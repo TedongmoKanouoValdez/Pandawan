@@ -17,7 +17,7 @@ class BoatFixtures extends Fixture
             $boat->setPort("Port " . ($i % 3 + 1));
             $boat->setPrice((string)(mt_rand(1000, 5000) / 10)); // cast en string
             $boat->setDisponibility(($i % 2) === 0); // corrigé : setDisponibility au lieu de isDisponibility
-            $boat->setDescription("This is a description for Boat $i");
+            $boat->setDescription("This is a description fore Boat $i");
             $boat->setCreateAt(new \DateTimeImmutable());
 
             $manager->persist($boat);
