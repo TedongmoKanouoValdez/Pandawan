@@ -18,7 +18,7 @@ class Boat
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $Model = null;
+    private ?string $model = null; // renommé en minuscule
 
     #[ORM\Column(length: 255)]
     private ?string $port = null;
@@ -33,7 +33,7 @@ class Boat
     private ?string $description = null;
 
     #[ORM\Column]
-    private ?\DateTime $createAt = null;
+    private ?\DateTimeImmutable $createAt = null; // changé en DateTimeImmutable
 
     public function getId(): ?int
     {
@@ -54,12 +54,12 @@ class Boat
 
     public function getModel(): ?string
     {
-        return $this->Model;
+        return $this->model;
     }
 
-    public function setModel(string $Model): static
+    public function setModel(string $model): static
     {
-        $this->Model = $Model;
+        $this->model = $model;
 
         return $this;
     }
@@ -112,12 +112,12 @@ class Boat
         return $this;
     }
 
-    public function getCreateAt(): ?\DateTime
+    public function getCreateAt(): ?\DateTimeImmutable
     {
         return $this->createAt;
     }
 
-    public function setCreateAt(\DateTime $createAt): static
+    public function setCreateAt(\DateTimeImmutable $createAt): static
     {
         $this->createAt = $createAt;
 
