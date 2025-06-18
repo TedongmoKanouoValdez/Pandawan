@@ -46,4 +46,40 @@ class BoatControllerTest extends WebTestCase
 
     }
 
+    public function testShowBoat(): void
+{
+    $client = static::createClient();
+    $entityManager = $client->getContainer()->get('doctrine')->getManager();
+
+    // Création d’un bateau à afficher
+    $boat = new Boat();
+    $boat->setName('Test Show Boat');
+    $boat->setModel('Model Show');
+    $boat->setPort('Port Show');
+    $boat->setPrice('9999');
+    $boat->setDisponibility(true);
+    $boat->setDescription('Description Show Boat');
+    $boat->setCreateAt(new \DateTimeImmutable());
+
+    $entityManager->persist($boat);
+    $entityManager->flush();
+
+    $id = $boat->getId();
+
+    // Envoie de la requête GET vers /boat/{id}
+    $crawler = $client->request('GET', '/boat/' . $id);
+
+    // Vérifie que la réponse est 200 OK
+    $this->assertResponseIsSuccessful(); // équivalent à 200
+
+    // Vérifie que le contenu de la page contient bien les infos du bateau
+    $this->assertSelectorTextContains('body', 'Test Show Boat');
+    $this->assertSelectorTextContains('body', 'Model Show');
+    $this->assertSelectorTextContains('body', 'Port Show');
+    $this->assertSelectorTextContains('body', '9999');
+}
+
+
+    
+
 }
