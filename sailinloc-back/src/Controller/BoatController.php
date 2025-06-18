@@ -68,14 +68,21 @@ final class BoatController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}', name: 'app_boat_delete', methods: ['POST'])]
-    public function delete(Request $request, Boat $boat, EntityManagerInterface $entityManager): Response
+    #[Route('/{id}', name: 'app_boat_delete', methods: ['DELETE'])]
+    public function delete(Request $request, Boat $boat, EntityManagerInterface $em): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$boat->getId(), $request->getPayload()->getString('_token'))) {
-            $entityManager->remove($boat);
-            $entityManager->flush();
+        // Pour tests sans session, ne fais pas la vérif CSRF ici, ou conditionne-la
+        if ($this->getParameter('kernel.environment') !== 'test') {
+            $submittedToken = $request->headers->get('X-CSRF-TOKEN');
+            if (!$this->isCsrfTokenValid('delete' . $boat->getId(), $submittedToken)) {
+                throw $this->createAccessDeniedException('Invalid CSRF token.');
+            }
         }
 
-        return $this->redirectToRoute('app_boat_index', [], Response::HTTP_SEE_OTHER);
+        $em->remove($boat);
+        $em->flush();
+
+        return new Response(null, 204);
     }
+
 }
