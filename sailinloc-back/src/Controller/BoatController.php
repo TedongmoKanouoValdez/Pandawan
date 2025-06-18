@@ -85,4 +85,6 @@ final class BoatController extends AbstractController
         return new Response(null, 204);
     }
 
+    
+
 }

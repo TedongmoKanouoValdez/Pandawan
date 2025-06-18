@@ -13,7 +13,7 @@ class BoatForm extends AbstractType
     {
         $builder
             ->add('name')
-            ->add('Model')
+            ->add('model')
             ->add('port')
             ->add('price')
             ->add('disponibility')
