@@ -100,7 +100,7 @@ export default function CategoriesPage() {
     <>
       <section className="">
              <div className="relative">
-               <div className="contentvideohome" style={{backgroundImage: "url(https://res.cloudinary.com/dluqkutu8/image/upload/v1751037743/top-view-harbor-with-many-boats_1_kl8kgi.jpg)", width: "100%", height:"100vh", objectFit:"cover", backgroundRepeat: "no-repeat", backgroundSize: "97rem"}} >
+               <div className="contentvideohome" style={{backgroundImage: "url(https://res.cloudinary.com/dluqkutu8/image/upload/v1751325213/handicap%C3%A9s_ffn7ax.jpg)", width: "100%", height:"100vh", objectFit:"cover", backgroundRepeat: "no-repeat", backgroundSize: "97rem"}} >
 
                </div>
                <div className="contenttext">
@@ -119,14 +119,7 @@ export default function CategoriesPage() {
                          pour vivre <br/> une experience en mer  inoubliable.
                        </p>
                      </BoxReveal>
-     
-                     <div className="mt-6">
-                       <BoxReveal boxColor={"#5046e6"} duration={0.5}>
-                         <RippleButton rippleColor="#ADD8E6">
-                           Trouver mon bateau
-                    </RippleButton>
-                       </BoxReveal>
-                     </div>
+
                    </div>
                  </div>
                </div>
@@ -185,14 +178,14 @@ export default function CategoriesPage() {
           <div className="flex flex-col justify-center items-center pb-20">
             <div>
               <h2 className="text-5xl font-medium mb-5">
-                EXPLOREZ LA MER À VOTRE RYTHME
+                EMBARQUEZ POUR UNE AVENTURE SUR MESURE
               </h2>
             </div>
             <div>
               <p className="descriptionallsectionhome text-center">
-                Trouvez facilement le bateau ou l&apos;expérience qui vous
-                correspond. Catamarans spacieux, voiliers authentiques ou
-                sorties avec skipper, choisissez en toute liberté.
+               Découvrez notre sélection de bateaux adaptés à tous les styles de navigation. Que vous recherchiez 
+               une escapade paisible à bord d’un voilier, une croisière conviviale en catamaran, 
+               ou une sortie guidée avec skipper, trouvez l’expérience idéale pour voguer à votre rythme..
               </p>
             </div>
           </div>
