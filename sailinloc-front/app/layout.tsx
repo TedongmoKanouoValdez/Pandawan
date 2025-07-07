@@ -1,14 +1,11 @@
 import "@/styles/globals.css";
 import { Metadata, Viewport } from "next";
-import { Link } from "@heroui/link";
-import clsx from "clsx";
-
 import { Providers } from "./providers";
+import clsx from "clsx";
 
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
-import { Navbar } from "@/components/navbar";
-import { FooterWrapper } from "@/components/FooterWrapper";
+import ClientLayout from "@/components/pages/ClientLayout";
 
 export const metadata: Metadata = {
   title: {
@@ -34,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html suppressHydrationWarning lang="en">
+    <html suppressHydrationWarning lang="fr">
       <head />
       <body
         className={clsx(
@@ -43,11 +40,7 @@ export default function RootLayout({
         )}
       >
         <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
-          <div className="relative flex flex-col h-screen">
-            <Navbar />
-            <main>{children}</main>
-            <FooterWrapper />
-          </div>
+          <ClientLayout>{children}</ClientLayout>
         </Providers>
       </body>
     </html>

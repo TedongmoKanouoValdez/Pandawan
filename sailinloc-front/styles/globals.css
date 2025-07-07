@@ -31,6 +31,14 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
   .dark {
     --background: 224 71.4% 4.1%;
@@ -57,9 +65,20 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
   .theme {
     --animate-rippling: rippling var(--duration) ease-out;
+    --animate-shimmer-slide: shimmer-slide var(--speed) ease-in-out infinite
+      alternate;
+    --animate-spin-around: spin-around calc(var(--speed) * 2) infinite linear;
   }
 }
 
@@ -109,6 +128,27 @@
     100% {
       transform: scale(2);
       opacity: 0;
+    }
+  }
+  @keyframes shimmer-slide {
+    to {
+      transform: translate(calc(100cqw - 100%), 0);
+    }
+  }
+  @keyframes spin-around {
+    0% {
+      transform: translateZ(0) rotate(0);
+    }
+    15%,
+    35% {
+      transform: translateZ(0) rotate(90deg);
+    }
+    65%,
+    85% {
+      transform: translateZ(0) rotate(270deg);
+    }
+    100% {
+      transform: translateZ(0) rotate(360deg);
     }
   }
 }
@@ -212,6 +252,38 @@
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
+.bg-glacev2 {
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow:
+    rgba(0, 0, 0, 0.16) 0px 10px 36px 0px,
+    rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.bg-glacev2::-webkit-scrollbar {
+  width: 8px;
+}
+
+.bg-glacev2::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+  border: 1px solid #ccc; /* Bordure sur la piste */
+}
+
+.bg-glacev2::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.bg-glacev2::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.contentswitch {
+  margin-left: 0 !important;
+}
+
 .contentdestinationshome .swiper {
   width: 100%;
   height: 39rem;
@@ -234,6 +306,16 @@
   height: 100%;
   object-fit: cover;
   border-radius: 10px;
+}
+
+.swiper-button-next,
+.swiper-rtl .swiper-button-prev {
+  top: 21rem !important;
+}
+
+.swiper-button-prev,
+.swiper-rtl .swiper-button-next {
+  top: 21rem !important;
 }
 
 .carddestinationshome {
@@ -339,4 +421,96 @@
 .contentavishome .swiper-button-next,
 .contentavishome .swiper-button-prev {
   display: none;
+}
+
+.bg-blueGray-800 {
+  --tw-bg-opacity: 1;
+  background-color: rgba(30, 41, 59, var(--tw-bg-opacity));
+}
+
+.avatarProfil > :first-child {
+  width: 5rem;
+  height: 5rem;
+}
+
+.avatarProfil > :nth-child(2) span {
+  font-size: 1rem;
+}
+
+.MoyenDePaimentDefault {
+  background-color: #17c964;
+}
+
+div[data-slot="content"].bg-content1 {
+  min-width: 1rem;
+}
+
+.contentLang {
+  width: 4rem;
+}
+
+.contentLang .liLang span {
+  display: flex;
+  justify-content: center;
+}
+
+#react-aria-«R36ql7H2» {
+  width: 7rem;
+}
+
+.ant-select-selector {
+  background: transparent !important;
+  border: none !important;
+}
+
+.bgBlue {
+  background-color: rgb(30 64 175 / var(--tw-bg-opacity, 1));
+}
+
+.contentTitleBoat span:nth-child(1) {
+  background-color: rgb(30 64 175 / var(--tw-bg-opacity, 1));
+}
+
+/* Masquer le select de l'année */
+.ant-picker-calendar-header .ant-picker-calendar-year-select {
+  display: none !important;
+}
+
+/* Masquer le bouton "Year" */
+.ant-picker-calendar-header .ant-picker-calendar-mode-switch {
+  display: none !important;
+}
+
+.sticky {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.contentsingleimageboat img {
+  object-fit: cover;
+  object-position: bottom;
+}
+
+.contenttitresectionprofile span:nth-child(1) {
+  background: rgba(6, 136, 201, 0.69);
+  box-shadow:
+    rgba(0, 0, 0, 0.16) 0px 10px 36px 0px,
+    rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.bannerpagedevenirpartenaire::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); /* noir avec opacité 50% */
+  border-radius: 10px;
+}
+
+.contentsingleimageboat .visuelImage {
+  width: 68rem;
+  height: 43rem;
 }
