@@ -10,53 +10,37 @@ export const siteConfig = {
     },
     {
       label: "Nos bateaux",
-      href: "/docs",
+      href: "/nosbateaux",
     },
     {
       label: "Nos destinations",
-      href: "/pricing",
+      href: "/#destinations",
     },
     {
       label: "Devenir partenaire",
-      href: "/blog",
+      href: "/devenirpartenaire",
     },
-    {
-      label: "A propos",
-      href: "/about",
-    },
+    // {
+    //   label: "A propos",
+    //   href: "/about",
+    // },
   ],
   navMenuItems: [
     {
-      label: "Profile",
-      href: "/profile",
+      label: "Accueil",
+      href: "/",
     },
     {
-      label: "Dashboard",
-      href: "/dashboard",
+      label: "Nos bateaux",
+      href: "/nosbateaux",
     },
     {
-      label: "Projects",
-      href: "/projects",
+      label: "Nos destinations",
+      href: "/#destinations",
     },
     {
-      label: "Team",
-      href: "/team",
-    },
-    {
-      label: "Calendar",
-      href: "/calendar",
-    },
-    {
-      label: "Settings",
-      href: "/settings",
-    },
-    {
-      label: "Help & Feedback",
-      href: "/help-feedback",
-    },
-    {
-      label: "Logout",
-      href: "/logout",
+      label: "Devenir partenaire",
+      href: "/devenirpartenaire",
     },
   ],
   links: {
