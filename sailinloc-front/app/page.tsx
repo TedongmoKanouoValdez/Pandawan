@@ -1216,7 +1216,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section>
+      <section id="destinations">
         <div
           className="py-24"
           style={{
@@ -1234,13 +1234,6 @@ export default function Home() {
               <p className="descriptionallsectionhome text-center">
                 Naviguez dans les plus beaux coins de France et d&apos;Europe
               </p>
-            </div>
-          </div>
-          <div className="flex justify-end mx-auto max-w-6xl w-full mb-10">
-            <div>
-              <RippleButton className="bg-black text-white font-bold">
-                Voir toutes nos destinations
-              </RippleButton>
             </div>
           </div>
           <div className="contentdestinationshome mx-auto max-w-6xl">
@@ -1284,9 +1277,9 @@ export default function Home() {
                         size="middle"
                         style={{ width: "100%", gap: "2rem" }}
                       >
-                        <Badge.Ribbon text="Croisières le long de la Côte d'Azur."></Badge.Ribbon>
-                        <Badge.Ribbon text="Excursions à bord de voiliers traditionnels."></Badge.Ribbon>
-                        <Badge.Ribbon text="Sports nautiques (planche à voile, plongée)."></Badge.Ribbon>
+                        <Badge.Ribbon text="Croisières le long de la Côte d'Azur." className="bg-glacev2"></Badge.Ribbon>
+                        <Badge.Ribbon text="Excursions à bord de voiliers traditionnels." className="bg-glacev2"></Badge.Ribbon>
+                        <Badge.Ribbon text="Sports nautiques (planche à voile, plongée)." className="bg-glacev2"></Badge.Ribbon>
                       </Space>
                     </div>
                     <div className="bg-glace contentinfocarddestination text-left text-base space-y-4 px-2">
@@ -1368,9 +1361,9 @@ export default function Home() {
                         size="middle"
                         style={{ width: "100%", gap: "2rem" }}
                       >
-                        <Badge.Ribbon text="Détente à bord d'un catamaran tout confort."></Badge.Ribbon>
-                        <Badge.Ribbon text="Plongée dans les eaux cristallines."></Badge.Ribbon>
-                        <Badge.Ribbon text="Visite des petits ports méditerranéens."></Badge.Ribbon>
+                        <Badge.Ribbon text="Détente à bord d'un catamaran tout confort." className="bg-glacev2"></Badge.Ribbon>
+                        <Badge.Ribbon text="Plongée dans les eaux cristallines." className="bg-glacev2"></Badge.Ribbon>
+                        <Badge.Ribbon text="Visite des petits ports méditerranéens." className="bg-glacev2"></Badge.Ribbon>
                       </Space>
                     </div>
                     <div className="bg-glace contentinfocarddestination text-left text-base space-y-4 px-2">
@@ -1452,9 +1445,9 @@ export default function Home() {
                         size="middle"
                         style={{ width: "100%", gap: "2rem" }}
                       >
-                        <Badge.Ribbon text="Visites culturelles à Palerme et Cagliari."></Badge.Ribbon>
-                        <Badge.Ribbon text="Croisières autour des îles volcaniques."></Badge.Ribbon>
-                        <Badge.Ribbon text="Pêche en mer et exploration des grottes marines."></Badge.Ribbon>
+                        <Badge.Ribbon text="Visites culturelles à Palerme et Cagliari." className="bg-glacev2"></Badge.Ribbon>
+                        <Badge.Ribbon text="Croisières autour des îles volcaniques." className="bg-glacev2"></Badge.Ribbon>
+                        <Badge.Ribbon text="Pêche en mer et exploration des grottes marines." className="bg-glacev2"></Badge.Ribbon>
                       </Space>
                     </div>
                     <div className="bg-glace contentinfocarddestination text-left text-base space-y-4 px-2">
@@ -1537,9 +1530,9 @@ export default function Home() {
                         size="middle"
                         style={{ width: "100%", gap: "2rem" }}
                       >
-                        <Badge.Ribbon text="Exploration des grottes marines."></Badge.Ribbon>
-                        <Badge.Ribbon text="Pêche en mer, sports nautiques."></Badge.Ribbon>
-                        <Badge.Ribbon text="Croisières et détente à bord d'un voilier."></Badge.Ribbon>
+                        <Badge.Ribbon text="Exploration des grottes marines." className="bg-glacev2"></Badge.Ribbon>
+                        <Badge.Ribbon text="Pêche en mer, sports nautiques." className="bg-glacev2"></Badge.Ribbon>
+                        <Badge.Ribbon text="Croisières et détente à bord d'un voilier." className="bg-glacev2"></Badge.Ribbon>
                       </Space>
                     </div>
                     <div className="bg-glace contentinfocarddestination text-left text-base space-y-4 px-2">
@@ -1617,9 +1610,9 @@ export default function Home() {
                         size="middle"
                         style={{ width: "100%", gap: "2rem" }}
                       >
-                        <Badge.Ribbon text="Croisières autour de Santorin et Mykonos."></Badge.Ribbon>
-                        <Badge.Ribbon text="Découverte des sites historiques."></Badge.Ribbon>
-                        <Badge.Ribbon text="Plongée dans les eaux cristallines et baignades."></Badge.Ribbon>
+                        <Badge.Ribbon text="Croisières autour de Santorin et Mykonos." className="bg-glacev2"></Badge.Ribbon>
+                        <Badge.Ribbon text="Découverte des sites historiques." className="bg-glacev2"></Badge.Ribbon>
+                        <Badge.Ribbon text="Plongée dans les eaux cristallines et baignades." className="bg-glacev2"></Badge.Ribbon>
                       </Space>
                     </div>
                     <div className="bg-glace contentinfocarddestination text-left text-base space-y-4 px-2">
@@ -1698,9 +1691,9 @@ export default function Home() {
                         size="middle"
                         style={{ width: "100%", gap: "2rem" }}
                       >
-                        <Badge.Ribbon text="Croisières autour de Split et Dubrovnik."></Badge.Ribbon>
-                        <Badge.Ribbon text="Découverte des îles de Hvar et Korčula."></Badge.Ribbon>
-                        <Badge.Ribbon text="Activités nautiques et plongée."></Badge.Ribbon>
+                        <Badge.Ribbon text="Croisières autour de Split et Dubrovnik." className="bg-glacev2"></Badge.Ribbon>
+                        <Badge.Ribbon text="Découverte des îles de Hvar et Korčula." className="bg-glacev2"></Badge.Ribbon>
+                        <Badge.Ribbon text="Activités nautiques et plongée." className="bg-glacev2"></Badge.Ribbon>
                       </Space>
                     </div>
                     <div className="bg-glace contentinfocarddestination text-left text-base space-y-4 px-2">
