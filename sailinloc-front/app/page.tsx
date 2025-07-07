@@ -30,6 +30,8 @@ import "swiper/css/navigation";
 import { TbMailFilled } from "react-icons/tb";
 // import required modules
 import { FreeMode, Pagination, Navigation } from "swiper/modules";
+import Link from "next/link";
+
 
 export const LogoSecondaire: React.FC = () => {
   return (
@@ -1030,9 +1032,11 @@ export default function Home() {
           </div>
           <div className="flex justify-end mx-auto max-w-6xl w-full mb-10">
             <div>
-              <RippleButton className="bg-black text-white font-bold">
-                Voir toutes nos catégories
-              </RippleButton>
+              <Link href="/categorie" passHref>
+                <RippleButton className="bg-black text-white font-bold">
+                  Voir toutes nos catégories
+                </RippleButton>
+              </Link>
             </div>
           </div>
           <div className="contentcategoriehome">
