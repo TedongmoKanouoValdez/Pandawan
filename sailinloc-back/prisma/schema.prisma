@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   //output   = "../generated/prisma"
@@ -15,45 +9,85 @@ datasource db {
 }
 
 model Utilisateur {
-  id           Int                   @id @default(autoincrement())
-  nom          String
-  prenom       String
-  email        String               @unique
-  motDePasse   String
-  role         RoleUtilisateur
+  id                    Int                   @id @default(autoincrement())
+  nom                   String
+  prenom                String
+  email                 String                @unique
+  motDePasse            String
+  role                  RoleUtilisateur
 
-  proprietaire Proprietaire?
-  reservations Reservation[]
-  messagesEnvoyes   Message[]       @relation("MessagesEnvoyes")
-  messagesRecus     Message[]       @relation("MessagesRecus")
-  demandes     DemandeProprietaire[]
-  medias            Media[] 
+  proprietaire          Proprietaire?
+  reservations          Reservation[]
+  messagesEnvoyes       Message[]             @relation("MessagesEnvoyes")
+  messagesRecus         Message[]             @relation("MessagesRecus")
+  demandes              DemandeProprietaire[]
+  medias                Media[]
+
+  coordonneesBancaires  CoordonneesBancaires?  // Juste la relation, pas de fields/references ici
 }
 
 model Proprietaire {
-  id             Int         @id @default(autoincrement())
-  utilisateur    Utilisateur @relation(fields: [utilisateurId], references: [id])
-  utilisateurId  Int         @unique
+  id            Int         @id @default(autoincrement())
+  utilisateur   Utilisateur @relation(fields: [utilisateurId], references: [id])
+  utilisateurId Int         @unique
 
-  bateaux        Bateau[]
+  bateaux       Bateau[]
 }
 
 model Bateau {
-  id              Int          @id @default(autoincrement())
-  nom             String
-  modele          String
-  port            String
-  prix            Decimal
-  disponibilite   Boolean
-  description     String
-  proprietaire    Proprietaire @relation(fields: [proprietaireId], references: [id])
-  proprietaireId  Int
-  creeLe          DateTime     @default(now())
+  id             Int            @id @default(autoincrement())
+  nom            String
+  modele         String
+  port           String
+  prix           Decimal
+  description    String
+  datesIndisponibles String?
+  proprietaire   Proprietaire   @relation(fields: [proprietaireId], references: [id])
+  proprietaireId Int
+  creeLe         DateTime       @default(now())
 
-  reservations    Reservation[]
-  assurances      Assurance[]
-  messages        Message[]
-  medias            Media[] 
+  reservations   Reservation[]
+  assurances     Assurance[]
+  messages       Message[]
+  medias         Media[]
+
+
+  details   DetailsBateau?  
+
+}
+
+model DetailsBateau {
+  id                   Int        @id @default(autoincrement())
+
+  longueur             Float?
+  largeur              Float?
+  tirantEau            Float?
+  capaciteMax          Int?
+  nombreCabines        Int?
+  nombreCouchages      Int?
+  equipements          String?
+  optionsPayantes      String?
+  zonesNavigation      String?
+  politiqueAnnulation  String?
+  locationSansPermis   Boolean?
+  numeroPoliceAssurance String?
+  certificatNavigation  String?
+
+  bateau                Bateau   @relation(fields: [bateauId], references: [id])
+  bateauId              Int      @unique
+}
+
+model CoordonneesBancaires {
+  id             Int        @id @default(autoincrement())
+  utilisateur    Utilisateur @relation(fields: [utilisateurId], references: [id])
+  utilisateurId  Int        @unique
+
+  titulaire      String
+  numeroCarte    String
+  dateExpiration DateTime
+  codeCVV        String
+  banque         String?
+  creeLe         DateTime   @default(now())
 }
 
 model Reservation {
@@ -68,7 +102,10 @@ model Reservation {
   creeLe         DateTime     @default(now())
 
   paiement       Paiement?
+
   contrat        Contrat?     @relation(name: "ContratToReservation")
+  contratId      Int?         @unique
+
   messages       Message[]
 }
 
@@ -83,8 +120,8 @@ model Paiement {
 
 model Contrat {
   id             Int         @id @default(autoincrement())
-  reservation    Reservation @relation(name: "ContratToReservation", fields: [reservationId], references: [id])
-  reservationId  Int         @unique
+  reservation    Reservation  @relation(name: "ContratToReservation", fields: [reservationId], references: [id])
+  reservationId  Int          @unique
   montant        Decimal
   date           DateTime
   creeLe         DateTime    @default(now())
@@ -139,22 +176,21 @@ model Media {
   description  String?
   creeLe       DateTime   @default(now())
 
-  utilisateur  Utilisateur? @relation(fields: [utilisateurId], references: [id])
-  utilisateurId Int?
+  utilisateur      Utilisateur?         @relation(fields: [utilisateurId], references: [id])
+  utilisateurId    Int?
 
-  bateau       Bateau?      @relation(fields: [bateauId], references: [id])
-  bateauId     Int?
+  bateau           Bateau?              @relation(fields: [bateauId], references: [id])
+  bateauId         Int?
 
-  assurance    Assurance?   @relation(fields: [assuranceId], references: [id])
-  assuranceId  Int?
+  assurance        Assurance?           @relation(fields: [assuranceId], references: [id])
+  assuranceId      Int?
 
-  contrat      Contrat?     @relation(fields: [contratId], references: [id])
-  contratId    Int?
+  contrat          Contrat?             @relation(fields: [contratId], references: [id])
+  contratId        Int?
 
-  demandeProprietaire      DemandeProprietaire?     @relation(fields: [demandeProprietaireId], references: [id])
-  demandeProprietaireId    Int?
+  demandeProprietaire DemandeProprietaire? @relation(fields: [demandeProprietaireId], references: [id])
+  demandeProprietaireId Int?
 }
-
 
 enum RoleUtilisateur {
   CLIENT
