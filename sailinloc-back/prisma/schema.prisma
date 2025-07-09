@@ -42,6 +42,7 @@ model Bateau {
   prix           Decimal
   description    String
   datesIndisponibles String?
+  disponibilite    Boolean?   // ici ce champ est obligatoire
   proprietaire   Proprietaire   @relation(fields: [proprietaireId], references: [id])
   proprietaireId Int
   creeLe         DateTime       @default(now())
