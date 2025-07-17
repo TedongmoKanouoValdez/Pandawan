@@ -2,8 +2,48 @@ import { title } from "@/components/primitives";
 import Link from "next/link";
 import { RippleButton } from "@/components/magicui/ripple-button";
 import {Checkbox} from "@heroui/checkbox";
+import { useState, FormEvent } from "react";
+import { useRouter } from "next/router";
 
 export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+ // Pour voir si le composant se monte
+  useEffect(() => {
+    console.log("✅ Composant LoginPage monté");
+  }, []);
+  
+const handleLogin = async (e) => {
+  e.preventDefault(); // évite le rechargement de la page
+
+
+  try {
+    const response = await fetch('http://localhost:3000/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      alert('Connexion réussie !');
+      localStorage.setItem('token', data.token); // facultatif : stocker le token pour authentification future
+      // Rediriger ou mettre à jour l'état utilisateur ici si besoin
+    } else {
+      alert(data.message || 'Erreur de connexion');
+    }
+  } catch (err) {
+    alert('Erreur serveur');
+    console.error('Erreur lors de la connexion :', err);
+  }
+};
+
+
+console.log("Composant LoginPage monté")
   return (
     <>
       <div className="container mx-auto px-4 h-full py-24">
@@ -38,7 +78,7 @@ export default function LoginPage() {
                 {/* <div className="text-blueGray-400 text-center mb-3 font-bold">
                   <small>Or sign in with credentials</small>
                 </div> */}
-                <form>
+                <form onSubmit={handleLogin}>
                   <div className="relative w-full mb-3">
                     <label
                       className="block uppercase text-white text-xs font-bold mb-2"
@@ -46,10 +86,13 @@ export default function LoginPage() {
                     >
                       Email
                     </label>
-                    <input
-                      type="email"
-                      className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-                      placeholder="Email"
+                    <input 
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
+                        placeholder="Email"
+                        required
                     />
                   </div>
 
@@ -62,8 +105,11 @@ export default function LoginPage() {
                     </label>
                     <input
                       type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                       className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
                       placeholder="Password"
+                       required
                     />
                   </div>
                   <div>
@@ -71,8 +117,17 @@ export default function LoginPage() {
                   </div>
 
                   <div className="flex justify-center text-center mt-6">
-                    <RippleButton rippleColor="#ADD8E6">Se connecter</RippleButton>
+                    <RippleButton 
+                        rippleColor="#ADD8E6" type="submit" onClick={() => {
+                        console.log("Clic détecté");
+                      }}> Se connecter</RippleButton>
                   </div>
+                  {success && (
+                    <p className="text-green-500 text-sm mt-2 text-center">{success}</p>
+                  )}
+                  {error && (
+                    <p className="text-red-500 text-sm mt-2 text-center">{error}</p>
+                  )}
                 </form>
               </div>
             </div>

@@ -21,6 +21,8 @@ import { GiArchiveRegister } from "react-icons/gi";
 import { siteConfig } from "@/config/site";
 import { FaUser } from "react-icons/fa";
 import { SearchIcon, Logo } from "@/components/icons";
+import { useState } from "react";
+
 import {
   Modal,
   ModalContent,
@@ -114,6 +116,57 @@ export const Navbar = () => {
     />
   );
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+   const [email, setEmail] = useState("");
+   const [password, setPassword] = useState("");
+   const [nom, setNom] = useState("");
+  const [prenom, setPrenom] = useState("");
+  
+ const handleRegister = async (onClose: () => void) => {
+    try {
+      const response = await fetch("http://localhost:3001/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nom, prenom, email, password, role: "CLIENT" }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        alert("Inscription réussie !");
+        onClose(); 
+      } else {
+        alert(data.message || "Une erreur est survenue.");
+      }
+    } catch (err) {
+      alert("Erreur lors de l'inscription.");
+      console.error(err);
+    }
+  };
+    
+  const handleLogin = async (e) => {
+    e.preventDefault(); 
+    try {
+      const response = await fetch('http://localhost:3001/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        alert('Connexion réussie !');
+        localStorage.setItem('token', data.token); 
+      } else {
+        alert(data.message || 'Erreur de connexion');
+      }
+    } catch (err) {
+      alert('Erreur serveur');
+      console.error('Erreur lors de la connexion :', err);
+    }
+  };
+  
 
   return (
     <HeroUINavbar
@@ -247,12 +300,15 @@ export const Navbar = () => {
                   <ModalHeader className="flex flex-col gap-1">
                     Bienvenue sur votre espace
                   </ModalHeader>
+                   <form onSubmit={handleLogin}>
                   <ModalBody>
                     <Input
                       endContent={
                         <MailIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
                       }
                       label="Email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       placeholder="Enter your email"
                       variant="bordered"
                     />
@@ -261,6 +317,8 @@ export const Navbar = () => {
                         <LockIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
                       }
                       label="Password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                       placeholder="Enter your password"
                       type="password"
                       variant="bordered"
@@ -282,10 +340,11 @@ export const Navbar = () => {
                     <Button color="danger" variant="flat" onPress={onClose}>
                       Fermer
                     </Button>
-                    <Button color="primary" onPress={onClose}>
+                    <Button color="primary" onPress={onClose} type="submit">
                       Se connecter
                     </Button>
                   </ModalFooter>
+                   </form>
                 </>
               )}
             </ModalContent>
@@ -320,7 +379,9 @@ export const Navbar = () => {
                         <FaUser className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
                       }
                       label="Nom"
-                      type="email"
+                      type="text"
+                      value={nom}
+                     onChange={(e) => setNom(e.target.value)}
                       placeholder="Veuillez saisir votre nom"
                       variant="bordered"
                     />
@@ -329,7 +390,9 @@ export const Navbar = () => {
                         <FaUser className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
                       }
                       label="Prénom"
-                      type="email"
+                      type="text"
+                      value={prenom}
+                      onChange={(e) => setPrenom(e.target.value)}
                       placeholder="Veuillez saisir votre prénom"
                       variant="bordered"
                     />
@@ -339,6 +402,8 @@ export const Navbar = () => {
                       }
                       label="Email"
                       type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       placeholder="Veuillez saisir votre email"
                       variant="bordered"
                     />
@@ -349,6 +414,8 @@ export const Navbar = () => {
                       label="Password"
                       placeholder="Enter your password"
                       type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                       variant="bordered"
                     />
                     <div className="flex py-2 px-1 justify-between">
@@ -370,7 +437,7 @@ export const Navbar = () => {
                     <Button color="danger" variant="flat" onPress={onClose}>
                       Fermer
                     </Button>
-                    <Button color="primary" onPress={onClose}>
+                    <Button color="primary" onPress={() => handleRegister(onClose)}>
                       S&apos;inscrire
                     </Button>
                   </ModalFooter>
