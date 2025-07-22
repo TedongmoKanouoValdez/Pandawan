@@ -129,6 +129,7 @@ export const Navbar = () => {
         body: JSON.stringify({ nom, prenom, email, password, role: "CLIENT" }),
       });
 
+      
       const data = await response.json();
       if (response.ok) {
         alert("Inscription réussie !");
