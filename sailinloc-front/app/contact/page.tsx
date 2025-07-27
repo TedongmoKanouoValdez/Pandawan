@@ -7,6 +7,28 @@ import { BsSendFill } from "react-icons/bs";
 import { BsTelephoneFill} from "react-icons/bs";
 import { TbMailFilled } from "react-icons/tb";
 import toast, { Toaster } from 'react-hot-toast';
+import { FlipWords } from "@/components/ui/flip-words";
+import { PiSunDimFill } from "react-icons/pi";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { DatePicker } from "@heroui/date-picker";
+import { RippleButton } from "@/components/magicui/ripple-button";
+import { NumberInput } from "@heroui/number-input";
+import { BoxReveal } from "@/components/magicui/box-reveal";
+import { Input } from "@heroui/input";
+import { BiSolidBookmark } from "react-icons/bi";
+import { BsCloudSunFill } from "react-icons/bs";
+import { FaStar } from "react-icons/fa";
+import { Badge, Space } from "antd";
+import { Chip } from "@heroui/chip";
+import { BsCheckCircleFill } from "react-icons/bs";
+import { BsFillCreditCard2FrontFill } from "react-icons/bs";
+import { BsShieldFill } from "react-icons/bs";
+import { FaQuoteLeft } from "react-icons/fa";
+import { GrNext } from "react-icons/gr";
+import { GrPrevious } from "react-icons/gr";
+import { Form } from "@heroui/form";
+import { Button, ButtonGroup } from "@heroui/button";
+
 
 
 export default function ContactPage() {
@@ -65,7 +87,7 @@ export default function ContactPage() {
     emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY)
       .then(() => {
         toast.success("Votre message a bien été envoyé !");
-        setFormData({ nom: "", email: "", objet: "", message: "" });
+        setFormData({ "" nom: "", email: "", objet: "", message: "" });
       })
       .catch((error) => {
         // console.error("Erreur lors de l'envoi :", error);
@@ -74,9 +96,54 @@ export default function ContactPage() {
   };
 
   return (
+    <>
+
+     <section className="">
+            <div className="relative">
+              <div className="contentvideohome">
+                <video
+                  muted
+                  autoPlay
+                  loop
+                  playsInline
+                  controls={false}
+                  style={{ width: "100%", height: "100vh", objectFit: "cover" }}
+                  src="https://res.cloudinary.com/dluqkutu8/video/upload/v1750331153/14637966-uhd_2560_1440_60fps_tli0wh.mp4"
+                />
+              </div>
+              <div className="contenttext">
+                <div className="flex flex-row space-x-2">
+                  {/* <div>
+                    <LogoSecondaire />
+                  </div> */}
+                  <div className="justify-items-center  Textheader text-white">
+                    <BoxReveal boxColor={"#5046e6"} duration={0.5}>
+                      <h1 className="  text-6xl font-bold">
+                        Votre prochaine
+                        <FlipWords words={words} className="text-white" />
+                        commence ici
+                      </h1>
+                    </BoxReveal>
+    
+                    <BoxReveal boxColor={"#5046e6"} duration={0.5}>
+                      <p className="text-lg mt-4">
+                        Louez ou proposez un bateau en quelques clics.
+                      </p>
+                    </BoxReveal>
+    
+                  
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+            
+          </section>
+
+
     <section
       className="bg-cover bg-center w-screen min-h-screen flex items-center justify-center px-4 py-12"
-      style={{
+      style={{Z
         backgroundImage:
           "url('https://res.cloudinary.com/dluqkutu8/image/upload/v1751037337/4931029_zmkvbr.jpg')",
       }}
@@ -210,6 +277,7 @@ export default function ContactPage() {
         </div>
       </div>
     </section>
+    </>
   );
 }
 

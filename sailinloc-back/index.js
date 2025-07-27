@@ -20,6 +20,13 @@ app.use('/api/bateaux', bateauRoutes);
 const uploadRoute = require("./src/routes/uploadRoute");
 app.use("/upload-documents", uploadRoute);
 
+const paymentRoutes = require('./src/routes/paymentRoutes'); // 👈 ajoute cette ligne
+app.use("/api/payment", paymentRoutes);
+
+
+const emailRoutes = require('./src/routes/emailRoutes');
+app.use("/emails", emailRoutes);
+
 
 // Démarrer le serveur
 const PORT = process.env.PORT || 3001;

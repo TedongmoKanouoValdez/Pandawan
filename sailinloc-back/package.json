@@ -28,7 +28,9 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.1",
     "multer-storage-cloudinary": "^4.0.0",
-    "postgres": "^3.4.7"
+    "nodemailer": "^7.0.5",
+    "postgres": "^3.4.7",
+    "stripe": "^18.3.0"
   },
   "description": ""
 }
