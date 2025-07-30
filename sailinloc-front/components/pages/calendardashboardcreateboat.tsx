@@ -6,8 +6,17 @@ import dayjs from "dayjs";
 import { Button } from "@heroui/button";
 import { AiOutlineSync } from "react-icons/ai";
 
-export const CalendarDashboardBoat = () => {
-  const [unavailableDates, setUnavailableDates] = useState<Dayjs[]>([]);
+type Props = {
+  unavailableDates: Dayjs[];
+  setUnavailableDates: React.Dispatch<React.SetStateAction<Dayjs[]>>;
+  editable?: boolean;
+};
+
+export const CalendarDashboardBoat = ({
+  unavailableDates,
+  setUnavailableDates,
+  editable = true,
+}: Props) => {
   const [calendarKey, setCalendarKey] = useState(0);
   const [currentMonth, setCurrentMonth] = useState(dayjs());
 
@@ -18,14 +27,16 @@ export const CalendarDashboardBoat = () => {
 
   const disabledDate = (currentDate: Dayjs) => {
     const today = dayjs().startOf("day");
-    return currentDate.isBefore(today, "day");
+    if (currentDate.isBefore(today, "day")) return true;
+
+    return unavailableDates.some((d) => d.isSame(currentDate, "day")); // ✅
   };
 
   const fullCellRender = (current: Dayjs, info: any) => {
     if (info.type !== "date") return info.originNode;
 
     const isDisabled = disabledDate(current);
-    const isSelected = unavailableDates.some((d) => d.isSame(current, "day"));
+    const isSelected = unavailableDates.some((d) => d.isSame(current, "day")); // ✅
 
     return (
       <div
@@ -45,9 +56,8 @@ export const CalendarDashboardBoat = () => {
   };
 
   const handleSelect = (date: Dayjs) => {
+    if (!editable) return;
     if (disabledDate(date)) return;
-
-    // Bloque la sélection automatique quand on change de mois
     if (!date.isSame(currentMonth, "month")) return;
 
     setUnavailableDates((prev) => {

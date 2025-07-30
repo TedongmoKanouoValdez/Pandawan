@@ -13,12 +13,20 @@ type Tag = {
 
 type TagsSelectorProps = {
   tags: Tag[];
+  selectedTags: Tag[];
+  setSelectedTags: React.Dispatch<React.SetStateAction<Tag[]>>;
+  inputs: Record<string, string>;
+  setInputs: React.Dispatch<React.SetStateAction<Record<string, string>>>;
 };
 
-export function TagsSelector({ tags }: TagsSelectorProps) {
-  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
+export function TagsSelector({
+  tags,
+  selectedTags,
+  setSelectedTags,
+  inputs,
+  setInputs,
+}: TagsSelectorProps) {
   const selectedsContainerRef = useRef<HTMLDivElement>(null);
-  const [inputs, setInputs] = useState<Record<string, string>>({});
 
   const removeSelectedTag = (id: string) => {
     setSelectedTags((prev) => prev.filter((tag) => tag.id !== id));

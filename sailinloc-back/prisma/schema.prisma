@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  //output   = "../generated/prisma"
 }
 
 datasource db {
@@ -9,27 +8,31 @@ datasource db {
 }
 
 model Utilisateur {
-  id         Int             @id @default(autoincrement())
-  nom        String
-  prenom     String
-  email      String          @unique
-  motDePasse String
-  role       RoleUtilisateur
+  id           Int             @id @default(autoincrement())
+  nom          String
+  prenom       String
+  email        String          @unique
+  motDePasse   String
+  role         RoleUtilisateur
+  telephone    String?
+  adresse      String?
+  dernierAcces DateTime?
+  photoProfil  String?
 
-  proprietaire    Proprietaire?
-  reservations    Reservation[]
-  messagesEnvoyes Message[]             @relation("MessagesEnvoyes")
-  messagesRecus   Message[]             @relation("MessagesRecus")
-  demandes        DemandeProprietaire[]
-  medias          Media[]
-
-  coordonneesBancaires CoordonneesBancaires? // Juste la relation, pas de fields/references ici
+  proprietaire        Proprietaire?
+  reservations        Reservation[]
+  messagesEnvoyes     Message[]             @relation("MessagesEnvoyes")
+  messagesRecus       Message[]             @relation("MessagesRecus")
+  demandes            DemandeProprietaire[]
+  medias              Media[]
+  commentairesRediges Commentaire[]
 }
 
 model Proprietaire {
   id            Int         @id @default(autoincrement())
   utilisateur   Utilisateur @relation(fields: [utilisateurId], references: [id])
   utilisateurId Int         @unique
+  contact       String?
 
   bateaux Bateau[]
 }
@@ -37,12 +40,13 @@ model Proprietaire {
 model Bateau {
   id                 Int           @id @default(autoincrement())
   nom                String
+  slug               String        @unique @default("sailingloc-slug")
   modele             String
-  port               String
+  portdefault        String?
   prix               Decimal
-  description        String
+  description        String?
+  typeBateau         String?
   datesIndisponibles String?
-  disponibilite      Boolean? // ici ce champ est obligatoire
   proprietaire       Proprietaire? @relation(fields: [proprietaireId], references: [id])
   proprietaireId     Int?
   creeLe             DateTime      @default(now())
@@ -51,13 +55,12 @@ model Bateau {
   assurances   Assurance[]
   messages     Message[]
   medias       Media[]
-
-  details DetailsBateau?
+  details      DetailsBateau?
+  commentaires Commentaire[]
 }
 
 model DetailsBateau {
-  id Int @id @default(autoincrement())
-
+  id                    Int      @id @default(autoincrement())
   longueur              Float?
   largeur               Float?
   tirantEau             Float?
@@ -67,79 +70,84 @@ model DetailsBateau {
   equipements           String?
   optionsPayantes       String?
   zonesNavigation       String?
-  portdedepart          String?
-  portdarriver          String?
+  depotgarantie         String?
+  dureeLocation         String?
+  portDeplacement       String?
+  portArriver           String?
   politiqueAnnulation   String?
   locationSansPermis    Boolean?
   numeroPoliceAssurance String?
   certificatNavigation  String?
-  contact               String?
+  anneeConstruction     String?
+  tarifications         String?
+  portdedepart          String?
+  portdarriver          String?
 
   bateau   Bateau @relation(fields: [bateauId], references: [id])
   bateauId Int    @unique
 }
 
-model CoordonneesBancaires {
-  id            Int         @id @default(autoincrement())
-  utilisateur   Utilisateur @relation(fields: [utilisateurId], references: [id])
-  utilisateurId Int         @unique
-
-  titulaire      String
-  numeroCarte    String
-  dateExpiration DateTime
-  codeCVV        String
-  banque         String?
-  creeLe         DateTime @default(now())
-}
-
 model Reservation {
-  id            Int               @id @default(autoincrement())
-  utilisateur   Utilisateur       @relation(fields: [utilisateurId], references: [id])
-  utilisateurId Int
-  bateau        Bateau            @relation(fields: [bateauId], references: [id])
-  bateauId      Int
-  dateDebut     DateTime
-  dateFin       DateTime
-  statut        StatutReservation
-  creeLe        DateTime          @default(now())
+  id                 Int               @id @default(autoincrement())
+  utilisateur        Utilisateur       @relation(fields: [utilisateurId], references: [id])
+  utilisateurId      Int
+  bateau             Bateau            @relation(fields: [bateauId], references: [id])
+  bateauId           Int
+  dateDebut          DateTime
+  dateFin            DateTime
+  statut             StatutReservation
+  creeLe             DateTime          @default(now())
+  urlDocumentContrat String?
 
-  paiement Paiement?
-
-  contrat   Contrat? @relation(name: "ContratToReservation")
-  contratId Int?     @unique
-
-  messages Message[]
+  paiement     Paiement?
+  contrat      Contrat?      @relation(name: "ContratToReservation")
+  contratId    Int?          @unique
+  messages     Message[]
+  commentaires Commentaire[]
 }
 
 model Paiement {
-  id              Int             @id @default(autoincrement())
-  reservation     Reservation     @relation(fields: [reservationId], references: [id])
-  reservationId   Int             @unique
-  montant         Decimal
-  methodePaiement MethodePaiement
-  creeLe          DateTime        @default(now())
+  id                Int          @id @default(autoincrement())
+  reservation       Reservation  @relation(fields: [reservationId], references: [id])
+  reservationId     Int          @unique
+  montant           Decimal
+  montantTotal      Decimal
+  methodePaiement   String
+  pourcentageStripe Decimal
+  etatPaiement      EtatPaiement
+  creeLe            DateTime     @default(now())
+  recu              Recu?
+}
+
+model Recu {
+  id         Int      @id @default(autoincrement())
+  paiement   Paiement @relation(fields: [paiementId], references: [id])
+  paiementId Int      @unique
+
+  creeLe DateTime @default(now())
+
+  media Media?
 }
 
 model Contrat {
   id            Int         @id @default(autoincrement())
   reservation   Reservation @relation(name: "ContratToReservation", fields: [reservationId], references: [id])
   reservationId Int         @unique
-  montant       Decimal
-  date          DateTime
+  signature     Boolean
   creeLe        DateTime    @default(now())
 
   medias Media[]
 }
 
 model Assurance {
-  id            Int           @id @default(autoincrement())
-  nom           String
-  description   String
-  montant       Decimal
-  typeAssurance TypeAssurance
-  bateau        Bateau        @relation(fields: [bateauId], references: [id])
-  bateauId      Int
-  creeLe        DateTime      @default(now())
+  id                  Int           @id @default(autoincrement())
+  nom                 String
+  description         String
+  montant             Decimal
+  couvertureAssurance TypeAssurance
+  bateau              Bateau        @relation(fields: [bateauId], references: [id])
+  bateauId            Int
+  creeLe              DateTime      @default(now())
 
   medias Media[]
 }
@@ -156,7 +164,24 @@ model Message {
   bateauId       Int?
   contenu        String
   dateEnvoi      DateTime
+  lu             Boolean      @default(false)
   creeLe         DateTime     @default(now())
+}
+
+model Commentaire {
+  id      Int      @id @default(autoincrement())
+  contenu String
+  note    Int // 1 à 5
+  creeLe  DateTime @default(now())
+
+  auteur   Utilisateur @relation(fields: [auteurId], references: [id])
+  auteurId Int
+
+  bateau   Bateau? @relation(fields: [bateauId], references: [id])
+  bateauId Int?
+
+  reservation   Reservation? @relation(fields: [reservationId], references: [id])
+  reservationId Int?
 }
 
 model DemandeProprietaire {
@@ -164,6 +189,7 @@ model DemandeProprietaire {
   utilisateur    Utilisateur   @relation(fields: [utilisateurId], references: [id])
   utilisateurId  Int
   statut         StatutDemande
+  data           String
   dateDemande    DateTime
   dateTraitement DateTime?
 
@@ -176,6 +202,7 @@ model Media {
   type        TypeMedia
   titre       String?
   description String?
+  numeroPolice   String? 
   creeLe      DateTime  @default(now())
 
   utilisateur   Utilisateur? @relation(fields: [utilisateurId], references: [id])
@@ -192,6 +219,9 @@ model Media {
 
   demandeProprietaire   DemandeProprietaire? @relation(fields: [demandeProprietaireId], references: [id])
   demandeProprietaireId Int?
+
+  recu   Recu? @relation(fields: [recuId], references: [id])
+  recuId Int?  @unique
 }
 
 enum RoleUtilisateur {
@@ -224,7 +254,15 @@ enum StatutDemande {
 }
 
 enum TypeMedia {
-  IMAGE
-  VIDEO
-  DOCUMENT
+  COVER
+  GALLERIE
+  ATTESTATION_ASSURANCE
+  CERTIFICAT_NAVIGATION
+  PROFIL
+}
+
+enum EtatPaiement {
+  PAYE
+  EN_ATTENTE
+  ECHEC
 }
