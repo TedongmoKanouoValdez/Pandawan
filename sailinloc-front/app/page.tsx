@@ -32,7 +32,6 @@ import { TbMailFilled } from "react-icons/tb";
 import { FreeMode, Pagination, Navigation } from "swiper/modules";
 import Link from "next/link";
 
-
 export const LogoSecondaire: React.FC = () => {
   return (
     <svg
@@ -930,18 +929,19 @@ export default function Home() {
               loop
               playsInline
               controls={false}
-              style={{ width: "100%", height: "100vh", objectFit: "cover" }}
+              style={{ objectFit: "cover" }}
+              className="w-full h-[170vh] md:h-[100vh]"
               src="https://res.cloudinary.com/dluqkutu8/video/upload/v1750331153/14637966-uhd_2560_1440_60fps_tli0wh.mp4"
             />
           </div>
-          <div className="contenttext">
-            <div className="flex flex-row space-x-2">
+          <div className="absolute left-[1rem] md:left-[10rem] top-[14rem]">
+            <div className="flex flex-col items-center md:items-start md:flex-row space-x-2">
               <div>
                 <LogoSecondaire />
               </div>
               <div className="Textheader text-white">
                 <BoxReveal boxColor={"#5046e6"} duration={0.5}>
-                  <h1 className="text-6xl font-bold">
+                  <h1 className="w-[20rem] text-[2.9rem] text-center md:text-6xl font-bold md:w-[46rem] md:text-left">
                     Votre prochaine
                     <FlipWords words={words} className="text-white" />
                     commence ici
@@ -949,12 +949,12 @@ export default function Home() {
                 </BoxReveal>
 
                 <BoxReveal boxColor={"#5046e6"} duration={0.5}>
-                  <p className="text-lg mt-4">
+                  <p className="text-lg mt-4 w-[20rem] text-center md:w-full md:text-left">
                     Louez ou proposez un bateau en quelques clics.
                   </p>
                 </BoxReveal>
 
-                <div className="mt-6">
+                <div className="mt-6 flex justify-center md:block">
                   <BoxReveal boxColor={"#5046e6"} duration={0.5}>
                     <RippleButton rippleColor="#ADD8E6">
                       Trouver mon bateau
@@ -964,9 +964,9 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <div className="contentFormHome">
+          <div className="absolute bottom-[6rem] left-[4rem] md:left-[10rem] md:bottom-[5rem] contentFormHome">
             <form action="">
-              <div className="grid grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <div className="inputformhome">
                   <Input
                     label="Veuillez saisire votre destination"
@@ -997,9 +997,9 @@ export default function Home() {
                     color="secondary"
                   />
                 </div>
-                <div>
+                <div className="flex justify-center md:block">
                   <RippleButton rippleColor="#ADD8E6" className="py-3.5">
-                    Trouver mon bateau
+                    Rechercher mon bateau
                   </RippleButton>
                 </div>
               </div>
@@ -1017,20 +1017,20 @@ export default function Home() {
           }}
         >
           <div className="flex flex-col justify-center items-center pb-20">
-            <div>
+            <div className="px-[1rem] md:px-0 text-center">
               <h2 className="text-5xl font-medium mb-5">
                 EXPLOREZ LA MER À VOTRE RYTHME
               </h2>
             </div>
             <div>
-              <p className="descriptionallsectionhome text-center">
+              <p className="w-[20rem] md:w-[35rem] text-center">
                 Trouvez facilement le bateau ou l&apos;expérience qui vous
                 correspond. Catamarans spacieux, voiliers authentiques ou
                 sorties avec skipper, choisissez en toute liberté.
               </p>
             </div>
           </div>
-          <div className="flex justify-end mx-auto max-w-6xl w-full mb-10">
+          <div className="flex justify-center md:justify-end mx-auto max-w-6xl w-full mb-10">
             <div>
               <Link href="/categorie" passHref>
                 <RippleButton className="bg-black text-white font-bold">
@@ -1040,7 +1040,7 @@ export default function Home() {
             </div>
           </div>
           <div className="contentcategoriehome">
-            <div className="grid grid-cols-3 gap-1">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-1 place-items-center md:place-items-start">
               <div className="relative cardcategorie">
                 <div className="logocategrie1 flex justify-center items-center">
                   <LogoBoar />
@@ -1225,13 +1225,13 @@ export default function Home() {
           }}
         >
           <div className="flex flex-col justify-center items-center pb-20">
-            <div>
+            <div className="px-[1rem] md:px-0 text-center">
               <h2 className="text-5xl font-medium mb-5">
                 NAVIGUEZ VERS DE NOUVEAUX HORIZONS
               </h2>
             </div>
             <div>
-              <p className="descriptionallsectionhome text-center">
+              <p className="w-[20rem] md:w-[35rem] text-center">
                 Naviguez dans les plus beaux coins de France et d&apos;Europe
               </p>
             </div>
@@ -1247,6 +1247,24 @@ export default function Home() {
                 }}
                 navigation={true}
                 modules={[FreeMode, Pagination, Navigation]}
+                breakpoints={{
+                  320: {
+                    slidesPerView: 1,
+                    spaceBetween: 10,
+                  },
+                  640: {
+                    slidesPerView: 2,
+                    spaceBetween: 20,
+                  },
+                  1024: {
+                    slidesPerView: 3,
+                    spaceBetween: 30,
+                  },
+                  1440: {
+                    slidesPerView: 3,
+                    spaceBetween: 30,
+                  },
+                }}
                 className="mySwiper"
               >
                 <SwiperSlide>
@@ -1277,9 +1295,18 @@ export default function Home() {
                         size="middle"
                         style={{ width: "100%", gap: "2rem" }}
                       >
-                        <Badge.Ribbon text="Croisières le long de la Côte d'Azur." className="bg-glacev2"></Badge.Ribbon>
-                        <Badge.Ribbon text="Excursions à bord de voiliers traditionnels." className="bg-glacev2"></Badge.Ribbon>
-                        <Badge.Ribbon text="Sports nautiques (planche à voile, plongée)." className="bg-glacev2"></Badge.Ribbon>
+                        <Badge.Ribbon
+                          text="Croisières le long de la Côte d'Azur."
+                          className="bg-glacev2"
+                        ></Badge.Ribbon>
+                        <Badge.Ribbon
+                          text="Excursions à bord de voiliers traditionnels."
+                          className="bg-glacev2"
+                        ></Badge.Ribbon>
+                        <Badge.Ribbon
+                          text="Sports nautiques (planche à voile, plongée)."
+                          className="bg-glacev2"
+                        ></Badge.Ribbon>
                       </Space>
                     </div>
                     <div className="bg-glace contentinfocarddestination text-left text-base space-y-4 px-2">
@@ -1361,9 +1388,18 @@ export default function Home() {
                         size="middle"
                         style={{ width: "100%", gap: "2rem" }}
                       >
-                        <Badge.Ribbon text="Détente à bord d'un catamaran tout confort." className="bg-glacev2"></Badge.Ribbon>
-                        <Badge.Ribbon text="Plongée dans les eaux cristallines." className="bg-glacev2"></Badge.Ribbon>
-                        <Badge.Ribbon text="Visite des petits ports méditerranéens." className="bg-glacev2"></Badge.Ribbon>
+                        <Badge.Ribbon
+                          text="Détente à bord d'un catamaran tout confort."
+                          className="bg-glacev2"
+                        ></Badge.Ribbon>
+                        <Badge.Ribbon
+                          text="Plongée dans les eaux cristallines."
+                          className="bg-glacev2"
+                        ></Badge.Ribbon>
+                        <Badge.Ribbon
+                          text="Visite des petits ports méditerranéens."
+                          className="bg-glacev2"
+                        ></Badge.Ribbon>
                       </Space>
                     </div>
                     <div className="bg-glace contentinfocarddestination text-left text-base space-y-4 px-2">
@@ -1445,9 +1481,18 @@ export default function Home() {
                         size="middle"
                         style={{ width: "100%", gap: "2rem" }}
                       >
-                        <Badge.Ribbon text="Visites culturelles à Palerme et Cagliari." className="bg-glacev2"></Badge.Ribbon>
-                        <Badge.Ribbon text="Croisières autour des îles volcaniques." className="bg-glacev2"></Badge.Ribbon>
-                        <Badge.Ribbon text="Pêche en mer et exploration des grottes marines." className="bg-glacev2"></Badge.Ribbon>
+                        <Badge.Ribbon
+                          text="Visites culturelles à Palerme et Cagliari."
+                          className="bg-glacev2"
+                        ></Badge.Ribbon>
+                        <Badge.Ribbon
+                          text="Croisières autour des îles volcaniques."
+                          className="bg-glacev2"
+                        ></Badge.Ribbon>
+                        <Badge.Ribbon
+                          text="Pêche en mer et exploration des grottes marines."
+                          className="bg-glacev2"
+                        ></Badge.Ribbon>
                       </Space>
                     </div>
                     <div className="bg-glace contentinfocarddestination text-left text-base space-y-4 px-2">
@@ -1530,9 +1575,18 @@ export default function Home() {
                         size="middle"
                         style={{ width: "100%", gap: "2rem" }}
                       >
-                        <Badge.Ribbon text="Exploration des grottes marines." className="bg-glacev2"></Badge.Ribbon>
-                        <Badge.Ribbon text="Pêche en mer, sports nautiques." className="bg-glacev2"></Badge.Ribbon>
-                        <Badge.Ribbon text="Croisières et détente à bord d'un voilier." className="bg-glacev2"></Badge.Ribbon>
+                        <Badge.Ribbon
+                          text="Exploration des grottes marines."
+                          className="bg-glacev2"
+                        ></Badge.Ribbon>
+                        <Badge.Ribbon
+                          text="Pêche en mer, sports nautiques."
+                          className="bg-glacev2"
+                        ></Badge.Ribbon>
+                        <Badge.Ribbon
+                          text="Croisières et détente à bord d'un voilier."
+                          className="bg-glacev2"
+                        ></Badge.Ribbon>
                       </Space>
                     </div>
                     <div className="bg-glace contentinfocarddestination text-left text-base space-y-4 px-2">
@@ -1610,9 +1664,18 @@ export default function Home() {
                         size="middle"
                         style={{ width: "100%", gap: "2rem" }}
                       >
-                        <Badge.Ribbon text="Croisières autour de Santorin et Mykonos." className="bg-glacev2"></Badge.Ribbon>
-                        <Badge.Ribbon text="Découverte des sites historiques." className="bg-glacev2"></Badge.Ribbon>
-                        <Badge.Ribbon text="Plongée dans les eaux cristallines et baignades." className="bg-glacev2"></Badge.Ribbon>
+                        <Badge.Ribbon
+                          text="Croisières autour de Santorin et Mykonos."
+                          className="bg-glacev2"
+                        ></Badge.Ribbon>
+                        <Badge.Ribbon
+                          text="Découverte des sites historiques."
+                          className="bg-glacev2"
+                        ></Badge.Ribbon>
+                        <Badge.Ribbon
+                          text="Plongée dans les eaux cristallines et baignades."
+                          className="bg-glacev2"
+                        ></Badge.Ribbon>
                       </Space>
                     </div>
                     <div className="bg-glace contentinfocarddestination text-left text-base space-y-4 px-2">
@@ -1691,9 +1754,18 @@ export default function Home() {
                         size="middle"
                         style={{ width: "100%", gap: "2rem" }}
                       >
-                        <Badge.Ribbon text="Croisières autour de Split et Dubrovnik." className="bg-glacev2"></Badge.Ribbon>
-                        <Badge.Ribbon text="Découverte des îles de Hvar et Korčula." className="bg-glacev2"></Badge.Ribbon>
-                        <Badge.Ribbon text="Activités nautiques et plongée." className="bg-glacev2"></Badge.Ribbon>
+                        <Badge.Ribbon
+                          text="Croisières autour de Split et Dubrovnik."
+                          className="bg-glacev2"
+                        ></Badge.Ribbon>
+                        <Badge.Ribbon
+                          text="Découverte des îles de Hvar et Korčula."
+                          className="bg-glacev2"
+                        ></Badge.Ribbon>
+                        <Badge.Ribbon
+                          text="Activités nautiques et plongée."
+                          className="bg-glacev2"
+                        ></Badge.Ribbon>
                       </Space>
                     </div>
                     <div className="bg-glace contentinfocarddestination text-left text-base space-y-4 px-2">
@@ -1759,19 +1831,21 @@ export default function Home() {
           }}
         >
           <div className="flex flex-col justify-center items-center pb-20">
-            <div>
-              <h2 className="text-5xl font-medium mb-5">POURQUOI NOUS CHOISIR ?</h2>
+            <div className="px-[1rem] md:px-0 text-center">
+              <h2 className="text-5xl font-medium mb-5">
+                POURQUOI NOUS CHOISIR ?
+              </h2>
             </div>
             <div>
-              <p className="descriptionallsectionhome text-center">
+              <p className="w-[20rem] md:w-[35rem] text-center">
                 Des services conçus pour vous offrir une navigation sans stress
               </p>
             </div>
           </div>
 
           <div className="contentpourquoihome mx-auto max-w-6xl">
-            <div className="grid grid-cols-4 gap-4">
-              <div className="relative">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 px-[2rem] md:px-0">
+              <div className="relative mb-[5rem] md:mb-0">
                 <div className="absolute bg-glace flex justify-center items-center w-24 h-24 iconecardpourquoi rounded-full">
                   <BsCheckCircleFill className="w-12 h-12" />
                 </div>
@@ -1783,7 +1857,7 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              <div className="relative">
+              <div className="relative mb-[5rem] md:mb-0">
                 <div className="absolute bg-glace flex justify-center items-center w-24 h-24 iconecardpourquoi rounded-full">
                   <BsFillCreditCard2FrontFill className="w-12 h-12" />
                 </div>
@@ -1795,7 +1869,7 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              <div className="relative">
+              <div className="relative mb-[5rem] md:mb-0">
                 <div className="absolute bg-glace flex justify-center items-center w-24 h-24 iconecardpourquoi rounded-full">
                   <BsTelephoneFill className="w-12 h-12" />
                 </div>
@@ -1807,7 +1881,7 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              <div className="relative">
+              <div className="relative mb-[5rem] md:mb-0">
                 <div className="absolute bg-glace flex justify-center items-center w-24 h-24 iconecardpourquoi rounded-full">
                   <BsShieldFill className="w-12 h-12" />
                 </div>
@@ -1839,7 +1913,7 @@ export default function Home() {
               </h2>
             </div>
             <div>
-              <p className="descriptionallsectionhome text-center">
+              <p className="w-[20rem] md:w-[35rem] text-center">
                 Devenez un acteur de la communauté SailingLoc
               </p>
             </div>
@@ -1892,7 +1966,9 @@ export default function Home() {
         >
           <div className="flex flex-col justify-center items-center pb-24">
             <div>
-              <h2 className="text-5xl font-medium mb-5">FAITES NOUS CONFIANCE</h2>
+              <h2 className="px-[1rem] md:px-0 text-center">
+                FAITES NOUS CONFIANCE
+              </h2>
             </div>
             <div>
               <p className="descriptionallsectionhome text-center">
