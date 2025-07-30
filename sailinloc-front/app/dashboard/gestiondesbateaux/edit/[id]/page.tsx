@@ -174,13 +174,16 @@ export default function EditBateauForm() {
 
         const selectedFromAPI =
           safeParse(data.bateau.details?.optionsPayantes) || [];
-        const selectedLabels = selectedFromAPI.filter((label) =>
-          TAGS.some((tag) => tag.label === label)
-        );
+
+        const selectedLabels = selectedFromAPI
+          .filter((option) => TAGS.some((tag) => tag.label === option.label))
+          .map((option) => ({ id: option.id, label: option.label }));
+
         setSelectedTags(selectedLabels);
 
-        const tagInputsFromAPI =
-          safeParse(data.bateau.details?.inputsOptionsPayantes) || {};
+        const tagInputsFromAPI = Object.fromEntries(
+          selectedFromAPI.map((option: any) => [option.id, option.detail || ""])
+        );
         setTagInputs(tagInputsFromAPI);
 
         setFormData({
@@ -198,7 +201,7 @@ export default function EditBateauForm() {
           equipementsInclus: setSelectedValues(
             safeParse(data.bateau.details?.equipements) || []
           ),
-          tags: safeParse(data.bateau.details?.optionsPayantes),
+          tags: selectedLabels,
           tarifications: safeParse(data.details?.tarifications),
           anneeConstruction: data.bateau.details?.anneeConstruction,
           longueur: data.bateau.details?.longueur,
@@ -207,8 +210,12 @@ export default function EditBateauForm() {
           tirantEau: data.bateau.details?.tirantEau,
           nombreCouchages: data.bateau.details?.nombreCouchages,
           capaciteMax: data.bateau.details?.capaciteMax,
-          tirantEau: data.bateau.details?.tirantEau,
+          portArriver: data.bateau.details?.portArriver,
+          portdarriver: data.bateau.details?.portdarriver,
+          portdefault: data.bateau.portdefault,
+          zonesNavigation: data.bateau.details?.zonesNavigation,
         });
+
         setLoading(false);
       });
     }
@@ -577,6 +584,202 @@ export default function EditBateauForm() {
                             onChange={(newTags) => setSelectedTags(newTags)}
                           />
                         </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-lg font-bold mb-4">
+                        Ports & zones de navigation
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mb-4">
+                        <div className="grid gap-3">
+                          <Label htmlFor="port-attache">
+                            Port d'attache (ville, marina)
+                          </Label>
+                          <Input
+                            id="port-attache"
+                            placeholder="Ex : Marina de Cannes"
+                            value={formData?.portdefault || "non défini"}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                portdefault: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="grid gap-3">
+                          <Label htmlFor="zones-navigation">
+                            Zones de navigation autorisées ou recommandées
+                          </Label>
+                          <Input
+                            id="zones-navigation"
+                            placeholder="Ex : Côte d'Azur, Méditerranée"
+                            value={formData?.zonesNavigation || "non défini"}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                zonesNavigation: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-lg font-bold mb-4">
+                        Conditions de location
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mb-4">
+                        <div className="grid gap-3">
+                          <Label htmlFor="tarification">
+                            Tarif journalier, hebdomadaire, etc.
+                          </Label>
+                          <Select onValueChange={handleSelect}>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Choisissez une tarification" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectGroup>
+                                <SelectLabel>
+                                  Tarifications disponibles
+                                </SelectLabel>
+                                {fruits
+                                  .filter((f) => !selected.includes(f.id))
+                                  .map((option) => (
+                                    <SelectItem
+                                      key={option.id}
+                                      value={option.id}
+                                    >
+                                      {option.label}
+                                    </SelectItem>
+                                  ))}
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
+                          {selected.length > 0 && selected[0] !== "Aucun" && (
+                            <div className="space-y-4">
+                              {selected.map((id) => {
+                                const label = fruits.find(
+                                  (f) => f.id === id
+                                )?.label;
+                                return (
+                                  <div key={id} className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                      <span className="font-medium">
+                                        {label}
+                                      </span>
+                                      <button
+                                        onClick={() => handleRemove(id)}
+                                        className="text-red-500 text-sm"
+                                      >
+                                        Supprimer
+                                      </button>
+                                    </div>
+                                    <Input
+                                      placeholder={`Tarif pour : ${label}`}
+                                      value={inputs[id] || ""}
+                                      onChange={(e) =>
+                                        setInputs((prev) => ({
+                                          ...prev,
+                                          [id]: e.target.value,
+                                        }))
+                                      }
+                                    />
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                        <div className="grid gap-3">
+                          <Label htmlFor="depot-garantie">
+                            Dépôt de garantie
+                          </Label>
+                          <Input
+                            id="depot-garantie"
+                            placeholder="Ex : 1000 €"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mb-4">
+                        <div className="grid gap-3">
+                          <Label htmlFor="duree-location">
+                            Durée minimale / maximale de location
+                          </Label>
+                          <Input
+                            id="duree-location"
+                            placeholder="Ex : 2 jours / 1 mois"
+                          />
+                        </div>
+                        <div className="grid gap-3">
+                          <Label htmlFor="depot-garantie-2">
+                            Tarif du bateau
+                          </Label>
+                          <Input id="tarif-bateau" placeholder="Ex : 1000.00" />
+                        </div>
+                      </div>
+                      <Alert
+                        color="warning"
+                        title="Merci de fournir un lien d'adresse Google Maps valide, tel que : https://www.google.com/maps/place/... Cela nous permettra de localiser précisément le port de départ et d'arriver de votre bateau."
+                      />
+                      <div className="grid grid-cols-2 gap-2 mb-4 mt-2">
+                        <div className="grid gap-3">
+                          <Label htmlFor="port-depart">
+                            Port de départ (optionnel)
+                          </Label>
+                          <Input id="port-depart" placeholder="Port de Nice" />
+                        </div>
+                        <div className="grid gap-3">
+                          <Label htmlFor="depot-garantie-2">
+                            Port d'arriver (optionnel)
+                          </Label>
+                          <Input id="port-arriver" placeholder="Port de Nice" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 gap-2 mb-4">
+                        <div className="grid gap-3">
+                          <Label className="font-medium">
+                            Politique d'annulation
+                          </Label>
+                          <Select
+                            onValueChange={(value) => setSelectedPolicy(value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Sélectionner une politique" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {cancellationPolicies.map((policy) => (
+                                <SelectItem key={policy.id} value={policy.id}>
+                                  {policy.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {selectedPolicy === "custom" && (
+                            <div className="space-y-2">
+                              <Label className="font-medium">
+                                Description personnalisée{" "}
+                                <span className="text-muted-foreground">
+                                  (optionnel)
+                                </span>
+                              </Label>
+                              <Textarea
+                                placeholder="Ex : Remboursement à 50% si annulation 14 jours avant"
+                                value={customDescription}
+                                onChange={(e) =>
+                                  setCustomDescription(e.target.value)
+                                }
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 gap-3">
+                        <Checkbox>
+                          Le bateau peut être loué sans certificat / permis
+                        </Checkbox>
                       </div>
                     </div>
                   </div>
