@@ -9,6 +9,6 @@ app.listen(PORT, () => {
 if (require.main === module) {
   const PORT = process.env.PORT || 3001;
   app.listen(PORT, () => {
-    // console.log(`Serveur démarré sur http://localhost:${PORT}`);
+     console.log(`Serveur démarré sur http://localhost:${PORT}`);
   });
 }
