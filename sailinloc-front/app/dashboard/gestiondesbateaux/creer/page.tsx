@@ -33,11 +33,13 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { TagsSelector } from "@/components/ui/tags-selector";
-import { MultiSectionImageUpload } from "@/components/pages/ImageUploadsSections";
 import { CalendarDashboardBoat } from "@/components/pages/calendardashboardcreateboat";
 import { Alert } from "@heroui/alert";
 import { Checkbox } from "@heroui/checkbox";
 import { Button as ButtonHeroui, ButtonGroup } from "@heroui/button";
+import { useRouter } from "next/navigation";
+import { addToast, ToastProvider } from "@heroui/toast";
+import { Spinner } from "@heroui/spinner";
 
 const frameworks = [
   {
@@ -128,7 +130,15 @@ export default function GestionDesBateauxCreerPage() {
   const [inputs, setInputs] = useState<Record<string, string>>({});
   const [selectedPolicy, setSelectedPolicy] = useState<string>("");
   const [customDescription, setCustomDescription] = useState<string>("");
-  const [noCertificat, setNoCertificat] = useState(false);
+
+  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
+  const [tagInputs, setTagInputs] = useState<Record<string, string>>({});
+  const [unavailableDates, setUnavailableDates] = useState<Dayjs[]>([]);
+  const [placement, setPlacement] = React.useState("top-center");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [typeBateau, setTypeBateau] = useState<string>("");
+
+  const router = useRouter();
 
   const handleSelect = (value: string) => {
     if (value === "Aucun") {
@@ -153,8 +163,149 @@ export default function GestionDesBateauxCreerPage() {
     });
   };
 
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  const [selectedValues, setSelectedValues] = useState<string[]>([]);
+
+  const toggleValue = (val: string) => {
+    setSelectedValues((prev) =>
+      prev.includes(val) ? prev.filter((v) => v !== val) : [...prev, val]
+    );
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    const formData = {
+      nomBateau: (document.getElementById("nom-bateau") as HTMLInputElement)
+        .value,
+      typeBateau: typeBateau,
+      modeleMarque: (
+        document.getElementById("modele-marque") as HTMLInputElement
+      ).value,
+      anneeConstruction: (
+        document.getElementById("annee-construction") as HTMLInputElement
+      ).value,
+      longueur: (document.getElementById("longueur") as HTMLInputElement).value,
+      largeur: (document.getElementById("largeur") as HTMLInputElement).value,
+      tirantEau: (document.getElementById("tirant-eau") as HTMLInputElement)
+        .value,
+      capaciteMax: (document.getElementById("capacite-max") as HTMLInputElement)
+        .value,
+      nombreCabines: (
+        document.getElementById("nombre-cabines") as HTMLInputElement
+      ).value,
+      nombreCouchages: (
+        document.getElementById("nombre-couchages") as HTMLInputElement
+      ).value,
+      description: (
+        document.getElementById("description-detaillee") as HTMLTextAreaElement
+      ).value,
+      zonesnavigation: (
+        document.getElementById("zones-navigation") as HTMLInputElement
+      ).value,
+      portattache: (document.getElementById("port-attache") as HTMLInputElement)
+        .value,
+      portdepart: (document.getElementById("port-depart") as HTMLInputElement)
+        .value,
+      portarriver: (document.getElementById("port-arriver") as HTMLInputElement)
+        .value,
+
+      equipementsInclus: selectedValues,
+      tags: selectedTags.map((tag) => ({
+        id: tag.id,
+        label: tag.label,
+        detail: tagInputs[tag.id] || "",
+      })),
+
+      tarifications: selected.map((id) => ({
+        type: id,
+        montant: inputs[id] || "",
+      })),
+
+      politiqueAnnulation:
+        selectedPolicy === "custom"
+          ? customDescription
+          : cancellationPolicies.find((p) => p.id === selectedPolicy)?.label ||
+            "",
+
+      Depotgarantie: (
+        document.getElementById("depot-garantie") as HTMLInputElement
+      ).value,
+
+      DureeLocation: (
+        document.getElementById("duree-location") as HTMLInputElement
+      ).value,
+
+      tarifbateau: (document.getElementById("tarif-bateau") as HTMLInputElement)
+        .value,
+
+      // contact: {
+      //   nom: (document.getElementById("nom-proprietaire") as HTMLInputElement)
+      //     .value,
+      //   telephone: (
+      //     document.getElementById("telephone-proprietaire") as HTMLInputElement
+      //   ).value,
+      //   email: (
+      //     document.getElementById("email-proprietaire") as HTMLInputElement
+      //   ).value,
+      // },
+
+      indisponibilites: unavailableDates.map((d) => d.format("YYYY-MM-DD")),
+    };
+
+    console.log("📤 Données à envoyer :", formData);
+
+    try {
+      const response = await fetch("http://localhost:3001/api/bateaux", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const id = data.bateauId;
+        addToast({
+          title: "Succès",
+          description: "Bateau enregistré avec succès.",
+          color: "success",
+        });
+        router.push(`/dashboard/gestiondesbateaux/creer/finalisation/${id}`);
+        // ici tu peux reset le formulaire ou rediriger si besoin
+      } else {
+        const errorData = await response.json();
+        addToast({
+          title: "Erreur",
+          description: errorData.message || response.statusText,
+          color: "danger",
+        });
+      }
+    } catch (error) {
+      console.error("Erreur réseau ou serveur :", error);
+      addToast({
+        title: "Erreur réseau",
+        description: "Veuillez réessayer plus tard.",
+        color: "danger",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <>
+      <ToastProvider
+        placement={placement}
+        toastOffset={placement.includes("top") ? 60 : 0}
+        toastProps={{
+          radius: "lg",
+          color: "primary",
+          variant: "flat",
+          timeout: 9000,
+        }}
+      />
       <SidebarProvider>
         <AppSidebar variant="inset" />
         <SidebarInset>
@@ -162,478 +313,490 @@ export default function GestionDesBateauxCreerPage() {
           <div className="flex flex-1 flex-col">
             <div className="@container/main flex flex-1 flex-col gap-2">
               <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-                <div className="grid flex-1 auto-rows-min gap-6 px-4">
-                  <div>
-                    <div className="text-lg font-bold mb-4">
-                      Informations générales
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 mb-4">
-                      <div className="grid gap-3">
-                        <Label htmlFor="nom-bateau">Nom du bateau</Label>
-                        <Input
-                          id="nom-bateau"
-                          placeholder="Ex : L'Étoile de Mer"
-                        />
-                      </div>
-                      <div className="grid gap-3">
-                        <Label>Type de bateau à louer</Label>
-                        <Select>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sélectionnez un type de bateau" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectGroup>
-                              <SelectLabel>Type de bateau à louer</SelectLabel>
-                              <SelectItem value="voilier">Voilier</SelectItem>
-                              <SelectItem value="catamaran">
-                                Catamaran
-                              </SelectItem>
-                              <SelectItem value="yacht à voile">
-                                Yacht à voile
-                              </SelectItem>
-                              <SelectItem value="yacht à moteur">
-                                Yacht à moteur
-                              </SelectItem>
-                              <SelectItem value="bateau à moteur">
-                                Bateau à moteur
-                              </SelectItem>
-                              <SelectItem value="semi-rigide">
-                                Semi-rigide
-                              </SelectItem>
-                              <SelectItem value="Goelétte">Goélette</SelectItem>
-                              <SelectItem value="trimaran">Trimaran</SelectItem>
-                              <SelectItem value="péniche">Péniche</SelectItem>
-                              <SelectItem value="jet-ski">Jet-ski</SelectItem>
-                              <SelectItem value="houseboat (péniche habitable)">
-                                Houseboat (péniche habitable)
-                              </SelectItem>
-                              <SelectItem value="bateau de pêche">
-                                Bateau de pêche
-                              </SelectItem>
-                              <SelectItem value="vedette rapide">
-                                Vedette rapide
-                              </SelectItem>
-                              <SelectItem value="catamaran à moteur">
-                                Catamaran à moteur
-                              </SelectItem>
-                              <SelectItem value="dinghy / annexe">
-                                Dinghy / Annexe
-                              </SelectItem>
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 mb-4">
-                      <div className="grid gap-3">
-                        <Label htmlFor="modele-marque">Modèle / marque</Label>
-                        <Input
-                          id="modele-marque"
-                          placeholder="Ex : Beneteau Oceanis 38"
-                        />
-                      </div>
-                      <div className="grid gap-3">
-                        <Label htmlFor="annee-construction">
-                          Année de construction
-                        </Label>
-                        <Input
-                          id="annee-construction"
-                          placeholder="Ex : 2015"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 mb-4">
-                      <div className="grid gap-3">
-                        <Label htmlFor="longueur">Longueur (en mètres)</Label>
-                        <Input id="longueur" placeholder="Ex : 12.5m" />
-                      </div>
-                      <div className="grid gap-3">
-                        <Label htmlFor="largeur">Largeur (en mètres)</Label>
-                        <Input id="largeur" placeholder="Ex : 4.2m" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 mb-4">
-                      <div className="grid gap-3">
-                        <Label htmlFor="tirant-eau">
-                          Tirant d'eau (en mètres)
-                        </Label>
-                        <Input id="tirant-eau" placeholder="Ex : 1.8m" />
-                      </div>
-                      <div className="grid gap-3">
-                        <Label htmlFor="capacite-max">
-                          Capacité maximale (nombre de personnes)
-                        </Label>
-                        <Input id="capacite-max" placeholder="Ex : 8" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 mb-4">
-                      <div className="grid gap-3">
-                        <Label htmlFor="nombre-cabines">
-                          Nombre de cabines
-                        </Label>
-                        <Input id="nombre-cabines" placeholder="Ex : 3" />
-                      </div>
-                      <div className="grid gap-3">
-                        <Label htmlFor="nombre-couchages">
-                          Nombre de couchages
-                        </Label>
-                        <Input id="nombre-couchages" placeholder="Ex : 6" />
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-lg font-bold mb-4">
-                      Description & équipement
-                    </div>
-                    <div className="grid grid-cols-1 gap-2 mb-4">
-                      <div className="grid gap-3">
-                        <Label htmlFor="description-detaillee">
-                          Description détaillée
-                        </Label>
-                        <Textarea
-                          id="description-detaillee"
-                          placeholder="Ex : Bateau confortable, idéal pour la famille."
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 gap-1 mb-4">
-                      <div className="grid gap-3">
-                        <Label htmlFor="equipements-inclus">
-                          Équipements inclus
-                        </Label>
-                        <Popover open={open} onOpenChange={setOpen}>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              aria-expanded={open}
-                              className="w-[20rem] justify-between"
-                            >
-                              {value
-                                ? frameworks.find(
-                                    (framework) => framework.value === value
-                                  )?.label
-                                : "Sélectionner un équipement..."}
-                              <ChevronsUpDown className="opacity-50" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-[200px] p-0">
-                            <Command>
-                              <CommandInput
-                                placeholder="Rechercher un équipement..."
-                                className="h-9"
-                              />
-                              <CommandList>
-                                <CommandEmpty>
-                                  Aucun équipement trouvé.
-                                </CommandEmpty>
-                                <CommandGroup>
-                                  {frameworks.map((framework) => (
-                                    <CommandItem
-                                      key={framework.value}
-                                      value={framework.value}
-                                      onSelect={(currentValue) => {
-                                        setValue(
-                                          currentValue === value
-                                            ? ""
-                                            : currentValue
-                                        );
-                                        setOpen(false);
-                                      }}
-                                    >
-                                      {framework.label}
-                                      <Check
-                                        className={cn(
-                                          "ml-auto",
-                                          value === framework.value
-                                            ? "opacity-100"
-                                            : "opacity-0"
-                                        )}
-                                      />
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 gap-1 mb-4">
-                      <div className="grid gap-3">
-                        <TagsSelector tags={TAGS} />
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-lg font-bold mb-4">
-                      Ports & zones de navigation
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 mb-4">
-                      <div className="grid gap-3">
-                        <Label htmlFor="port-attache">
-                          Port d'attache (ville, marina)
-                        </Label>
-                        <Input
-                          id="port-attache"
-                          placeholder="Ex : Marina de Cannes"
-                        />
-                      </div>
-                      <div className="grid gap-3">
-                        <Label htmlFor="zones-navigation">
-                          Zones de navigation autorisées ou recommandées
-                        </Label>
-                        <Input
-                          id="zones-navigation"
-                          placeholder="Ex : Côte d'Azur, Méditerranée"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-lg font-bold mb-4">
-                      Conditions de location
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 mb-4">
-                      <div className="grid gap-3">
-                        <Label htmlFor="tarification">
-                          Tarif journalier, hebdomadaire, etc.
-                        </Label>
-                        <Select onValueChange={handleSelect}>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Choisissez une tarification" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectGroup>
-                              <SelectLabel>
-                                Tarifications disponibles
-                              </SelectLabel>
-                              {fruits
-                                .filter((f) => !selected.includes(f.id))
-                                .map((option) => (
-                                  <SelectItem key={option.id} value={option.id}>
-                                    {option.label}
-                                  </SelectItem>
-                                ))}
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                        {selected.length > 0 && selected[0] !== "Aucun" && (
-                          <div className="space-y-4">
-                            {selected.map((id) => {
-                              const label = fruits.find(
-                                (f) => f.id === id
-                              )?.label;
-                              return (
-                                <div key={id} className="space-y-2">
-                                  <div className="flex items-center justify-between">
-                                    <span className="font-medium">{label}</span>
-                                    <button
-                                      onClick={() => handleRemove(id)}
-                                      className="text-red-500 text-sm"
-                                    >
-                                      Supprimer
-                                    </button>
-                                  </div>
-                                  <Input
-                                    placeholder={`Tarif pour : ${label}`}
-                                    value={inputs[id] || ""}
-                                    onChange={(e) =>
-                                      setInputs((prev) => ({
-                                        ...prev,
-                                        [id]: e.target.value,
-                                      }))
-                                    }
-                                  />
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                      <div className="grid gap-3">
-                        <Label htmlFor="depot-garantie">
-                          Dépôt de garantie
-                        </Label>
-                        <Input id="depot-garantie" placeholder="Ex : 1000 €" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 mb-4">
-                      <div className="grid gap-3">
-                        <Label htmlFor="duree-location">
-                          Durée minimale / maximale de location
-                        </Label>
-                        <Input
-                          id="duree-location"
-                          placeholder="Ex : 2 jours / 1 mois"
-                        />
-                      </div>
-                      <div className="grid gap-3">
-                        <Label htmlFor="depot-garantie-2">
-                          Dépôt de garantie
-                        </Label>
-                        <Input
-                          id="depot-garantie-2"
-                          placeholder="Ex : 1000 €"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 gap-2 mb-4">
-                      <div className="grid gap-3">
-                        <Label className="font-medium">
-                          Politique d'annulation
-                        </Label>
-                        <Select
-                          onValueChange={(value) => setSelectedPolicy(value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner une politique" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {cancellationPolicies.map((policy) => (
-                              <SelectItem key={policy.id} value={policy.id}>
-                                {policy.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {selectedPolicy === "custom" && (
-                          <div className="space-y-2">
-                            <Label className="font-medium">
-                              Description personnalisée{" "}
-                              <span className="text-muted-foreground">
-                                (optionnel)
-                              </span>
-                            </Label>
-                            <Textarea
-                              placeholder="Ex : Remboursement à 50% si annulation 14 jours avant"
-                              value={customDescription}
-                              onChange={(e) =>
-                                setCustomDescription(e.target.value)
-                              }
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 gap-3">
-                      <Checkbox>
-                        Le bateau peut être loué sans certificat / permis
-                      </Checkbox>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-lg font-bold mb-4">
-                      Photos & médias
-                    </div>
+                <form onSubmit={handleSubmit}>
+                  <div className="grid flex-1 auto-rows-min gap-6 px-4">
                     <div>
-                      <MultiSectionImageUpload />
+                      <div className="text-lg font-bold mb-4">
+                        Informations générales
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mb-4">
+                        <div className="grid gap-3">
+                          <Label htmlFor="nom-bateau">Nom du bateau</Label>
+                          <Input
+                            id="nom-bateau"
+                            placeholder="Ex : L'Étoile de Mer"
+                          />
+                        </div>
+                        <div className="grid gap-3">
+                          <Label>Type de bateau à louer</Label>
+                          <Select
+                            value={typeBateau}
+                            onValueChange={setTypeBateau}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Sélectionnez un type de bateau" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectGroup>
+                                <SelectLabel>
+                                  Type de bateau à louer
+                                </SelectLabel>
+                                <SelectItem value="voilier">Voilier</SelectItem>
+                                <SelectItem value="catamaran">
+                                  Catamaran
+                                </SelectItem>
+                                <SelectItem value="yacht à voile">
+                                  Yacht à voile
+                                </SelectItem>
+                                <SelectItem value="yacht à moteur">
+                                  Yacht à moteur
+                                </SelectItem>
+                                <SelectItem value="bateau à moteur">
+                                  Bateau à moteur
+                                </SelectItem>
+                                <SelectItem value="semi-rigide">
+                                  Semi-rigide
+                                </SelectItem>
+                                <SelectItem value="Goelétte">
+                                  Goélette
+                                </SelectItem>
+                                <SelectItem value="trimaran">
+                                  Trimaran
+                                </SelectItem>
+                                <SelectItem value="péniche">Péniche</SelectItem>
+                                <SelectItem value="jet-ski">Jet-ski</SelectItem>
+                                <SelectItem value="houseboat (péniche habitable)">
+                                  Houseboat (péniche habitable)
+                                </SelectItem>
+                                <SelectItem value="bateau de pêche">
+                                  Bateau de pêche
+                                </SelectItem>
+                                <SelectItem value="vedette rapide">
+                                  Vedette rapide
+                                </SelectItem>
+                                <SelectItem value="catamaran à moteur">
+                                  Catamaran à moteur
+                                </SelectItem>
+                                <SelectItem value="dinghy / annexe">
+                                  Dinghy / Annexe
+                                </SelectItem>
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mb-4">
+                        <div className="grid gap-3">
+                          <Label htmlFor="modele-marque">Modèle / marque</Label>
+                          <Input
+                            id="modele-marque"
+                            placeholder="Ex : Beneteau Oceanis 38"
+                          />
+                        </div>
+                        <div className="grid gap-3">
+                          <Label htmlFor="annee-construction">
+                            Année de construction
+                          </Label>
+                          <Input
+                            id="annee-construction"
+                            placeholder="Ex : 2015"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mb-4">
+                        <div className="grid gap-3">
+                          <Label htmlFor="longueur">Longueur (en mètres)</Label>
+                          <Input id="longueur" placeholder="Ex : 12.5m" />
+                        </div>
+                        <div className="grid gap-3">
+                          <Label htmlFor="largeur">Largeur (en mètres)</Label>
+                          <Input id="largeur" placeholder="Ex : 4.2m" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mb-4">
+                        <div className="grid gap-3">
+                          <Label htmlFor="tirant-eau">
+                            Tirant d'eau (en mètres)
+                          </Label>
+                          <Input id="tirant-eau" placeholder="Ex : 1.8m" />
+                        </div>
+                        <div className="grid gap-3">
+                          <Label htmlFor="capacite-max">
+                            Capacité maximale (nombre de personnes)
+                          </Label>
+                          <Input id="capacite-max" placeholder="Ex : 8" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mb-4">
+                        <div className="grid gap-3">
+                          <Label htmlFor="nombre-cabines">
+                            Nombre de cabines
+                          </Label>
+                          <Input id="nombre-cabines" placeholder="Ex : 3" />
+                        </div>
+                        <div className="grid gap-3">
+                          <Label htmlFor="nombre-couchages">
+                            Nombre de couchages
+                          </Label>
+                          <Input id="nombre-couchages" placeholder="Ex : 6" />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <div className="text-lg font-bold mb-4">
-                      Indisponibilités
-                    </div>
-                    <div className="flex items-center justify-center w-full mb-4">
-                      <div className="flex flex-col w-full">
-                        <div className="w-full flex items-center my-3">
-                          <Alert
-                            color="warning"
-                            title="Sélectionnez les jours où votre bateau ne sera pas disponible à la location. Cliquez sur un jour pour l'ajouter comme indisponible; cliquez à nouveau pour l'enlever. Les dates sélectionnées apparaîtront ci-dessous."
+
+                    <div>
+                      <div className="text-lg font-bold mb-4">
+                        Description & équipement
+                      </div>
+                      <div className="grid grid-cols-1 gap-2 mb-4">
+                        <div className="grid gap-3">
+                          <Label htmlFor="description-detaillee">
+                            Description détaillée
+                          </Label>
+                          <Textarea
+                            id="description-detaillee"
+                            placeholder="Ex : Bateau confortable, idéal pour la famille."
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 gap-1 mb-4">
+                        <div className="grid gap-3">
+                          <Label htmlFor="equipements-inclus">
+                            Équipements inclus
+                          </Label>
+                          <Popover
+                            open={popoverOpen}
+                            onOpenChange={setPopoverOpen}
+                          >
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                aria-expanded={open}
+                                className="w-[20rem] justify-between"
+                              >
+                                {selectedValues.length > 0
+                                  ? frameworks
+                                      .filter((f) =>
+                                        selectedValues.includes(f.value)
+                                      )
+                                      .map((f) => f.label)
+                                      .join(", ")
+                                  : "Sélectionner des équipements..."}
+                                <ChevronsUpDown className="ml-2 opacity-50" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[20rem] p-0">
+                              <Command>
+                                <CommandInput placeholder="Rechercher un équipement..." />
+                                <CommandList>
+                                  <CommandEmpty>
+                                    Aucun équipement trouvé.
+                                  </CommandEmpty>
+                                  <CommandGroup>
+                                    {frameworks.map((framework) => (
+                                      <CommandItem
+                                        key={framework.value}
+                                        value={framework.value}
+                                        onSelect={() =>
+                                          toggleValue(framework.value)
+                                        }
+                                      >
+                                        {framework.label}
+                                        <Check
+                                          className={cn(
+                                            "ml-auto",
+                                            selectedValues.includes(
+                                              framework.value
+                                            )
+                                              ? "opacity-100"
+                                              : "opacity-0"
+                                          )}
+                                        />
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 gap-1 mb-4">
+                        <div className="grid gap-3">
+                          <TagsSelector
+                            selectedTags={selectedTags}
+                            setSelectedTags={setSelectedTags}
+                            inputs={tagInputs}
+                            setInputs={setTagInputs}
+                            tags={TAGS}
                           />
                         </div>
                       </div>
                     </div>
-                    <div>
-                      <CalendarDashboardBoat />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-lg font-bold mb-4">
-                      Informations administratives
-                    </div>
-                    <div className="grid gap-3 mb-4">
-                      <label>Attestation d'assurance (PDF ou image)</label>
-                      <input type="file" accept=".pdf, .jpg, .jpeg, .png" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="grid gap-3 mb-4">
-                        <label>Numéro de police d'assurance</label>
-                        <Input
-                          id="numero-police"
-                          type="text"
-                          placeholder="Ex : 12345678-AB"
-                        />
-                      </div>
 
-                      <div className="grid gap-3 mb-4">
-                        <label>Attestation d'assurance (PDF ou image)</label>
-                        <input type="file" accept=".pdf, .jpg, .jpeg, .png" />
-                      </div>
-                    </div>
                     <div>
-                      <div className="grid gap-3 mb-4">
-                        <label>Certificat de navigation (si applicable)</label>
-                        <input
-                          type="file"
-                          accept=".pdf, .jpg, .jpeg, .png"
-                          disabled={noCertificat}
-                          className={`mt-2 ${noCertificat ? "opacity-50 cursor-not-allowed" : ""}`}
-                        />
-                        <div className="flex items-center mt-2">
-                          <Checkbox
-                            checked={noCertificat}
-                            onChange={(e) => setNoCertificat(e.target.checked)}
-                          >
-                            Je ne possède pas de certificat
-                          </Checkbox>
+                      <div className="text-lg font-bold mb-4">
+                        Ports & zones de navigation
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mb-4">
+                        <div className="grid gap-3">
+                          <Label htmlFor="port-attache">
+                            Port d'attache (ville, marina)
+                          </Label>
+                          <Input
+                            id="port-attache"
+                            placeholder="Ex : Marina de Cannes"
+                          />
+                        </div>
+                        <div className="grid gap-3">
+                          <Label htmlFor="zones-navigation">
+                            Zones de navigation autorisées ou recommandées
+                          </Label>
+                          <Input
+                            id="zones-navigation"
+                            placeholder="Ex : Côte d'Azur, Méditerranée"
+                          />
                         </div>
                       </div>
                     </div>
-                  </div>
-                  <div>
-                    <div className="text-lg font-bold mb-4">
-                      Contact propriétaire
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="grid gap-3 mb-4">
-                        <label>Nom du propriétaire</label>
-                        <Input
-                          id="nom-proprietaire"
-                          type="text"
-                          placeholder="Ex : Jean Dupont"
-                          required
-                        />
-                      </div>
 
-                      <div className="grid gap-3 mb-4">
-                        <label>Téléphone</label>
-                        <Input
-                          id="telephone-proprietaire"
-                          type="tel"
-                          placeholder="+33 6 12 34 56 78"
-                          required
-                        />
-                      </div>
-                    </div>
                     <div>
-                      <div className="grid gap-3 mb-4">
-                        <label>Email</label>
-                        <Input
-                          id="email-proprietaire"
-                          type="email"
-                          placeholder="exemple@domaine.com"
-                          required
+                      <div className="text-lg font-bold mb-4">
+                        Conditions de location
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mb-4">
+                        <div className="grid gap-3">
+                          <Label htmlFor="tarification">
+                            Tarif journalier, hebdomadaire, etc.
+                          </Label>
+                          <Select onValueChange={handleSelect}>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Choisissez une tarification" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectGroup>
+                                <SelectLabel>
+                                  Tarifications disponibles
+                                </SelectLabel>
+                                {fruits
+                                  .filter((f) => !selected.includes(f.id))
+                                  .map((option) => (
+                                    <SelectItem
+                                      key={option.id}
+                                      value={option.id}
+                                    >
+                                      {option.label}
+                                    </SelectItem>
+                                  ))}
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
+                          {selected.length > 0 && selected[0] !== "Aucun" && (
+                            <div className="space-y-4">
+                              {selected.map((id) => {
+                                const label = fruits.find(
+                                  (f) => f.id === id
+                                )?.label;
+                                return (
+                                  <div key={id} className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                      <span className="font-medium">
+                                        {label}
+                                      </span>
+                                      <button
+                                        onClick={() => handleRemove(id)}
+                                        className="text-red-500 text-sm"
+                                      >
+                                        Supprimer
+                                      </button>
+                                    </div>
+                                    <Input
+                                      placeholder={`Tarif pour : ${label}`}
+                                      value={inputs[id] || ""}
+                                      onChange={(e) =>
+                                        setInputs((prev) => ({
+                                          ...prev,
+                                          [id]: e.target.value,
+                                        }))
+                                      }
+                                    />
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                        <div className="grid gap-3">
+                          <Label htmlFor="depot-garantie">
+                            Dépôt de garantie
+                          </Label>
+                          <Input
+                            id="depot-garantie"
+                            placeholder="Ex : 1000 €"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mb-4">
+                        <div className="grid gap-3">
+                          <Label htmlFor="duree-location">
+                            Durée minimale / maximale de location
+                          </Label>
+                          <Input
+                            id="duree-location"
+                            placeholder="Ex : 2 jours / 1 mois"
+                          />
+                        </div>
+                        <div className="grid gap-3">
+                          <Label htmlFor="depot-garantie-2">
+                            Tarif du bateau
+                          </Label>
+                          <Input id="tarif-bateau" placeholder="Ex : 1000.00" />
+                        </div>
+                      </div>
+                      <Alert
+                        color="warning"
+                        title="Merci de fournir un lien d'adresse Google Maps valide, tel que : https://www.google.com/maps/place/... Cela nous permettra de localiser précisément le port de départ et d'arriver de votre bateau."
+                      />
+                      <div className="grid grid-cols-2 gap-2 mb-4 mt-2">
+                        <div className="grid gap-3">
+                          <Label htmlFor="port-depart">
+                            Port de départ (optionnel)
+                          </Label>
+                          <Input id="port-depart" placeholder="Port de Nice" />
+                        </div>
+                        <div className="grid gap-3">
+                          <Label htmlFor="depot-garantie-2">
+                            Port d'arriver (optionnel)
+                          </Label>
+                          <Input id="port-arriver" placeholder="Port de Nice" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 gap-2 mb-4">
+                        <div className="grid gap-3">
+                          <Label className="font-medium">
+                            Politique d'annulation
+                          </Label>
+                          <Select
+                            onValueChange={(value) => setSelectedPolicy(value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Sélectionner une politique" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {cancellationPolicies.map((policy) => (
+                                <SelectItem key={policy.id} value={policy.id}>
+                                  {policy.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {selectedPolicy === "custom" && (
+                            <div className="space-y-2">
+                              <Label className="font-medium">
+                                Description personnalisée{" "}
+                                <span className="text-muted-foreground">
+                                  (optionnel)
+                                </span>
+                              </Label>
+                              <Textarea
+                                placeholder="Ex : Remboursement à 50% si annulation 14 jours avant"
+                                value={customDescription}
+                                onChange={(e) =>
+                                  setCustomDescription(e.target.value)
+                                }
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 gap-3">
+                        <Checkbox>
+                          Le bateau peut être loué sans certificat / permis
+                        </Checkbox>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-lg font-bold mb-4">
+                        Indisponibilités
+                      </div>
+                      <div className="flex items-center justify-center w-full mb-4">
+                        <div className="flex flex-col w-full">
+                          <div className="w-full flex items-center my-3">
+                            <Alert
+                              color="warning"
+                              title="Sélectionnez les jours où votre bateau ne sera pas disponible à la location. Cliquez sur un jour pour l'ajouter comme indisponible; cliquez à nouveau pour l'enlever. Les dates sélectionnées apparaîtront ci-dessous."
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <CalendarDashboardBoat
+                          unavailableDates={unavailableDates}
+                          setUnavailableDates={setUnavailableDates}
                         />
                       </div>
                     </div>
+
+                    {/* <div>
+                      <div className="text-lg font-bold mb-4">
+                        Contact propriétaire
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="grid gap-3 mb-4">
+                          <label>Nom du propriétaire</label>
+                          <Input
+                            id="nom-proprietaire"
+                            type="text"
+                            placeholder="Ex : Jean Dupont"
+                            required
+                          />
+                        </div>
+
+                        <div className="grid gap-3 mb-4">
+                          <label>Téléphone</label>
+                          <Input
+                            id="telephone-proprietaire"
+                            type="tel"
+                            placeholder="+33 6 12 34 56 78"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <div className="grid gap-3 mb-4">
+                          <label>Email</label>
+                          <Input
+                            id="email-proprietaire"
+                            type="email"
+                            placeholder="exemple@domaine.com"
+                            required
+                          />
+                        </div>
+                      </div>
+                    </div> */}
                   </div>
-                </div>
-                <div className="ml-4">
-                  <ButtonHeroui color="primary" variant="shadow">
-                    Enregistrer
-                  </ButtonHeroui>
-                </div>
+                  <div className="ml-4 mt-4">
+                    <button
+                      type="submit"
+                      className="bg-black text-white px-4 py-2 rounded shadow flex items-center justify-center gap-2"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Spinner
+                            classNames={{ label: "text-white" }}
+                            color="default"
+                            variant="simple"
+                          />
+                          <span>Soumission...</span>
+                        </>
+                      ) : (
+                        "Soumettre"
+                      )}
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>
