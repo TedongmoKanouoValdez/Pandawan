@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 
+
 // Activer CORS
 app.use(cors());
 
@@ -26,6 +27,11 @@ app.use("/api/payment", paymentRoutes);
 
 const emailRoutes = require('./src/routes/emailRoutes');
 app.use("/emails", emailRoutes);
+
+
+const contratRoutes = require('./src/routes/contratRoutes');
+
+app.use('/api/contrat', contratRoutes);
 
 
 // Démarrer le serveur
