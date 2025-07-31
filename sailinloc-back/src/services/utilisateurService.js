@@ -3,9 +3,10 @@ const { validateUtilisateurInput } = require('../validation/utilisateurValidatio
 const prisma = new PrismaClient();
 
 const bcrypt = require('bcrypt');
-const cloudinary = require('../utils/cloudinaryConfig');
+const {cloudinary, getPublicIdFromUrl } = require('../utils/cloudinaryConfig');
 
 const fs = require('fs-extra');
+const path = require('path');
 async function createUserWithPhoto(data, file) {
   const error = validateUtilisateurInput(data);
   if (error) {
@@ -51,7 +52,87 @@ async function createUserWithPhoto(data, file) {
   }
 }
 
+async function updateUserWithPhoto(id, data, file) {
+  const utilisateur = await prisma.utilisateur.findUnique({
+    where: { id: parseInt(id) },
+  });
+
+  if (!utilisateur) {
+    throw new Error('Utilisateur non trouvé');
+  }
+
+  if (file) {
+    if (utilisateur.photoProfil) {
+      const publicId = getPublicIdFromUrl(utilisateur.photoProfil);
+        //console.log("Tentative suppression image Cloudinary avec publicId:", publicId);
+      try {
+        await cloudinary.uploader.destroy(publicId);
+      } catch (err) {
+        console.error("Erreur suppression image Cloudinary:", err);
+        // Optionnel : gérer l'erreur ou continuer
+      }
+    }
+
+    try {
+      const result = await cloudinary.uploader.upload(file.path, {
+        folder: 'utilisateurs',
+      });
+      data.photoProfil = result.secure_url;
+    } catch (err) {
+      console.error("Erreur upload image Cloudinary:", err);
+      throw new Error("Impossible d'uploader la nouvelle photo");
+    }
+
+    // Supprime le fichier local temporaire
+    fs.unlinkSync(file.path);
+  }
+
+  const utilisateurMisAJour = await prisma.utilisateur.update({
+    where: { id: parseInt(id) },
+    data,
+  });
+
+  return utilisateurMisAJour;
+}
+
+async function deleteUserById(id) {
+  const utilisateur = await prisma.utilisateur.findUnique({
+    where: { id }
+  });
+
+  if (!utilisateur) {
+    throw new Error('Utilisateur non trouvé');
+  }
+
+  // Supprimer la photo Cloudinary si elle existe
+  if (utilisateur.photoProfil) {
+    const publicId = getPublicIdFromUrl(utilisateur.photoProfil);
+    await cloudinary.uploader.destroy(publicId);
+  }
+
+  // Supprimer l'utilisateur dans la base
+  await prisma.utilisateur.delete({
+    where: { id }
+  });
+}
+
+// affichage de tous les utilisateurs
+async function getAllUtilisateur() {
+  return await prisma.utilisateur.findMany();
+  console.log("Service getAllUtilisateurs lancé");
+}
+
+//affichage d'un utilisateur
+async function getUtilisateurById(id) {
+  return await prisma.utilisateur.findUnique({
+    where: { id: Number(id) },
+  });
+}
 
 module.exports = {
   createUserWithPhoto,
+  updateUserWithPhoto,
+  deleteUserById,
+  getAllUtilisateur,
+  getUtilisateurById
 };
