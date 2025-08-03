@@ -42,7 +42,7 @@ router.post("/", async (req, res) => {
         prix: data.tarifbateau || new Prisma.Decimal("0"),
         description: data.description,
         datesIndisponibles: JSON.stringify(data.indisponibilites || []),
-        proprietaireId: null, // À remplacer si besoin
+        proprietaireId: 1, // À remplacer si besoin
 
         details: {
           create: {
@@ -97,7 +97,6 @@ router.get("/:id", async (req, res) => {
       where: { id: parseInt(req.params.id) },
       include: { 
         details: true, 
-        medias: true,
         proprietaire: {
           include: {
             utilisateur: true,
