@@ -23,6 +23,13 @@ app.use('/upload-documents', uploadRoute);
 const userRoutes = require('./routes/utilisateurRoute');
 app.use('/api/utilisateur', userRoutes);
 
+const paymentRoutes = require('./src/routes/paymentRoutes'); 
+app.use("/api/payment", paymentRoutes);
+
+
+const emailRoutes = require('./src/routes/contactRoutes');
+app.use("/emails", emailRoutes);
+
 // Démarrer le serveur une seule fois
 const PORT = process.env.PORT || 3001;
 if (require.main === module) {
