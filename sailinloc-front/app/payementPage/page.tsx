@@ -48,6 +48,7 @@ export default function Home() {
             amount: convertToSubcurrency(amount),
             currency: "eur",
           }}
+          
         >
           <CheckoutPage amount={amount} />
         </Elements>

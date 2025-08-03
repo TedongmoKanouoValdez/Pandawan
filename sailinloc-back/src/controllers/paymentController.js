@@ -9,6 +9,8 @@ async function handleCreatePaymentIntent(req, res) {
     console.error("Erreur create-payment-intent:", error.message);
     res.status(500).json({ error: "Erreur lors de la création du paiement." });
   }
+
+  
 }
 
 module.exports = { handleCreatePaymentIntent };

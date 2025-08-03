@@ -6,6 +6,7 @@ async function createPaymentIntent(amount) {
   if (!amount || isNaN(amount)) {
     throw new Error("Montant invalide ou manquant.");
   }
+  
 
   const paymentIntent = await stripe.paymentIntents.create({
     amount,

@@ -7,6 +7,7 @@ export async function handleSendEmail(req, res) {
     if (!email) {
       return res.status(400).json({ error: "L'e-mail est requis." });
     }
+    
 
     await sendEmail(email, link, message); // délégué au service
     res.json({ success: true });

@@ -1,19 +1,20 @@
-import nodemailer from "nodemailer";
+const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  service: 'gmail',
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
 });
 
-export async function sendEmail(userEmail, link, userMessage) {
+
+async function sendEmail(userEmail, link, userMessage) {
   // 📩 Envoi à l’admin
   await transporter.sendMail({
     from: process.env.EMAIL_USER,
     to: process.env.EMAIL_USER,
-    subject: "Nouveau message de contact",
+    subject: 'Nouveau message de contact',
     html: `
       <p><strong>De :</strong> ${userEmail}</p>
       ${link ? `<p><strong>Lien :</strong> <a href="${link}">${link}</a></p>` : ""}
@@ -25,7 +26,7 @@ export async function sendEmail(userEmail, link, userMessage) {
   await transporter.sendMail({
     from: `SailingLoc <${process.env.EMAIL_USER}>`,
     to: userEmail,
-    subject: "Confirmation de réception",
+    subject: 'Confirmation de réception',
     html: `
       <p>Bonjour,</p>
       <p>Nous avons bien reçu votre message.</p>
@@ -34,3 +35,7 @@ export async function sendEmail(userEmail, link, userMessage) {
     `,
   });
 }
+
+module.exports = {
+  sendEmail,
+};

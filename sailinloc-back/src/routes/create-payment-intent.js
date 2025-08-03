@@ -11,6 +11,7 @@ router.post('/create-payment-intent', async (req, res) => {
     if (!amount || isNaN(amount)) {
       return res.status(400).json({ error: "Montant invalide ou manquant." });
     }
+    
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amount, // en centimes

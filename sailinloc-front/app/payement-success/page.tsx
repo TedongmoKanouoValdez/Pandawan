@@ -18,6 +18,7 @@ export default function PaymentSuccess({
           <div className="mt-6 bg-white text-purple-600 rounded-full px-6 py-3 text-2xl font-bold shadow-lg">
             {Number(amount).toFixed(2)} €
           </div>
+          
 
           <p className="mt-4 text-sm text-white/60">
             Un email de confirmation vous a été envoyé.
