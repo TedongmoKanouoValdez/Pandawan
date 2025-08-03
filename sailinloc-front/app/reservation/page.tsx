@@ -19,6 +19,7 @@ export default function ReservationPage() {
   const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
   const router = useRouter();
 
+  
   const extrasPrices: Record<string, number> = {
     table: 50,
     dg: 120,

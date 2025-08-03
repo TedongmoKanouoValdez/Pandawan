@@ -6,11 +6,13 @@ import {
   useElements,
   PaymentElement,
 } from "@stripe/react-stripe-js";
+import { useRouter } from "next/navigation"; // <- import router
 import convertToSubcurrency from "@/lib/convertToSubcurrency";
 
 const CheckoutPage = ({ amount }: { amount: number }) => {
   const stripe = useStripe();
   const elements = useElements();
+  const router = useRouter(); // <- instanciation
   const [errorMessage, setErrorMessage] = useState<string>();
   const [clientSecret, setClientSecret] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,6 +32,7 @@ const CheckoutPage = ({ amount }: { amount: number }) => {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLoading(true);
+    setErrorMessage(undefined);
 
     if (!stripe || !elements) return;
 
@@ -40,29 +43,32 @@ const CheckoutPage = ({ amount }: { amount: number }) => {
       return;
     }
 
-    const { error } = await stripe.confirmPayment({
+    const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
       clientSecret,
       confirmParams: {
         return_url: `http://localhost:3000/payement-success?amount=${amount}`,
       },
+      redirect: "if_required", // évite redirection si tout peut être géré ici
     });
 
-    if (error) setErrorMessage(error.message);
+    if (error) {
+      setErrorMessage(error.message);
+    } else if (paymentIntent?.status === "succeeded") {
+      router.push("/contrat-location?bookingId=123"); // navigation ici
+    }
+
     setLoading(false);
   };
 
-  if (!clientSecret || !stripe || !elements) {
+  if (!clientSecret) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
-
-  stripe.confirmCardPayment(clientSecret).then(() => {
-  router.push("/contrat-location?bookingId=123"); // passe un identifiant
-});
+  
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-8">
@@ -79,13 +85,14 @@ const CheckoutPage = ({ amount }: { amount: number }) => {
           </p>
         </div>
 
-        {clientSecret && <PaymentElement id="stripe-payment-element" />}
+        <PaymentElement id="stripe-payment-element" />
 
         {errorMessage && (
           <div className="text-sm text-red-600 text-center">{errorMessage}</div>
         )}
 
         <button
+          type="submit"
           disabled={!stripe || loading}
           className={`w-full py-3 px-6 rounded-xl text-white font-semibold transition duration-200 ${
             loading || !stripe
