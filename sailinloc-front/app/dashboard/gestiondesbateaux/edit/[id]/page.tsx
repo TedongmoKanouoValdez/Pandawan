@@ -41,6 +41,10 @@ import { Button as ButtonHeroui, ButtonGroup } from "@heroui/button";
 import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 import { useParams } from "next/navigation";
+import dayjs from "dayjs";
+import { Spinner } from "@heroui/spinner";
+import { Divider } from "antd";
+import { Image } from "@heroui/image";
 
 const frameworks = [
   {
@@ -136,6 +140,14 @@ export default function EditBateauForm() {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [tagInputs, setTagInputs] = useState<Record<string, boolean>>({});
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedTarif, setSelectedTarif] = useState<string[]>([]);
+  const [inputsTarif, setInputsTarif] = useState<Record<string, string>>({});
+  const [unavailableDates, setUnavailableDates] = useState<Dayjs[]>([]);
+  const [coverImages, setCoverImages] = useState([]);
+  const [galleryImages, setGalleryImages] = useState([]);
+  const [documentPdfs, setDocumentPdfs] = useState([]);
+  const [ImagesNeedUpdate, setImagesNeedUpdate] = useState(false);
+  const [numeroPolice, setNumeroPolice] = useState("");
 
   const router = useRouter();
   const params = useParams();
@@ -186,6 +198,72 @@ export default function EditBateauForm() {
         );
         setTagInputs(tagInputsFromAPI);
 
+        const tarificationsFromAPI =
+          safeParse(data.bateau.details?.tarifications) || [];
+
+        const selectedTypes = tarificationsFromAPI.map((t: any) => t.type);
+        const inputsObj = Object.fromEntries(
+          tarificationsFromAPI.map((t: any) => [t.type, t.montant])
+        );
+
+        setSelectedTarif(selectedTypes);
+        setInputsTarif(inputsObj);
+
+        const policyFromAPI = data.bateau.details?.politiqueAnnulation || "";
+        const foundPolicy = cancellationPolicies.find(
+          (p) => p.label === policyFromAPI
+        );
+
+        if (foundPolicy) {
+          setSelectedPolicy(foundPolicy.id); // ID d’une option existante
+        } else if (policyFromAPI) {
+          setSelectedPolicy("custom");
+          setCustomDescription(policyFromAPI); // Valeur personnalisée
+        }
+
+        setFormData({
+          ...defaultFormData,
+          ...data,
+          // ... autres champs ...
+          politiqueAnnulation: policyFromAPI,
+        });
+
+        if (data.bateau?.datesIndisponibles) {
+          try {
+            const parsed = JSON.parse(data.bateau.datesIndisponibles);
+            const converted = Array.isArray(parsed)
+              ? parsed.map((date: string) => dayjs(date))
+              : [];
+            setUnavailableDates(converted);
+          } catch (e) {
+            console.error("Erreur parsing datesIndisponibles :", e);
+            setUnavailableDates([]);
+          }
+        } else {
+          setUnavailableDates([]);
+        }
+
+        const allMedias = data.bateau?.medias || [];
+
+        // 1. Récupérer uniquement les images (type COVER ou GALLERIE)
+        const images = allMedias.filter(
+          (media) => media.type === "COVER" || media.type === "GALLERIE"
+        );
+
+        // 2. Séparer les 4 premières images (affichage principal)
+        const firstFourImages = images.slice(0, 4);
+
+        // 3. Le reste des images (affichage secondaire / galerie)
+        const otherImages = images.slice(4);
+
+        // 4. Séparer les PDFs (type ATTESTATION_ASSURANCE, CERTIFICAT_NAVIGATION, etc.)
+        const pdfs = allMedias.filter((media) => media.url.endsWith(".pdf"));
+
+        // Tu peux maintenant stocker ça dans des états séparés si tu veux :
+        setCoverImages(firstFourImages);
+        setGalleryImages(otherImages);
+        setDocumentPdfs(pdfs);
+
         setFormData({
           ...defaultFormData,
           ...data,
@@ -210,10 +288,14 @@ export default function EditBateauForm() {
           tirantEau: data.bateau.details?.tirantEau,
           nombreCouchages: data.bateau.details?.nombreCouchages,
           capaciteMax: data.bateau.details?.capaciteMax,
-          portArriver: data.bateau.details?.portArriver,
           portdarriver: data.bateau.details?.portdarriver,
+          portdedepart: data.bateau.details?.portdedepart,
           portdefault: data.bateau.portdefault,
           zonesNavigation: data.bateau.details?.zonesNavigation,
+          depotgarantie: data.bateau.details?.depotgarantie,
+          politiqueAnnulation: data.bateau.details?.politiqueAnnulation,
+          dureeLocation: data.bateau.details?.dureeLocation,
+          locationSansPermis: data.bateau.details?.locationSansPermis,
         });
 
         setLoading(false);
@@ -228,37 +310,186 @@ export default function EditBateauForm() {
   };
 
   const handleSelect = (value: string) => {
-    if (value === "Aucun") {
-      setSelected(["Aucun"]);
-      setInputs({});
-      return;
-    }
-
-    if (selected.includes("Aucun")) {
-      setSelected([value]);
-    } else if (!selected.includes(value)) {
-      setSelected([...selected, value]);
-    }
+    setSelectedTarif((prev) => [...prev, value]);
   };
 
-  const handleRemove = (value: string) => {
-    setSelected((prev) => prev.filter((v) => v !== value));
-    setInputs((prev) => {
-      const newInputs = { ...prev };
-      delete newInputs[value];
-      return newInputs;
+  const handleRemove = (id: string) => {
+    setSelectedTarif((prev) => prev.filter((item) => item !== id));
+    setInputsTarif((prev) => {
+      const copy = { ...prev };
+      delete copy[id];
+      return copy;
     });
   };
 
-  const handleSubmit = async (e: any) => {
+  const handleReplaceImage = (
+    index: number,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const newUrl = URL.createObjectURL(file);
+
+    // Mettre à jour l’image dans l’état
+    const updatedImages = [...coverImages];
+    updatedImages[index] = {
+      ...updatedImages[index],
+      url: newUrl,
+      file: file, // Stocke le fichier pour upload plus tard
+    };
+
+    setCoverImages(updatedImages);
+    setImagesNeedUpdate(false); // Considère que les images ont été modifiées
+  };
+
+  const handleReplacePDF = (
+    index: number,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const updatedPDFs = [...pdfFiles];
+    updatedPDFs[index] = {
+      ...updatedPDFs[index],
+      file: file,
+      url: URL.createObjectURL(file), // Pour prévisualisation
+      nom: file.name,
+    };
+
+    setDocumentPdfs(updatedPDFs);
+  };
+
+  const handleAddImage = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    type: "cover" | "gallery"
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const newImage = {
+      id: Date.now(),
+      file,
+      url: URL.createObjectURL(file),
+      titre: file.name,
+    };
+
+    if (type === "cover" && coverImages.length < 4) {
+      setCoverImages((prev) => [...prev, newImage]);
+    } else if (type === "gallery" && galleryImages.length < 5) {
+      setGalleryImages((prev) => [...prev, newImage]);
+    }
+
+    e.target.value = ""; // Reset input
+  };
+
+  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    try {
-      await axios.put(`/api/bateaux/${bateauId}`, formData);
-      alert("Bateau modifié avec succès !");
-      router.push("/bateaux");
-    } catch (error) {
-      console.error(error);
-      alert("Erreur lors de la modification");
+
+    const form = new FormData();
+
+    // Politique d’annulation
+    const annulation =
+      selectedPolicy === "custom"
+        ? customDescription
+        : cancellationPolicies.find((p) => p.id === selectedPolicy)?.label ||
+          "";
+
+    // Options payantes
+    const optionsPayantes = selectedTags.map((tag) => ({
+      id: tag.id,
+      label: tag.label,
+      detail: tagInputs[tag.id] || "",
+    }));
+
+    // Tarifications
+    const tarifications = selectedTarif.map((id) => ({
+      type: id,
+      montant: inputsTarif[id] || "",
+    }));
+
+    // Données principales à enregistrer
+    const body = {
+      nom: formData.nomBateau,
+      modele: formData.modeleMarque,
+      description: formData.description,
+      prix: formData.tarifbateau,
+      port: formData.portattache,
+      portdefault: formData.portdefault,
+      typeBateau: formData.typeBateau,
+      disponibilite: formData.disponibilite,
+      datesIndisponibles: JSON.stringify(
+        unavailableDates.map((d) => d.toISOString())
+      ),
+      details: {
+        anneeConstruction: formData.anneeConstruction,
+        longueur: formData.longueur,
+        largeur: formData.largeur,
+        nombreCabines: formData.nombreCabines,
+        tirantEau: formData.tirantEau,
+        nombreCouchages: formData.nombreCouchages,
+        capaciteMax: formData.capaciteMax,
+        portdedepart: formData.portdedepart,
+        portdarriver: formData.portdarriver,
+        depotgarantie: formData.depotgarantie,
+        politiqueAnnulation: annulation,
+        dureeLocation: formData.dureeLocation,
+        locationSansPermis: formData.locationSansPermis,
+        equipements: JSON.stringify(selectedValues),
+        optionsPayantes: JSON.stringify(optionsPayantes),
+        tarifications: JSON.stringify(tarifications),
+        zonesNavigation: formData.zonesNavigation,
+      },
+    };
+
+    form.append("data", JSON.stringify(body)); // Les autres données dans FormData
+    console.log("📦 Contenu FormData :");
+    for (const pair of form.entries()) {
+      console.log(pair[0], pair[1]);
+    }
+    // try {
+    //   await axios.put(`http://localhost:3001/api/bateaux/${bateauId}`, form, {
+    //     headers: {
+    //       "Content-Type": "multipart/form-data",
+    //     },
+    //   });
+    //   alert("Modifications enregistrées !");
+    //   router.push("/dashboard/gestiondesbateaux");
+    // } catch (err) {
+    //   console.error("Erreur lors de la sauvegarde :", err);
+    //   alert("Erreur lors de l'enregistrement");
+    // }
+  };
+
+  const handleSaveMedia = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = new FormData();
+
+    coverImages.forEach((img) => {
+      if (img.file) form.append("coverImages", img.file);
+    });
+
+    galleryImages.forEach((img) => {
+      if (img.file) form.append("galleryImages", img.file);
+    });
+
+    documentPdfs.forEach((pdf) => {
+      if (pdf.file) form.append("documentPdfs", pdf.file);
+    });
+
+    form.append("numeroPolice", numeroPolice);
+
+    const body = {
+      numeroPolice,
+      // autreChamp,
+      // etc: valeur,
+    };
+
+    form.append("data", JSON.stringify(body));
+
+    for (const pair of form.entries()) {
+      console.log(pair[0], pair[1]);
     }
   };
 
@@ -274,8 +505,17 @@ export default function EditBateauForm() {
           <SiteHeader />
           <div className="flex flex-1 flex-col">
             <div className="@container/main flex flex-1 flex-col gap-2">
-              <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-                <form onSubmit={handleSubmit}>
+              <div
+                className="m-[3rem] p-[1rem]"
+                style={{
+                  boxShadow:
+                    "rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px",
+                  borderRadius: "10px",
+                }}
+              >
+                <Divider orientation="left">Détails du bateau</Divider>
+                <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+                  {/* <form> */}
                   <div className="grid flex-1 auto-rows-min gap-6 px-4">
                     <div>
                       <div className="text-lg font-bold mb-4">
@@ -646,7 +886,7 @@ export default function EditBateauForm() {
                                   Tarifications disponibles
                                 </SelectLabel>
                                 {fruits
-                                  .filter((f) => !selected.includes(f.id))
+                                  .filter((f) => !selectedTarif.includes(f.id))
                                   .map((option) => (
                                     <SelectItem
                                       key={option.id}
@@ -658,40 +898,41 @@ export default function EditBateauForm() {
                               </SelectGroup>
                             </SelectContent>
                           </Select>
-                          {selected.length > 0 && selected[0] !== "Aucun" && (
-                            <div className="space-y-4">
-                              {selected.map((id) => {
-                                const label = fruits.find(
-                                  (f) => f.id === id
-                                )?.label;
-                                return (
-                                  <div key={id} className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                      <span className="font-medium">
-                                        {label}
-                                      </span>
-                                      <button
-                                        onClick={() => handleRemove(id)}
-                                        className="text-red-500 text-sm"
-                                      >
-                                        Supprimer
-                                      </button>
+                          {selectedTarif.length > 0 &&
+                            selectedTarif[0] !== "Aucun" && (
+                              <div className="space-y-4">
+                                {selectedTarif.map((id) => {
+                                  const label = fruits.find(
+                                    (f) => f.id === id
+                                  )?.label;
+                                  return (
+                                    <div key={id} className="space-y-2">
+                                      <div className="flex items-center justify-between">
+                                        <span className="font-medium">
+                                          {label}
+                                        </span>
+                                        <button
+                                          onClick={() => handleRemove(id)}
+                                          className="text-red-500 text-sm"
+                                        >
+                                          Supprimer
+                                        </button>
+                                      </div>
+                                      <Input
+                                        placeholder={`Tarif pour : ${label}`}
+                                        value={inputsTarif[id] ?? ""}
+                                        onChange={(e) =>
+                                          setInputsTarif((prev) => ({
+                                            ...prev,
+                                            [id]: e.target.value,
+                                          }))
+                                        }
+                                      />
                                     </div>
-                                    <Input
-                                      placeholder={`Tarif pour : ${label}`}
-                                      value={inputs[id] || ""}
-                                      onChange={(e) =>
-                                        setInputs((prev) => ({
-                                          ...prev,
-                                          [id]: e.target.value,
-                                        }))
-                                      }
-                                    />
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
+                                  );
+                                })}
+                              </div>
+                            )}
                         </div>
                         <div className="grid gap-3">
                           <Label htmlFor="depot-garantie">
@@ -700,6 +941,13 @@ export default function EditBateauForm() {
                           <Input
                             id="depot-garantie"
                             placeholder="Ex : 1000 €"
+                            value={formData?.depotgarantie || "non défini"}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                depotgarantie: e.target.value,
+                              })
+                            }
                           />
                         </div>
                       </div>
@@ -711,13 +959,30 @@ export default function EditBateauForm() {
                           <Input
                             id="duree-location"
                             placeholder="Ex : 2 jours / 1 mois"
+                            value={formData?.dureeLocation || "non défini"}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                dureeLocation: e.target.value,
+                              })
+                            }
                           />
                         </div>
                         <div className="grid gap-3">
                           <Label htmlFor="depot-garantie-2">
                             Tarif du bateau
                           </Label>
-                          <Input id="tarif-bateau" placeholder="Ex : 1000.00" />
+                          <Input
+                            id="tarif-bateau"
+                            placeholder="Ex : 1000.00"
+                            value={formData?.tarifbateau || "non défini"}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                tarifbateau: e.target.value,
+                              })
+                            }
+                          />
                         </div>
                       </div>
                       <Alert
@@ -729,13 +994,33 @@ export default function EditBateauForm() {
                           <Label htmlFor="port-depart">
                             Port de départ (optionnel)
                           </Label>
-                          <Input id="port-depart" placeholder="Port de Nice" />
+                          <Input
+                            id="port-depart"
+                            placeholder="Port de Nice"
+                            value={formData?.portdedepart || "non défini"}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                portdedepart: e.target.value,
+                              })
+                            }
+                          />
                         </div>
                         <div className="grid gap-3">
                           <Label htmlFor="depot-garantie-2">
                             Port d'arriver (optionnel)
                           </Label>
-                          <Input id="port-arriver" placeholder="Port de Nice" />
+                          <Input
+                            id="port-arriver"
+                            placeholder="Port de Nice"
+                            value={formData?.portdarriver || "non défini"}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                portdarriver: e.target.value,
+                              })
+                            }
+                          />
                         </div>
                       </div>
                       <div className="grid grid-cols-1 gap-2 mb-4">
@@ -744,6 +1029,7 @@ export default function EditBateauForm() {
                             Politique d'annulation
                           </Label>
                           <Select
+                            value={selectedPolicy}
                             onValueChange={(value) => setSelectedPolicy(value)}
                           >
                             <SelectTrigger>
@@ -777,13 +1063,221 @@ export default function EditBateauForm() {
                         </div>
                       </div>
                       <div className="grid grid-cols-1 gap-3">
-                        <Checkbox>
+                        <Checkbox
+                          defaultChecked={formData?.locationSansPermis || false}
+                        >
                           Le bateau peut être loué sans certificat / permis
                         </Checkbox>
                       </div>
                     </div>
+
+                    <div>
+                      <div className="text-lg font-bold mb-4">
+                        Indisponibilités
+                      </div>
+                      <div className="flex items-center justify-center w-full mb-4">
+                        <div className="flex flex-col w-full">
+                          <div className="w-full flex items-center my-3">
+                            <Alert
+                              color="warning"
+                              title="Sélectionnez les jours où votre bateau ne sera pas disponible à la location. Cliquez sur un jour pour l'ajouter comme indisponible; cliquez à nouveau pour l'enlever. Les dates sélectionnées apparaîtront ci-dessous."
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <CalendarDashboardBoat
+                          unavailableDates={unavailableDates}
+                          setUnavailableDates={setUnavailableDates}
+                        />
+                      </div>
+                    </div>
                   </div>
-                </form>
+
+                  <div className="ml-4 mt-4">
+                    <button
+                      // type="submit"
+                      onClick={handleSave}
+                      className="bg-black text-white px-4 py-2 rounded shadow flex items-center justify-center gap-2"
+                      // disabled={isSubmitting}
+                    >
+                      {/* {isSubmitting ? (
+                        <>
+                          <Spinner
+                            classNames={{ label: "text-white" }}
+                            color="default"
+                            size="sm"
+                            variant="simple"
+                          />
+                          <span>Soumission...</span>
+                        </>
+                      ) : ( */}
+                      "Soumettre"
+                      {/* )} */}
+                    </button>
+                  </div>
+                  {/* </form> */}
+                </div>
+              </div>
+
+              <div
+                className="m-[3rem] p-[1rem] mt-0"
+                style={{
+                  boxShadow:
+                    "rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px",
+                  borderRadius: "10px",
+                }}
+              >
+                <Divider orientation="left">Détails du bateau</Divider>
+                <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+                  <form onSubmit={handleSaveMedia}>
+                    <div className="flex flex-row space-x-2">
+                      <div className="w-full max-w-2xl rounded-xl border p-4">
+                        <div className="mt-4 grid grid-cols-2 gap-4">
+                          {coverImages.map((img, index) => (
+                            <div key={img.id} className="relative">
+                              <Image
+                                src={img.url}
+                                alt={img.titre}
+                                width={300}
+                                className="h-[14rem] object-cover"
+                              />
+                              <label className="mt-2 block text-center">
+                                <span className="text-sm text-blue-600 cursor-pointer underline">
+                                  Remplacer l'image
+                                </span>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => handleReplaceImage(index, e)}
+                                />
+                              </label>
+                            </div>
+                          ))}
+                          {coverImages.length < 4 && (
+                            <div className="col-span-2 text-center">
+                              <label className="cursor-pointer text-blue-500 underline">
+                                + Ajouter une image
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => handleAddImage(e, "cover")}
+                                />
+                              </label>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="w-full max-w-2xl rounded-xl border p-4">
+                        <div className="mt-4 grid grid-cols-2 gap-4">
+                          {galleryImages.map((img, index) => (
+                            <div key={img.id} className="relative">
+                              <Image
+                                src={img.url}
+                                alt={img.titre}
+                                width={300}
+                                className="h-[14rem] object-cover"
+                              />
+                              <label className="mt-2 block text-center">
+                                <span className="text-sm text-blue-600 cursor-pointer underline">
+                                  Remplacer l'image
+                                </span>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => handleReplaceImage(index, e)}
+                                />
+                              </label>
+                            </div>
+                          ))}
+                          {galleryImages.length < 5 && (
+                            <div className="col-span-2 text-center">
+                              <label className="cursor-pointer text-blue-500 underline">
+                                + Ajouter une image
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => handleAddImage(e, "gallery")}
+                                />
+                              </label>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 mt-6">
+                      {documentPdfs.map((pdf, index) => (
+                        <div
+                          key={pdf.id}
+                          className="flex items-center justify-between border p-3 rounded-lg"
+                        >
+                          <div>
+                            <p className="font-medium text-sm">
+                              {pdf.type || `Document ${index + 1}`}
+                            </p>
+                            <a
+                              href={pdf.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 text-sm underline"
+                            >
+                              Voir le PDF
+                            </a>
+                          </div>
+                          <label className="text-sm text-blue-600 underline cursor-pointer">
+                            Remplacer
+                            <input
+                              type="file"
+                              accept="application/pdf"
+                              className="hidden"
+                              onChange={(e) => handleReplacePDF(index, e)}
+                            />
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="grid gap-3 mb-4">
+                        <label>Numéro de police d'assurance</label>
+                        <Input
+                          id="numero-police"
+                          type="text"
+                          onChange={(e) => setNumeroPolice(e.target.value)}
+                          placeholder="Ex : 12345678-AB"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="ml-4 mt-4">
+                      <button
+                        type="submit"
+                        className="bg-black text-white px-4 py-2 rounded shadow flex items-center justify-center gap-2"
+                        // disabled={isSubmitting}
+                      >
+                        {/* {isSubmitting ? (
+                        <>
+                          <Spinner
+                            classNames={{ label: "text-white" }}
+                            color="default"
+                            size="sm"
+                            variant="simple"
+                          />
+                          <span>Soumission...</span>
+                        </>
+                      ) : ( */}
+                        "Soumettre"
+                        {/* )} */}
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </div>
             </div>
           </div>
