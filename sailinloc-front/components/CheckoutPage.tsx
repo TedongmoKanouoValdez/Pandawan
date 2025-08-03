@@ -60,6 +60,10 @@ const CheckoutPage = ({ amount }: { amount: number }) => {
     );
   }
 
+  stripe.confirmCardPayment(clientSecret).then(() => {
+  router.push("/contrat-location?bookingId=123"); // passe un identifiant
+});
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-8">
       <form

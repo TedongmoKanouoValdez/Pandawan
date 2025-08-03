@@ -1,0 +1,45 @@
+import { useState, useRef } from "react";
+import SignatureCanvas from "react-signature-canvas";
+import { useRouter } from "next/router";
+
+export default function SignaturePage() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const sigCanvas = useRef<any>();
+  const router = useRouter();
+  const { bookingId } = router.query;
+
+  const handleValidate = async () => {
+    setIsSubmitting(true);
+    const signatureDataURL = sigCanvas.current.getTrimmedCanvas().toDataURL("image/png");
+
+    const res = await fetch("/api/contrat/sign", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        bookingId,
+        signature: signatureDataURL,
+      }),
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      router.push(`/recapitulatif-location?bookingId=${bookingId}`);
+    } else {
+      alert("Erreur lors de la signature : " + data.error);
+    }
+
+    setIsSubmitting(false);
+  };
+
+  return (
+    <div className="p-6">
+      <h1 className="text-xl font-bold mb-4">Signature du contrat</h1>
+      <SignatureCanvas penColor="black" canvasProps={{ width: 500, height: 200, className: "border" }} ref={sigCanvas} />
+      <div className="mt-4">
+        <button onClick={handleValidate} disabled={isSubmitting} className="bg-blue-600 text-white px-4 py-2 rounded">
+          Valider la signature
+        </button>
+      </div>
+    </div>
+  );
+}
