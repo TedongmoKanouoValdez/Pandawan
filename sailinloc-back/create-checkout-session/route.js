@@ -25,6 +25,7 @@ export async function POST(req) {
       ],
       // Tu peux activer les redirections ci-dessous :
       // mode: 'payment',
+      success_url: 'https://localhost/contrat?amount=4999&email=client@example.com',
       // success_url: 'https://ton-site.com/success',
       // cancel_url: 'https://ton-site.com/cancel',
     });

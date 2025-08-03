@@ -24,7 +24,7 @@ const paymentRoutes = require('./src/routes/paymentRoutes'); // 👈 ajoute cett
 app.use("/api/payment", paymentRoutes);
 
 
-const emailRoutes = require('./src/routes/emailRoutes');
+const emailRoutes = require('./src/routes/contactRoutes');
 app.use("/emails", emailRoutes);
 
 

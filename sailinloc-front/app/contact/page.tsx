@@ -87,7 +87,7 @@ export default function ContactPage() {
     emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY)
       .then(() => {
         toast.success("Votre message a bien été envoyé !");
-        setFormData({ "" nom: "", email: "", objet: "", message: "" });
+        setFormData({ nom: "", email: "", objet: "", message: "" });
       })
       .catch((error) => {
         // console.error("Erreur lors de l'envoi :", error);
@@ -118,16 +118,15 @@ export default function ContactPage() {
                   </div> */}
                   <div className="justify-items-center  Textheader text-white">
                     <BoxReveal boxColor={"#5046e6"} duration={0.5}>
-                      <h1 className="  text-6xl font-bold">
-                        Votre prochaine
-                        <FlipWords words={words} className="text-white" />
-                        commence ici
+                      <h1 className="  text-4xl font-bold">
+                        Besoin d`aide ou dinformations ?
+                
                       </h1>
                     </BoxReveal>
     
                     <BoxReveal boxColor={"#5046e6"} duration={0.5}>
                       <p className="text-lg mt-4">
-                        Louez ou proposez un bateau en quelques clics.
+                     Contactez-nous, nous sommes à votre écoute pour répondre à vos questions, suggestions ou réclamations.
                       </p>
                     </BoxReveal>
     
@@ -139,11 +138,11 @@ export default function ContactPage() {
               
             
           </section>
-
+                   
 
     <section
       className="bg-cover bg-center w-screen min-h-screen flex items-center justify-center px-4 py-12"
-      style={{Z
+      style={{
         backgroundImage:
           "url('https://res.cloudinary.com/dluqkutu8/image/upload/v1751037337/4931029_zmkvbr.jpg')",
       }}
