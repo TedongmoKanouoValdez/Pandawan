@@ -6,16 +6,25 @@ import {
   useElements,
   PaymentElement,
 } from "@stripe/react-stripe-js";
-import { useRouter } from "next/navigation"; // <- import router
+import { useRouter, useSearchParams } from "next/navigation";
 import convertToSubcurrency from "@/lib/convertToSubcurrency";
 
 const CheckoutPage = ({ amount }: { amount: number }) => {
   const stripe = useStripe();
   const elements = useElements();
-  const router = useRouter(); // <- instanciation
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [errorMessage, setErrorMessage] = useState<string>();
   const [clientSecret, setClientSecret] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Infos de l’utilisateur
+  const prenom = searchParams.get("prenom") || "";
+  const nom = searchParams.get("nom") || "";
+  const email = searchParams.get("email") || "";
+  const telephone = searchParams.get("telephone") || "";
+  const reservationId = searchParams.get("reservationId") || "";
 
   useEffect(() => {
     fetch("http://localhost:3001/api/payment/create-payment-intent", {
@@ -47,15 +56,18 @@ const CheckoutPage = ({ amount }: { amount: number }) => {
       elements,
       clientSecret,
       confirmParams: {
-        return_url: `http://localhost:3000/payement-success?amount=${amount}`,
+        return_url: `http://localhost:3000/recu?prenom=${prenom}&nom=${nom}&email=${email}&telephone=${telephone}&total=${amount}&reservationId=${reservationId}`,
       },
-      redirect: "if_required", // évite redirection si tout peut être géré ici
+      redirect: "if_required",
     });
 
     if (error) {
       setErrorMessage(error.message);
     } else if (paymentIntent?.status === "succeeded") {
-      router.push("/contrat-location?bookingId=123"); // navigation ici
+      // Redirige manuellement (utile si Stripe ne le fait pas tout seul)
+      router.push(
+        `/recu?prenom=${prenom}&nom=${nom}&email=${email}&telephone=${telephone}&total=${amount}&reservationId=${reservationId}`
+      );
     }
 
     setLoading(false);
@@ -68,7 +80,6 @@ const CheckoutPage = ({ amount }: { amount: number }) => {
       </div>
     );
   }
-  
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-8">
@@ -77,9 +88,7 @@ const CheckoutPage = ({ amount }: { amount: number }) => {
         className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 space-y-6"
       >
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-800">
-            Paiement sécurisé
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-800">Paiement sécurisé</h2>
           <p className="text-sm text-gray-500">
             Finalisez votre réservation avec Stripe
           </p>

@@ -19,12 +19,11 @@ export default function ReservationPage() {
   const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
   const router = useRouter();
 
-  
   const extrasPrices: Record<string, number> = {
     table: 50,
     dg: 120,
     levrette: 50,
-    pipe:10
+    pipe: 10,
   };
 
   const basePrice = 1;
@@ -62,35 +61,66 @@ export default function ReservationPage() {
     return Object.keys(newErrors).length === 0;
   };
 
+
+const handleReserveClick = () => {
+  if (!termsAccepted) return;
+  if (!validateForm()) return;
+
+  // On simule un ID de réservation fictif, par exemple '12345'
+  const reservationId = "12345";
+
+  const query = new URLSearchParams({
+    reservationId,
+    titre: form.titre,
+    prenom: form.prenom,
+    nom: form.nom,
+    codePays: form.codePays,
+    telephone: form.telephone,
+    email: form.email,
+    extras: extras.join(","),
+    total: totalPrice.toFixed(2),
+  }).toString();
+
+  router.push(`/contract?${query}`);
+};
+
 //   const handleReserveClick = async () => {
-//   if (!termsAccepted) return;
-//   if (!validateForm()) return;
+//   if (!termsAccepted || !validateForm()) return;
 
-//   const checkoutLink = `${window.location.origin}/checkout?amount=${totalPrice.toFixed(2)}`;
+//   try {
+//     const response = await fetch("/api/reservations", {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify({
+//         utilisateurId: 1,
+//         bateauId: 1,
+//         dateDebut: "2025-07-12T00:00:00.000Z",
+//         dateFin: "2025-07-19T00:00:00.000Z",
+//         statut: "EN_ATTENTE",
+//         extras,
+//         prixTotal: totalPrice,
+//       }),
+//     });
 
-//   const res = await fetch("/api/send-email", {
-//     method: "POST",
-//     headers: { "Content-Type": "application/json" },
-//     body: JSON.stringify({
-//       email: form.email,
-//       link: checkoutLink,
-//     }),
-//   });
+//     if (!response.ok) throw new Error("Erreur API");
 
-//   if (res.ok) {
-//     alert("Un e-mail contenant le lien de paiement vous a été envoyé.");
-//   } else {
-//     alert("Échec de l'envoi de l'e-mail. Veuillez réessayer.");
+//     const { reservationId } = await response.json();
+
+//     const query = new URLSearchParams({
+//       reservationId,
+//       ...form,
+//       extras: extras.join(","),
+//       total: totalPrice.toFixed(2),
+//     }).toString();
+
+//     router.push(`/contract?${query}`);
+//   } catch (err) {
+//     console.error(err);
+//     alert("Erreur lors de la réservation.");
 //   }
 // };
-  const handleReserveClick = () => {
-    if (!termsAccepted) return;
-    if (!validateForm()) return;
-    setShowPopup(true);
-    setTimeout(() => {
-      router.push(`/payementPage?amount=${totalPrice.toFixed(2)}`);
-    }, 3000);
-  };
+
+
 
   return (
     <div
@@ -100,188 +130,194 @@ export default function ReservationPage() {
           "url('https://res.cloudinary.com/dluqkutu8/image/upload/v1751362027/4847236_rplbu1.jpg')",
       }}
     >
-
       <div className="flex justify-center pt-24 items-start  mb-4 flex-col gap-2 lg:flex-row ">
-      <div className="mx-2xl flex flex-col lg:flex-row gap-2 lg:gap-4 bg-white bg-opacity-90 rounded-2xl shadow-lg p-6">
+        <div className="mx-2xl flex flex-col lg:flex-row gap-2 lg:gap-4 bg-white bg-opacity-90 rounded-2xl shadow-lg p-6">
+          {/* Formulaire */}
+          <div className="flex-1 rounded-xl bg-white/70 p-6 space-y-6">
+            <h2 className="text-2xl font-bold">1. Informations Personnelles</h2>
 
-        {/* Formulaire */}
-        <div className="flex-1 rounded-xl bg-white/70 p-6 space-y-6">
-          <h2 className="text-2xl font-bold">1. Informations Personnelles</h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label htmlFor="titre" className="block text-sm mb-1">
-                Civilité<span className="text-red-500">*</span>
-              </label>
-              <select
-                id="titre"
-                value={form.titre}
-                onChange={handleChange}
-                className={`w-full border p-2 rounded ${errors.titre && "border-red-500"}`}
-              >
-                <option value="">M</option>
-                <option value="M.">M.</option>
-                <option value="Mme">Mme</option>
-                <option value="Autre">Autre</option>
-              </select>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label htmlFor="titre" className="block text-sm mb-1">
+                  Civilité<span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="titre"
+                  value={form.titre}
+                  onChange={handleChange}
+                  className={`w-full border p-2 rounded ${errors.titre ? "border-red-500" : ""}`}
+                >
+                  <option value="">M</option>
+                  <option value="M.">M.</option>
+                  <option value="Mme">Mme</option>
+                  <option value="Autre">Autre</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="prenom" className="block text-sm mb-1">
+                  Prénom<span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="prenom"
+                  value={form.prenom}
+                  onChange={handleChange}
+                  type="text"
+                  className={`w-full border p-2 rounded ${errors.prenom ? "border-red-500" : ""}`}
+                />
+              </div>
+              <div>
+                <label htmlFor="nom" className="block text-sm mb-1">
+                  Nom<span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="nom"
+                  value={form.nom}
+                  onChange={handleChange}
+                  type="text"
+                  className={`w-full border p-2 rounded ${errors.nom ? "border-red-500" : ""}`}
+                />
+              </div>
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label htmlFor="codePays" className="block text-sm mb-1">
+                  Code pays
+                </label>
+                <select
+                  id="codePays"
+                  value={form.codePays}
+                  onChange={handleChange}
+                  className="w-full border p-2 rounded"
+                >
+                  <option value="+33">+33</option>
+                </select>
+              </div>
+              <div className="md:col-span-2">
+                <label htmlFor="telephone" className="block text-sm mb-1">
+                  Téléphone<span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="telephone"
+                  value={form.telephone}
+                  onChange={handleChange}
+                  type="text"
+                  className={`w-full border p-2 rounded ${errors.telephone ? "border-red-500" : ""}`}
+                />
+              </div>
+            </div>
+
             <div>
-              <label htmlFor="prenom" className="block text-sm mb-1">
-                Prénom<span className="text-red-500">*</span>
+              <label htmlFor="email" className="block text-sm mb-1">
+                E-mail<span className="text-red-500">*</span>
               </label>
               <input
-                id="prenom"
-                value={form.prenom}
+                id="email"
+                value={form.email}
                 onChange={handleChange}
-                type="text"
-                className={`w-full border p-2 rounded ${errors.prenom && "border-red-500"}`}
+                type="email"
+                className={`w-full border p-2 rounded ${errors.email ? "border-red-500" : ""}`}
               />
             </div>
-            <div>
-              <label htmlFor="nom" className="block text-sm mb-1">
-                Nom<span className="text-red-500">*</span>
-              </label>
+
+            {/* Extras */}
+            <div className="border-t pt-6">
+              <h2 className="text-xl font-semibold mb-4">2. Extras</h2>
+
+              <div className=" h-[11rem] overflow-y-scroll space-y-4">
+                <label className="flex items-center justify-between border p-4 rounded-lg hover:shadow-md cursor-pointer">
+                  <div>
+                    <span className="font-medium">Service à table</span>
+                    <p className="text-sm text-gray-500">Un repas servi à bord à l'arrivée.</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    value="table"
+                    onChange={handleExtrasChange}
+                    className="w-5 h-5"
+                    checked={extras.includes("table")}
+                  />
+                </label>
+
+                <label className="flex items-center justify-between border p-4 rounded-lg hover:shadow-md cursor-pointer">
+                  <div>
+                    <span className="font-medium">Directeur de groupe (DG)</span>
+                    <p className="text-sm text-gray-500">Un accompagnateur pendant le séjour.</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    value="dg"
+                    onChange={handleExtrasChange}
+                    className="w-5 h-5"
+                    checked={extras.includes("dg")}
+                  />
+                </label>
+
+                <label className="flex items-center justify-between border p-4 rounded-lg hover:shadow-md cursor-pointer">
+                  <div>
+                    <span className="font-medium">Levrette</span>
+                    <p className="text-sm text-gray-500">Un extra supplémentaire.</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    value="levrette"
+                    onChange={handleExtrasChange}
+                    className="w-5 h-5"
+                    checked={extras.includes("levrette")}
+                  />
+                </label>
+
+                <label className="flex items-center justify-between border p-4 rounded-lg hover:shadow-md cursor-pointer">
+                  <div>
+                    <span className="font-medium">Pipe</span>
+                    <p className="text-sm text-gray-500">Un autre extra.</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    value="pipe"
+                    onChange={handleExtrasChange}
+                    className="w-5 h-5"
+                    checked={extras.includes("pipe")}
+                  />
+                </label>
+              </div>
+            </div>
+
+            {/* CGU */}
+            <div className="flex items-start mt-6">
               <input
-                id="nom"
-                value={form.nom}
-                onChange={handleChange}
-                type="text"
-                className={`w-full border p-2 rounded ${errors.nom && "border-red-500"}`}
+                id="accept-cgu"
+                type="checkbox"
+                className="mt-1"
+                checked={termsAccepted}
+                onChange={() => setTermsAccepted(!termsAccepted)}
               />
+              <p className="ml-2 text-sm">
+                J’ai lu et j’accepte les{" "}
+                <a href="#" className="text-blue-600 underline">
+                  conditions générales
+                </a>
+                .
+              </p>
             </div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label htmlFor="codePays" className="block text-sm mb-1">
-                Code pays
-              </label>
-              <select
-                id="codePays"
-                value={form.codePays}
-                onChange={handleChange}
-                className="w-full border p-2 rounded"
-              >
-                <option value="+33">+33</option>
-              </select>
-            </div>
-            <div className="md:col-span-2">
-              <label htmlFor="telephone" className="block text-sm mb-1">
-                Téléphone<span className="text-red-500">*</span>
-              </label>
-              <input
-                id="telephone"
-                value={form.telephone}
-                onChange={handleChange}
-                type="text"
-                className={`w-full border p-2 rounded ${errors.telephone && "border-red-500"}`}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="email" className="block text-sm mb-1">
-              E-mail<span className="text-red-500">*</span>
-            </label>
-            <input
-              id="email"
-              value={form.email}
-              onChange={handleChange}
-              type="email"
-              className={`w-full border p-2 rounded ${errors.email && "border-red-500"}`}
-            />
-          </div>
-
-          {/* Extras */}
-          
-          <div className="border-t pt-6">
-            <h2 className="text-xl font-semibold mb-4">2. Extras</h2>
-
-            <div className=" h-[11rem] overflow-y-scroll space-y-4">
-              <label className="flex items-center justify-between border p-4 rounded-lg hover:shadow-md cursor-pointer">
-                <div>
-                  <span className="font-medium">Service à table</span>
-                  <p className="text-sm text-gray-500">Un repas servi à bord à l'arrivée.</p>
-                </div>
-                <input
-                  type="checkbox"
-                  value="table"
-                  onChange={handleExtrasChange}
-                  className="w-5 h-5"
-                />
-              </label>
-
-              <label className="flex items-center justify-between border p-4 rounded-lg hover:shadow-md cursor-pointer">
-                <div>
-                  <span className="font-medium">Directeur de groupe (DG)</span>
-                  <p className="text-sm text-gray-500">Un accompagnateur pendant le séjour.</p>
-                </div>
-                <input
-                  type="checkbox"
-                  value="dg"
-                  onChange={handleExtrasChange}
-                  className="w-5 h-5"
-                />
-              </label>
-
-               <label className="flex items-center justify-between border p-4 rounded-lg hover:shadow-md cursor-pointer">
-                <div>
-                  <span className="font-medium">Directeur de groupe (DG)</span>
-                  <p className="text-sm text-gray-500">Un accompagnateur pendant le séjour.</p>
-                </div>
-                <input
-                  type="checkbox"
-                  value="dg"
-                  onChange={handleExtrasChange}
-                  className="w-5 h-5"
-                />
-              </label>
-               <label className="flex items-center justify-between border p-4 rounded-lg hover:shadow-md cursor-pointer">
-                <div>
-                  <span className="font-medium">Directeur de groupe (DG)</span>
-                  <p className="text-sm text-gray-500">Un accompagnateur pendant le séjour.</p>
-                </div>
-                <input
-                  type="checkbox"
-                  value="dg"
-                  onChange={handleExtrasChange}
-                  className="w-5 h-5"
-                />
-              </label>
-               
-
-            </div>
-          </div>
-
-          {/* CGU */}
-          <div className="flex items-start mt-6">
-            <input
-              id="accept-cgu"
-              type="checkbox"
-              className="mt-1"
-              checked={termsAccepted}
-              onChange={() => setTermsAccepted(!termsAccepted)}
-            />
-            <p className="ml-2 text-sm">
-              J’ai lu et j’accepte les{" "}
-              <a href="#" className="text-blue-600 underline">
-                conditions générales
-              </a>
-              .
-            </p>
-          </div>
-        </div>
         </div>
 
         {/* Récapitulatif */}
         <div className="w-full lg:w-[350px] bg-blue-50 rounded-2xl p-6 shadow space-y-5">
           <div className="flex justify-between text-sm text-gray-600">
             <span id="address">Bourgogne Franche-Comté, France</span>
-            <a href="#" className="text-blue-600 text-sm">Modifier</a>
+            <a href="#" className="text-blue-600 text-sm">
+              Modifier
+            </a>
           </div>
 
-          <p id="boat-name" className="text-lg font-bold text-gray-800">Sheba</p>
-          <p id="boat-dates" className="text-sm text-gray-600">12 juil. 2025 - 19 juil. 2025</p>
+          <p id="boat-name" className="text-lg font-bold text-gray-800">
+            Sheba
+          </p>
+          <p id="boat-dates" className="text-sm text-gray-600">
+            12 juil. 2025 - 19 juil. 2025
+          </p>
 
           <div className="border rounded p-3 text-sm bg-white">
             <strong id="boat-info">Infos réservation</strong>
@@ -300,7 +336,17 @@ export default function ReservationPage() {
 
             {extras.map((key) => (
               <div key={key} className="flex justify-between text-gray-700">
-                <span>{key === "table" ? "Service à table" : "Directeur de groupe"}</span>
+                <span>
+                  {key === "table"
+                    ? "Service à table"
+                    : key === "dg"
+                    ? "Directeur de groupe"
+                    : key === "levrette"
+                    ? "Levrette"
+                    : key === "pipe"
+                    ? "Pipe"
+                    : key}
+                </span>
                 <span>+{extrasPrices[key].toFixed(2)}€</span>
               </div>
             ))}
@@ -318,7 +364,7 @@ export default function ReservationPage() {
             }`}
             disabled={!termsAccepted}
           >
-            Procéder au paiement
+            Réserver
           </button>
 
           <div className="text-xs text-center mt-3 text-gray-600">
@@ -326,8 +372,7 @@ export default function ReservationPage() {
             832 avis sur <span className="underline">Trustpilot</span>
           </div>
         </div>
-        </div>
-      
+      </div>
 
       {/* Pop-up de confirmation */}
       <AnimatePresence>
