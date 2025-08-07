@@ -58,35 +58,46 @@ async function updateUserWithPhoto(id, data, file) {
   });
 
   if (!utilisateur) {
+    if (file) await fs.remove(file.path);
     throw new Error('Utilisateur non trouvé');
   }
 
   if (file) {
-    if (utilisateur.photoProfil) {
-      const publicId = getPublicIdFromUrl(utilisateur.photoProfil);
-        //console.log("Tentative suppression image Cloudinary avec publicId:", publicId);
-      try {
-        await cloudinary.uploader.destroy(publicId);
-      } catch (err) {
-        console.error("Erreur suppression image Cloudinary:", err);
-        // Optionnel : gérer l'erreur ou continuer
-      }
-    }
-
     try {
+      // ✅ Supprimer ancienne image Cloudinary
+      if (utilisateur.photoProfil) {
+        const publicId = getPublicIdFromUrl(utilisateur.photoProfil);
+        await cloudinary.uploader.destroy(publicId);
+      }
+
+      // ✅ Uploader nouvelle image
       const result = await cloudinary.uploader.upload(file.path, {
         folder: 'utilisateurs',
       });
-      data.photoProfil = result.secure_url;
-    } catch (err) {
-      console.error("Erreur upload image Cloudinary:", err);
-      throw new Error("Impossible d'uploader la nouvelle photo");
-    }
 
-    // Supprime le fichier local temporaire
-    fs.unlinkSync(file.path);
+      data.photoProfil = result.secure_url;
+
+      // ✅ Ajouter aussi la photo dans la table medias (comme lors de create)
+      await prisma.media.create({
+        data: {
+          url: result.secure_url,
+          type: TypeMedia.PROFIL,
+          titre: 'Photo de profil',
+          utilisateurId: utilisateur.id,
+        }
+      });
+
+    } catch (err) {
+      console.error("Erreur Cloudinary:", err);
+      await fs.remove(file.path);
+      throw new Error("Erreur lors de la mise à jour de la photo de profil");
+    } finally {
+      // ✅ Supprime TOUJOURS le fichier temporaire, qu'il y ait une erreur ou non
+      await fs.remove(file.path);
+    }
   }
 
+  // ✅ Mise à jour des autres données (y compris photoProfil si présente)
   const utilisateurMisAJour = await prisma.utilisateur.update({
     where: { id: parseInt(id) },
     data,
@@ -94,6 +105,7 @@ async function updateUserWithPhoto(id, data, file) {
 
   return utilisateurMisAJour;
 }
+
 
 async function deleteUserById(id) {
   const utilisateur = await prisma.utilisateur.findUnique({

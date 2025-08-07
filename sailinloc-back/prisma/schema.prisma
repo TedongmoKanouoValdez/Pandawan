@@ -96,6 +96,8 @@ model Reservation {
   dateDebut          DateTime
   dateFin            DateTime
   statut             StatutReservation
+   prixTotal     Float
+   extras        ExtraReservation[]
   creeLe             DateTime          @default(now())
   urlDocumentContrat String?
 
@@ -105,6 +107,36 @@ model Reservation {
   messages     Message[]
   commentaires Commentaire[]
 }
+
+// model Reservation {
+//   id            Int                  @id @default(autoincrement())
+//   utilisateurId Int
+//   utilisateur   Utilisateur          @relation(fields: [utilisateurId], references: [id])
+//   bateauId      Int
+//   bateau        Bateau               @relation(fields: [bateauId], references: [id])
+//   dateDebut     DateTime
+//   dateFin       DateTime
+//   statut        StatutReservation    @default(EN_ATTENTE)
+//   prixTotal     Float
+//   extras        ExtraReservation[]   // Liste des extras liés à cette réservation
+//   createdAt     DateTime             @default(now())
+//   updatedAt     DateTime             @updatedAt
+// }
+
+model ExtraReservation {
+  id            Int          @id @default(autoincrement())
+  reservationId Int
+  nom           String
+  reservation   Reservation  @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+}
+
+// enum StatutReservation {
+//   EN_ATTENTE
+//   CONFIRMEE
+//   ANNULEE
+//   TERMINEE
+// }
+
 
 model Paiement {
   id                Int          @id @default(autoincrement())

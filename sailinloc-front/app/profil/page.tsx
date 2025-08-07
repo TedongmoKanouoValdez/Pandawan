@@ -78,6 +78,22 @@ import { FaqUser } from "@/components/pages/faquser";
 import ChatUI from "@/components/pages/chatui";
 import { Divider as Dividerhenoui } from "@heroui/divider";
 
+function parseJwt(token: string) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (err) {
+    return null;
+  }
+}
+
 type MoyenDePaimentIconProps = {
   icon: ElementType<{ size?: number | string; color?: string }>;
   size?: number | string;
@@ -119,6 +135,7 @@ export type Reservation = {
 
 // const token = localStorage.getItem('token'); // ou autre méthode
 // const userData = parseJwt(token);
+
 
 
 
@@ -820,6 +837,121 @@ export default function ProfilPage() {
     onOpen();
   };
 
+
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (file) {
+    setSelectedFile(file);
+  }
+};
+
+  const [user, setUser] = useState<{
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+} | null>(null);
+
+useEffect(() => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    const userData = parseJwt(token);
+    setUser({
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      email: userData.email,
+      role: userData.role,
+    });
+  }
+}, []);
+
+const [formData, setFormData] = useState({
+  firstName: '',
+  lastName: '',
+  email: '',
+  password: '',
+});
+
+useEffect(() => {
+  if (user) {
+    setFormData({
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
+      email: user.email || '',
+      password: '', 
+    });
+  }
+}, [user]);
+
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  const token = localStorage.getItem("token");
+  if (!token) return;
+
+  const userData = parseJwt(token);
+  const userId = userData?.id;
+
+  const form = new FormData();
+  form.append("firstName", formData.firstName);
+  form.append("lastName", formData.lastName);
+  form.append("email", formData.email);
+  form.append("password", formData.password);
+  if (selectedFile) {
+    form.append("photoProfil", selectedFile);
+  }
+
+  try {
+    const response = await fetch(`http://localhost:3000/api/utilisateurs/${userId}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`, // PAS de "Content-Type"
+      },
+      body: form,
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      console.log("Utilisateur mis à jour :", result);
+
+      // Met à jour le state local avec les nouvelles données
+      setUser({
+        firstName: result.firstName,
+        lastName: result.lastName,
+        email: result.email,
+        role: result.role,
+        photoProfil: result.photoProfil,
+      });
+
+      // Optionnel : reset le formulaire
+      setSelectedFile(null);
+      setFormData((prev) => ({ ...prev, password: "" }));
+
+      // Fermer le dialog (si besoin)
+      onOpenChange(false);
+    } else {
+      const error = await response.json();
+      console.error("Erreur :", error.message);
+    }
+  } catch (err) {
+    console.error("Erreur de mise à jour :", err);
+  }
+};
+
+
+
+const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const { name, value } = e.target;
+  setFormData((prev) => ({
+    ...prev,
+    [name]: value,
+  }));
+};
+
+
+
   return (
     <main>
       <section className="relative">
@@ -853,12 +985,13 @@ export default function ProfilPage() {
                 <div>
                   <div>
                     <User
-                      avatarProps={{
-                        src: "https://i.pravatar.cc/150?u=a04258114e29026702d",
-                      }}
-                      // description="Product Designer"
-                      name="Jane Doe"
-                      className="avatarProfil"
+                    avatarProps={{
+  src: selectedFile
+    ? URL.createObjectURL(selectedFile)
+    : user?.photoProfil || "https://i.pravatar.cc/150?u=a04258114e29026702d",
+}}
+
+  name={`${user?.firstName ?? ""} ${user?.lastName ?? ""}`}
                     />
                   </div>
                 </div>
@@ -887,7 +1020,8 @@ export default function ProfilPage() {
                               Présentation de l&apos;utilisateur
                             </h2>
                             <Dialog>
-                              <form>
+                              <form onSubmit={handleSubmit} encType="multipart/form-data"
+                              >
                                 <DialogTrigger asChild>
                                   <Button variant="outline">
                                     <FaUserEdit /> Modifier mes informations
@@ -909,40 +1043,61 @@ export default function ProfilPage() {
                                   </DialogHeader>
                                   <div className="grid gap-4">
                                     <div className="grid gap-3">
-                                      <Label htmlFor="nom">Nom</Label>
+                                      <Label htmlFor="photoProfil">Photo de profil</Label>
                                       <Input
-                                        id="nom"
-                                        name="nom"
-                                        defaultValue="Doe"
+                                        id="photoProfil"
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleFileChange}
                                       />
+                                      {selectedFile && (
+                                        <img
+                                          src={URL.createObjectURL(selectedFile)}
+                                          alt="Aperçu"
+                                          className="mt-2 rounded"
+                                          width={100}
+                                        />
+                                      )}
+                                        </div>
+                                    <div className="grid gap-3">
+                                      <Label htmlFor="firstName">Nom</Label>
+                                      <Input
+                                          id="firstName"
+                                          name="firstName"
+                                          value={formData.firstName}
+                                          onChange={handleChange}
+                                        />
                                     </div>
                                     <div className="grid gap-3">
-                                      <Label htmlFor="prenom">Prénom</Label>
+                                      <Label htmlFor="lastName">Prénom</Label>
                                       <Input
-                                        id="prenom"
-                                        name="prenom"
-                                        defaultValue="John"
-                                      />
+                                            id="lastName"
+                                            name="lastName"
+                                            value={formData.lastName}
+                                            onChange={handleChange}
+                                          />
                                     </div>
                                     <div className="grid gap-3">
                                       <Label htmlFor="Email">E-mail</Label>
                                       <Input
-                                        id="Email"
-                                        name="email"
-                                        type="email"
-                                        defaultValue="johndoe@exemple.com"
-                                      />
+                                              id="Email"
+                                              name="email"
+                                              type="email"
+                                              value={formData.email}
+                                              onChange={handleChange}
+                                            />
                                     </div>
                                     <div className="grid gap-3">
                                       <Label htmlFor="password">
                                         Mot de passe
                                       </Label>
                                       <Input
-                                        id="password"
-                                        name="motDePasse"
-                                        type="email"
-                                        defaultValue="************"
-                                      />
+                                            id="password"
+                                            name="password"
+                                            type="password"
+                                            value={formData.password}
+                                            onChange={handleChange}
+                                          />
                                     </div>
                                   </div>
                                   <DialogFooter>
@@ -956,26 +1111,22 @@ export default function ProfilPage() {
                             </Dialog>
                           </div>
 
-                          <div className="flex flex-col space-y-2">
+                         <div className="flex flex-col space-y-2">
                             <span>
-                              <span className="text-gray-500">
-                                Nom complet :
-                              </span>{" "}
-                              <span>Jane Doe</span>
+                              <span className="text-gray-500">Nom complet :</span>{" "}
+                              <span>{user ? `${user.firstName} ${user.lastName}` : "Chargement..."}</span>
                             </span>
                             <span>
                               <span className="text-gray-500">Email :</span>{" "}
-                              <span>janedoe@gmail.com</span>
+                              <span>{user ? user.email : "Chargement..."}</span>
                             </span>
                             <span>
-                              <span className="text-gray-500">
-                                Mot de passe :
-                              </span>{" "}
+                              <span className="text-gray-500">Mot de passe :</span>{" "}
                               <span>*************</span>
                             </span>
                             <span>
                               <span className="text-gray-500">Statut :</span>{" "}
-                              <span>Client</span>
+                              <span>{user ? user.role : "Chargement..."}</span>
                             </span>
                             <span className="flex justify-end w-full">
                               <Chip color="success" variant="dot">
@@ -983,6 +1134,7 @@ export default function ProfilPage() {
                               </Chip>
                             </span>
                           </div>
+
                         </div>
                         <div className="bg-glacev2 flex flex-col space-y-4 p-4 w-[46.4rem] rounded-lg h-[16rem] overflow-y-scroll">
                           <div className="flex justify-between items-center">

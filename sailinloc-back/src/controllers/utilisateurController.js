@@ -75,7 +75,8 @@ async function deleteUtilisateur(req, res) {
 
 async function getAllUtilisateurs(req, res) {
   try {
-    const utilisateurs = await prisma.Utilisateur.findMany();
+    const utilisateurs = await getAllUtilisateur(); // Tu as déjà une fonction service pour ça
+
     res.json(utilisateurs);
   } catch (error) {
     console.error(error);
