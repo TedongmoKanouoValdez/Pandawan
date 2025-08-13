@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Button as Buttonheroui } from "@heroui/button";
 import {
@@ -77,6 +77,7 @@ import { ZonesFavorites } from "@/components/pages/zonesfavorites";
 import { FaqUser } from "@/components/pages/faquser";
 import ChatUI from "@/components/pages/chatui";
 import { Divider as Dividerhenoui } from "@heroui/divider";
+import { jwtDecode } from "jwt-decode";
 
 type MoyenDePaimentIconProps = {
   icon: ElementType<{ size?: number | string; color?: string }>;
@@ -796,12 +797,142 @@ export default function ProfilPage() {
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [backdrop, setBackdrop] = React.useState("opaque");
+  const [user, setUser] = React.useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [error, setError] = useState(null);
+
+  const inputFileRef = useRef<HTMLInputElement>(null);
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+
+  const [nom, setNom] = useState("");
+  const [prenom, setPrenom] = useState("");
+  const [email, setEmail] = useState("");
+  const [motDePasse, setMotDePasse] = useState("");
+  const [telephone, setTelephone] = useState("");
+  const [role, setRole] = useState("");
+  const [urlProfileDefault, setUrlProfileDefault] = useState("");
+
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [submitted, setSubmitted] = useState(false);
+  const [decoded, setDecoded] = useState([]);
+  const [preview, setPreview] = useState("/default-avatar.png");
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setImageFile(e.target.files[0]);
+      setPreview(URL.createObjectURL(e.target.files[0])); // affichage de l'aperçu
+    }
+  };
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setError("Vous devez être connecté");
+          setLoading(false);
+          return;
+        }
+
+        setDecoded(jwtDecode(token));
+        console.log(token);
+        console.log(jwtDecode(token));
+
+        const res = await fetch("http://localhost:3001/api/utilisateur/me", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.message || "Erreur serveur");
+        }
+        const data = await res.json();
+        setUser(data);
+
+        setNom(data.nom || "");
+        setPrenom(data.prenom || "");
+        setEmail(data.email || "");
+        setRole("CLIENT");
+        setTelephone(data.telephone || "");
+        setPreview(data.photoProfil || "/default-avatar.png");
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitted(true);
+
+    setIsLoading(true);
+
+    const formData = new FormData();
+    formData.append("nom", nom);
+    formData.append("prenom", prenom);
+    formData.append("email", email);
+    formData.append("telephone", telephone);
+    formData.append("role", role);
+
+    // N’envoie le mot de passe que si l’utilisateur en a saisi un nouveau
+    if (motDePasse.trim()) {
+      formData.append("motDePasse", motDePasse);
+    }
+    console.log("motDePasse avant append:", motDePasse);
+
+    // N’envoie la photo que si elle a été modifiée
+    if (imageFile) {
+      formData.append("photoProfil", imageFile);
+    }
+
+    try {
+      const res = await fetch(
+        `http://localhost:3001/api/utilisateur/${decoded?.userId}`,
+        {
+          method: "PUT",
+          body: formData, // fetch gère automatiquement le Content-Type ici
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Erreur lors de la mise à jour");
+      }
+
+      const data = await res.json();
+      console.log("Utilisateur mis à jour :", data);
+      alert("Utilisateur mis à jour avec succès !");
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  if (loading) return <p>Chargement...</p>;
+  console.log(user);
+  if (error)
+    return (
+      <main>
+        <p style={{ color: "red", textAlign: "center", marginTop: "2rem" }}>
+          {error}
+        </p>
+      </main>
+    );
 
   const handleBackdropChange = (backdrop: string) => {
     setBackdrop(backdrop);
     onOpen();
   };
-
+  // console.log(decoded.userId);
   return (
     <main>
       <section className="relative">
@@ -836,10 +967,11 @@ export default function ProfilPage() {
                   <div>
                     <User
                       avatarProps={{
-                        src: "https://i.pravatar.cc/150?u=a04258114e29026702d",
+                        src:
+                          user?.photoProfil ||
+                          "https://i.pravatar.cc/150?u=a04258114e29026702d", // photo si dispo sinon avatar par défaut
                       }}
-                      // description="Product Designer"
-                      name="Jane Doe"
+                      name={user ? `${user.prenom} ${user.nom}` : "Utilisateur"} // Affiche prénom + nom ou "Utilisateur" par défaut
                       className="avatarProfil"
                     />
                   </div>
@@ -859,8 +991,13 @@ export default function ProfilPage() {
                 <TabsContent value="account">
                   <div className="flex flex-col space-y-8 mt-8">
                     <div>
-                      <Chip variant="dot" className="border-none contenttitresectionprofile mb-4">
-                        <div className="text-lg font-bold">Profil & bateau favori</div>
+                      <Chip
+                        variant="dot"
+                        className="border-none contenttitresectionprofile mb-4"
+                      >
+                        <div className="text-lg font-bold">
+                          Profil & bateau favori
+                        </div>
                       </Chip>
                       <div className="flex flex-row space-x-3">
                         <div className="bg-glacev2 flex flex-col space-y-4 p-4 w-[30rem] rounded-lg h-[16rem]">
@@ -869,13 +1006,13 @@ export default function ProfilPage() {
                               Présentation de l&apos;utilisateur
                             </h2>
                             <Dialog>
-                              <form>
-                                <DialogTrigger asChild>
-                                  <Button variant="outline">
-                                    <FaUserEdit /> Modifier mes informations
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent className="sm:max-w-[425px]">
+                              <DialogTrigger asChild>
+                                <Button variant="outline">
+                                  <FaUserEdit /> Modifier mes informations
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="sm:max-w-[425px]">
+                                <form onSubmit={handleSubmit}>
                                   <DialogHeader>
                                     <DialogTitle>
                                       Modifier votre profile
@@ -884,18 +1021,47 @@ export default function ProfilPage() {
                                       Modifiez vos informations personnelles
                                       pour garder votre profil à jour et
                                       améliorer votre expérience sur notre
-                                      plateforme. Vous pouvez changer votre nom,
-                                      votre adresse ou vos coordonnées de
-                                      contact.
+                                      plateforme.
                                     </DialogDescription>
                                   </DialogHeader>
                                   <div className="grid gap-4">
+                                    <div className="flex items-cente grid gap-3">
+                                      <label
+                                        htmlFor="photoProfil"
+                                        style={{
+                                          cursor: "pointer",
+                                          width: "120px",
+                                          height: "120px",
+                                        }}
+                                      >
+                                        <img
+                                          src={preview || "/default-avatar.png"}
+                                          alt="Avatar"
+                                          className="w-24 h-24 rounded-full object-cover"
+                                          style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            borderRadius: "50%",
+                                            objectFit: "cover",
+                                            border: "2px solid #ccc",
+                                          }}
+                                        />
+                                        <input
+                                          id="photoProfil"
+                                          type="file"
+                                          accept="image/*"
+                                          style={{ display: "none" }}
+                                          onChange={handleFileChange}
+                                        />
+                                      </label>
+                                    </div>
                                     <div className="grid gap-3">
                                       <Label htmlFor="nom">Nom</Label>
                                       <Input
                                         id="nom"
                                         name="nom"
-                                        defaultValue="Doe"
+                                        value={nom}
+                                        onChange={(e) => setNom(e.target.value)}
                                       />
                                     </div>
                                     <div className="grid gap-3">
@@ -903,7 +1069,10 @@ export default function ProfilPage() {
                                       <Input
                                         id="prenom"
                                         name="prenom"
-                                        defaultValue="John"
+                                        value={prenom}
+                                        onChange={(e) =>
+                                          setPrenom(e.target.value)
+                                        }
                                       />
                                     </div>
                                     <div className="grid gap-3">
@@ -912,7 +1081,10 @@ export default function ProfilPage() {
                                         id="Email"
                                         name="email"
                                         type="email"
-                                        defaultValue="johndoe@exemple.com"
+                                        value={email}
+                                        onChange={(e) =>
+                                          setEmail(e.target.value)
+                                        }
                                       />
                                     </div>
                                     <div className="grid gap-3">
@@ -921,9 +1093,12 @@ export default function ProfilPage() {
                                       </Label>
                                       <Input
                                         id="password"
-                                        name="motDePasse"
-                                        type="email"
-                                        defaultValue="************"
+                                        type="password"
+                                        name="password"
+                                        value={motDePasse}
+                                        onChange={(e) =>
+                                          setMotDePasse(e.target.value)
+                                        }
                                       />
                                     </div>
                                   </div>
@@ -931,10 +1106,12 @@ export default function ProfilPage() {
                                     <DialogClose asChild>
                                       <Button variant="outline">Annuler</Button>
                                     </DialogClose>
-                                    <Button type="submit">Enregistrer</Button>
+                                    <Button type="submit">
+                                      {isLoading ? "Chargement..." : "modifier"}
+                                    </Button>
                                   </DialogFooter>
-                                </DialogContent>
-                              </form>
+                                </form>
+                              </DialogContent>
                             </Dialog>
                           </div>
 
@@ -943,11 +1120,13 @@ export default function ProfilPage() {
                               <span className="text-gray-500">
                                 Nom complet :
                               </span>{" "}
-                              <span>Jane Doe</span>
+                              <span>
+                                {user.nom} {user.prenom}
+                              </span>
                             </span>
                             <span>
                               <span className="text-gray-500">Email :</span>{" "}
-                              <span>janedoe@gmail.com</span>
+                              <span>{user.email}</span>
                             </span>
                             <span>
                               <span className="text-gray-500">
@@ -957,7 +1136,7 @@ export default function ProfilPage() {
                             </span>
                             <span>
                               <span className="text-gray-500">Statut :</span>{" "}
-                              <span>Client</span>
+                              <span>{user.role}</span>
                             </span>
                             <span className="flex justify-end w-full">
                               <Chip color="success" variant="dot">
@@ -980,8 +1159,13 @@ export default function ProfilPage() {
                     </div>
 
                     <div>
-                      <Chip variant="dot" className="border-none contenttitresectionprofile mb-4">
-                        <div className="text-lg font-bold">Mes préférences et alertes</div>
+                      <Chip
+                        variant="dot"
+                        className="border-none contenttitresectionprofile mb-4"
+                      >
+                        <div className="text-lg font-bold">
+                          Mes préférences et alertes
+                        </div>
                       </Chip>
 
                       <div className="flex flex-row space-x-3">
@@ -1010,8 +1194,13 @@ export default function ProfilPage() {
                     </div>
 
                     <div>
-                      <Chip variant="dot" className="border-none contenttitresectionprofile mb-4">
-                        <div className="text-lg font-bold">Aide & Paiements enregistrés</div>
+                      <Chip
+                        variant="dot"
+                        className="border-none contenttitresectionprofile mb-4"
+                      >
+                        <div className="text-lg font-bold">
+                          Aide & Paiements enregistrés
+                        </div>
                       </Chip>
 
                       <div className="flex flex-row space-x-3">
@@ -1246,8 +1435,13 @@ export default function ProfilPage() {
                     </div>
 
                     <div>
-                      <Chip variant="dot" className="border-none contenttitresectionprofile mb-4">
-                        <div className="text-lg font-bold">Vos réservations</div>
+                      <Chip
+                        variant="dot"
+                        className="border-none contenttitresectionprofile mb-4"
+                      >
+                        <div className="text-lg font-bold">
+                          Vos réservations
+                        </div>
                       </Chip>
 
                       <div className="bg-glacev2 flex flex-col space-y-4 p-4 w-[76.4rem] rounded-lg mt-2 contentswitch">
