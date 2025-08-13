@@ -1,3 +1,4 @@
+"use client"
 import { title } from "@/components/primitives";
 import Link from "next/link";
 import { RippleButton } from "@/components/magicui/ripple-button";
