@@ -514,3 +514,7 @@ div[data-slot="content"].bg-content1 {
   width: 68rem;
   height: 43rem;
 }
+
+.contourselector {
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}

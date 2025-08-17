@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BsFillFileEarmarkPdfFill } from "react-icons/bs";
 import {
   Select,
   SelectContent,
@@ -45,6 +46,7 @@ import dayjs from "dayjs";
 import { Spinner } from "@heroui/spinner";
 import { Divider } from "antd";
 import { Image } from "@heroui/image";
+import { addToast, ToastProvider } from "@heroui/toast";
 
 const frameworks = [
   {
@@ -148,6 +150,8 @@ export default function EditBateauForm() {
   const [documentPdfs, setDocumentPdfs] = useState([]);
   const [ImagesNeedUpdate, setImagesNeedUpdate] = useState(false);
   const [numeroPolice, setNumeroPolice] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [placement, setPlacement] = React.useState("top-center");
 
   const router = useRouter();
   const params = useParams();
@@ -271,7 +275,13 @@ export default function EditBateauForm() {
           modeleMarque: data.bateau.modele,
           typeBateau: data.bateau.typeBateau,
           portattache: data.bateau.port,
-          tarifbateau: data.bateau.prix,
+          SupplementParPassagerSupplémentaire:
+            data.bateau.details?.SupplementParPassagerSupplémentaire,
+          moteur: data.bateau.details?.moteur,
+          reservoirEau: data.bateau.details?.reservoirEau,
+          reservoirCarburant: data.bateau.details?.reservoirCarburant,
+          PassagersInclusDansLePrix:
+            data.bateau.details?.PassagersInclusDansLePrix,
           description: data.bateau.description,
           indisponibilites: safeParse(data.datesIndisponibles),
           disponibilite: data.disponibilite,
@@ -384,112 +394,179 @@ export default function EditBateauForm() {
     e.target.value = ""; // Reset input
   };
 
+  const handleAddPDF = (
+    index: number,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Vérifie qu'il n'y a rien déjà
+    if (documentPdfs[index]?.file) {
+      alert(
+        "Un fichier est déjà présent. Utilisez 'Remplacer' pour le modifier."
+      );
+      return;
+    }
+
+    const updatedPDFs = [...documentPdfs];
+    updatedPDFs[index] = {
+      ...updatedPDFs[index],
+      file,
+      url: URL.createObjectURL(file),
+      nom: file.name,
+    };
+
+    setDocumentPdfs(updatedPDFs);
+  };
+
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const form = new FormData();
+    setIsSubmitting(true);
 
-    // Politique d’annulation
     const annulation =
       selectedPolicy === "custom"
         ? customDescription
         : cancellationPolicies.find((p) => p.id === selectedPolicy)?.label ||
           "";
 
-    // Options payantes
     const optionsPayantes = selectedTags.map((tag) => ({
       id: tag.id,
       label: tag.label,
       detail: tagInputs[tag.id] || "",
     }));
 
-    // Tarifications
     const tarifications = selectedTarif.map((id) => ({
       type: id,
       montant: inputsTarif[id] || "",
     }));
 
-    // Données principales à enregistrer
     const body = {
-      nom: formData.nomBateau,
-      modele: formData.modeleMarque,
+      nomBateau: formData.nomBateau,
+      modeleMarque: formData.modeleMarque,
       description: formData.description,
-      prix: formData.tarifbateau,
-      port: formData.portattache,
+      SupplementParPassagerSupplémentaire:
+        formData.SupplementParPassagerSupplémentaire,
+      moteur: formData.moteur,
+      reservoirEau: formData.reservoirEau,
+      reservoirCarburant: formData.reservoirCarburant,
+      PassagersInclusDansLePrix: formData.PassagersInclusDansLePrix,
+      portattache: formData.portattache,
       portdefault: formData.portdefault,
       typeBateau: formData.typeBateau,
       disponibilite: formData.disponibilite,
-      datesIndisponibles: JSON.stringify(
-        unavailableDates.map((d) => d.toISOString())
-      ),
-      details: {
-        anneeConstruction: formData.anneeConstruction,
-        longueur: formData.longueur,
-        largeur: formData.largeur,
-        nombreCabines: formData.nombreCabines,
-        tirantEau: formData.tirantEau,
-        nombreCouchages: formData.nombreCouchages,
-        capaciteMax: formData.capaciteMax,
-        portdedepart: formData.portdedepart,
-        portdarriver: formData.portdarriver,
-        depotgarantie: formData.depotgarantie,
-        politiqueAnnulation: annulation,
-        dureeLocation: formData.dureeLocation,
-        locationSansPermis: formData.locationSansPermis,
-        equipements: JSON.stringify(selectedValues),
-        optionsPayantes: JSON.stringify(optionsPayantes),
-        tarifications: JSON.stringify(tarifications),
-        zonesNavigation: formData.zonesNavigation,
-      },
+      indisponibilites: unavailableDates.map((d) => d.toISOString()),
+      anneeConstruction: formData.anneeConstruction,
+      longueur: parseFloat(formData.longueur) || null,
+      largeur: parseFloat(formData.largeur) || null,
+      nombreCabines: parseInt(formData.nombreCabines) || null,
+      tirantEau: parseFloat(formData.tirantEau) || null,
+      nombreCouchages: parseInt(formData.nombreCouchages) || null,
+      capaciteMax: parseInt(formData.capaciteMax) || null,
+      portdedepart: formData.portdedepart || "",
+      portdarriver: formData.portdarriver || "",
+      depotgarantie: formData.depotgarantie || "",
+      politiqueAnnulation: annulation,
+      dureeLocation: formData.dureeLocation || "",
+      locationSansPermis: !!formData.locationSansPermis,
+      equipementsInclus: selectedValues,
+      tags: optionsPayantes,
+      tarifications: tarifications,
+      zonesNavigation: formData.zonesNavigation || "",
     };
 
-    form.append("data", JSON.stringify(body)); // Les autres données dans FormData
-    console.log("📦 Contenu FormData :");
-    for (const pair of form.entries()) {
-      console.log(pair[0], pair[1]);
+    try {
+      await axios.put(`http://localhost:3001/api/bateaux/${bateauId}`, body, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      addToast({
+        title: "Succès",
+        description: "Modifications enregistrées !",
+        color: "success",
+      });
+    } catch (err) {
+      console.error("Erreur lors de la sauvegarde :", err);
+      addToast({
+        title: "Succès",
+        description: "Erreur lors de l'enregistrement",
+        color: "danger",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-    // try {
-    //   await axios.put(`http://localhost:3001/api/bateaux/${bateauId}`, form, {
-    //     headers: {
-    //       "Content-Type": "multipart/form-data",
-    //     },
-    //   });
-    //   alert("Modifications enregistrées !");
-    //   router.push("/dashboard/gestiondesbateaux");
-    // } catch (err) {
-    //   console.error("Erreur lors de la sauvegarde :", err);
-    //   alert("Erreur lors de l'enregistrement");
-    // }
   };
 
-  const handleSaveMedia = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleUpdateMedia = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
     const form = new FormData();
 
-    coverImages.forEach((img) => {
-      if (img.file) form.append("coverImages", img.file);
+    const metaImages: { name: string; type: string }[] = [];
+
+    // Ajoute les fichiers de cover avec métadonnées
+    coverImages.forEach((img, index) => {
+      if (img.file) {
+        form.append("section1", img.file);
+        metaImages.push({
+          name: img.file.name,
+          type: index === 0 ? "COVER" : "GALLERIE", // le premier = COVER
+        });
+      }
     });
 
     galleryImages.forEach((img) => {
-      if (img.file) form.append("galleryImages", img.file);
+      if (img.file) {
+        form.append("section2", img.file);
+        metaImages.push({
+          name: img.file.name,
+          type: "GALLERIE",
+        });
+      }
     });
 
-    documentPdfs.forEach((pdf) => {
-      if (pdf.file) form.append("documentPdfs", pdf.file);
+    documentPdfs.forEach((pdf, i) => {
+      if (pdf.file) {
+        if (i === 0) {
+          form.append("attestation1", pdf.file);
+        } else if (i === 1) {
+          form.append("certificat", pdf.file);
+        }
+      }
     });
 
-    form.append("numeroPolice", numeroPolice);
+    form.append("metaImages", JSON.stringify(metaImages));
+    form.append("bateauId", String(bateauId));
+    if (numeroPolice) form.append("numeroPolice", numeroPolice);
+    if (noCertificat) form.append("noCertificat", String(noCertificat));
 
-    const body = {
-      numeroPolice,
-      // autreChamp,
-      // etc: valeur,
-    };
+    for (const [key, value] of form.entries()) {
+      if (value instanceof File) {
+        console.log(`📎 ${key}:`, {
+          name: value.name,
+          size: value.size,
+          type: value.type,
+        });
+      } else {
+        console.log(`📝 ${key}:`, value);
+      }
+    }
 
-    form.append("data", JSON.stringify(body));
-
-    for (const pair of form.entries()) {
-      console.log(pair[0], pair[1]);
+    try {
+      const res = await axios.put(
+        "http://localhost:3001/upload-documents/medias",
+        form,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+      alert("Médias mis à jour avec succès !");
+      console.log("✅ Résultat:", res.data);
+    } catch (error) {
+      console.error("❌ Erreur mise à jour médias :", error);
+      alert("Erreur lors de la mise à jour des médias.");
     }
   };
 
@@ -499,6 +576,16 @@ export default function EditBateauForm() {
 
   return (
     <>
+      <ToastProvider
+        placement={placement}
+        toastOffset={placement.includes("top") ? 60 : 0}
+        toastProps={{
+          radius: "lg",
+          color: "primary",
+          variant: "flat",
+          timeout: 9000,
+        }}
+      />
       <SidebarProvider>
         <AppSidebar variant="inset" />
         <SidebarInset>
@@ -721,6 +808,54 @@ export default function EditBateauForm() {
                               setFormData({
                                 ...formData,
                                 nombreCouchages: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mb-4">
+                        <div className="grid gap-3">
+                          <Label htmlFor="Moteurs">Moteurs</Label>
+                          <Input
+                            id="Moteurs"
+                            placeholder="Torqeedo Travel 1103 C"
+                            value={formData?.moteur || "non défini"}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                moteur: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="grid gap-3">
+                          <Label htmlFor="reservoirEau">réservoirs d’eau</Label>
+                          <Input
+                            id="reservoirEau"
+                            placeholder="Vetus FTANK série (PEHD, 100 à 400 L)"
+                            value={formData?.reservoirEau || "non défini"}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                reservoirEau: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mb-4">
+                        <div className="grid gap-3">
+                          <Label htmlFor="reservoirCarburant">
+                            réservoirs de carburant
+                          </Label>
+                          <Input
+                            id="reservoirCarburant"
+                            placeholder="12 L à 30 L"
+                            value={formData?.reservoirCarburant || "non défini"}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                reservoirCarburant: e.target.value,
                               })
                             }
                           />
@@ -968,18 +1103,50 @@ export default function EditBateauForm() {
                             }
                           />
                         </div>
+                      </div>
+                      <Alert
+                        color="warning"
+                        title="Si vous souhaitez facturer un supplément au-delà d’un certain nombre de passagers, indiquez ici le prix par passager supplémentaire et par jour.
+                        Laissez vide ou mettez 0 si aucun supplément n’est appliqué."
+                      />
+                      <div className="grid grid-cols-2 gap-2 mt-2 mb-4">
                         <div className="grid gap-3">
                           <Label htmlFor="depot-garantie-2">
-                            Tarif du bateau
+                            Passagers inclus dans le prix
                           </Label>
                           <Input
-                            id="tarif-bateau"
-                            placeholder="Ex : 1000.00"
-                            value={formData?.tarifbateau || "non défini"}
+                            id="PassagersInclusDansLePrix"
+                            placeholder="ex : 4"
+                            value={
+                              formData?.PassagersInclusDansLePrix ||
+                              "non défini"
+                            }
                             onChange={(e) =>
                               setFormData({
                                 ...formData,
-                                tarifbateau: e.target.value,
+                                PassagersInclusDansLePrix: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="grid gap-3">
+                          <Label htmlFor="depot-garantie-2">
+                            Supplément par passager supplémentaire (€ / jour)
+                          </Label>
+                          <Input
+                            type="number"
+                            id="SupplementParPassagerSupplémentaire"
+                            placeholder="ex : 20"
+                            step="0.01"
+                            value={
+                              formData?.SupplementParPassagerSupplémentaire ||
+                              "non défini"
+                            }
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                SupplementParPassagerSupplémentaire:
+                                  e.target.value,
                               })
                             }
                           />
@@ -1099,9 +1266,9 @@ export default function EditBateauForm() {
                       // type="submit"
                       onClick={handleSave}
                       className="bg-black text-white px-4 py-2 rounded shadow flex items-center justify-center gap-2"
-                      // disabled={isSubmitting}
+                      disabled={isSubmitting}
                     >
-                      {/* {isSubmitting ? (
+                      {isSubmitting ? (
                         <>
                           <Spinner
                             classNames={{ label: "text-white" }}
@@ -1109,11 +1276,11 @@ export default function EditBateauForm() {
                             size="sm"
                             variant="simple"
                           />
-                          <span>Soumission...</span>
+                          <span>Modification...</span>
                         </>
-                      ) : ( */}
-                      "Soumettre"
-                      {/* )} */}
+                      ) : (
+                        "Modifier"
+                      )}
                     </button>
                   </div>
                   {/* </form> */}
@@ -1130,7 +1297,7 @@ export default function EditBateauForm() {
               >
                 <Divider orientation="left">Détails du bateau</Divider>
                 <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-                  <form onSubmit={handleSaveMedia}>
+                  <form onSubmit={handleUpdateMedia}>
                     <div className="flex flex-row space-x-2">
                       <div className="w-full max-w-2xl rounded-xl border p-4">
                         <div className="mt-4 grid grid-cols-2 gap-4">
@@ -1212,35 +1379,66 @@ export default function EditBateauForm() {
                     </div>
 
                     <div className="space-y-4 mt-6">
-                      {documentPdfs.map((pdf, index) => (
-                        <div
-                          key={pdf.id}
-                          className="flex items-center justify-between border p-3 rounded-lg"
-                        >
-                          <div>
-                            <p className="font-medium text-sm">
-                              {pdf.type || `Document ${index + 1}`}
-                            </p>
-                            <a
-                              href={pdf.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 text-sm underline"
-                            >
-                              Voir le PDF
-                            </a>
+                      {[0, 1].map((i) => {
+                        const pdf = documentPdfs[i] || {
+                          id: i + 1,
+                          type: `Document ${i + 1}`,
+                          file: null,
+                          url: "",
+                          nom: "",
+                        };
+
+                        return (
+                          <div
+                            key={`pdf-${i}`}
+                            className="flex items-center justify-between border p-3 rounded-lg"
+                          >
+                            <div>
+                              <p className="font-medium text-sm">{pdf.type}</p>
+
+                              {pdf.url && (
+                                <a
+                                  href={pdf.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 text-sm underline"
+                                >
+                                  Voir le PDF
+                                </a>
+                              )}
+
+                              {pdf.nom && (
+                                <p className="flex items-center space-x-4 text-xs text-gray-600 mt-1">
+                                  <BsFillFileEarmarkPdfFill className="w-6 h-6 text-red-700" />{" "}
+                                  {pdf.nom}
+                                </p>
+                              )}
+                            </div>
+
+                            {!pdf.file && !pdf.url ? (
+                              <label className="text-sm text-green-600 underline cursor-pointer">
+                                Ajouter
+                                <input
+                                  type="file"
+                                  accept="application/pdf"
+                                  className="hidden"
+                                  onChange={(e) => handleAddPDF(i, e)}
+                                />
+                              </label>
+                            ) : (
+                              <label className="text-sm text-blue-600 underline cursor-pointer">
+                                Remplacer
+                                <input
+                                  type="file"
+                                  accept="application/pdf"
+                                  className="hidden"
+                                  onChange={(e) => handleReplacePDF(i, e)}
+                                />
+                              </label>
+                            )}
                           </div>
-                          <label className="text-sm text-blue-600 underline cursor-pointer">
-                            Remplacer
-                            <input
-                              type="file"
-                              accept="application/pdf"
-                              className="hidden"
-                              onChange={(e) => handleReplacePDF(index, e)}
-                            />
-                          </label>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
