@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useState } from "react";
 import emailjs from 'emailjs-com';
 import { FaLocationDot } from "react-icons/fa6";
@@ -7,6 +8,28 @@ import { BsSendFill } from "react-icons/bs";
 import { BsTelephoneFill} from "react-icons/bs";
 import { TbMailFilled } from "react-icons/tb";
 import toast, { Toaster } from 'react-hot-toast';
+import { FlipWords } from "@/components/ui/flip-words";
+import { PiSunDimFill } from "react-icons/pi";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { DatePicker } from "@heroui/date-picker";
+import { RippleButton } from "@/components/magicui/ripple-button";
+import { NumberInput } from "@heroui/number-input";
+import { BoxReveal } from "@/components/magicui/box-reveal";
+import { Input } from "@heroui/input";
+import { BiSolidBookmark } from "react-icons/bi";
+import { BsCloudSunFill } from "react-icons/bs";
+import { FaStar } from "react-icons/fa";
+import { Badge, Space } from "antd";
+import { Chip } from "@heroui/chip";
+import { BsCheckCircleFill } from "react-icons/bs";
+import { BsFillCreditCard2FrontFill } from "react-icons/bs";
+import { BsShieldFill } from "react-icons/bs";
+import { FaQuoteLeft } from "react-icons/fa";
+import { GrNext } from "react-icons/gr";
+import { GrPrevious } from "react-icons/gr";
+import { Form } from "@heroui/form";
+import { Button, ButtonGroup } from "@heroui/button";
+
 
 
 export default function ContactPage() {
@@ -34,7 +57,7 @@ export default function ContactPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
+    alert()
     const newErrors = {
       nom: formData.nom.trim() === "",
       email: formData.email.trim() === "",
@@ -72,8 +95,53 @@ export default function ContactPage() {
         toast.error("Une erreur s'est produite. Veuillez réessayer.");
       });
   };
+  
 
   return (
+    <>
+
+     <section className="">
+            <div className="relative">
+              <div className="contentvideohome">
+                <video
+                  muted
+                  autoPlay
+                  loop
+                  playsInline
+                  controls={false}
+                  style={{ width: "100%", height: "100vh", objectFit: "cover" }}
+                  src="https://res.cloudinary.com/dluqkutu8/video/upload/v1750331153/14637966-uhd_2560_1440_60fps_tli0wh.mp4"
+                />
+              </div>
+              <div className="contenttext">
+                <div className="flex flex-row space-x-2">
+                  {/* <div>
+                    <LogoSecondaire />
+                  </div> */}
+                  <div className="justify-items-center  Textheader text-white">
+                    <BoxReveal boxColor={"#5046e6"} duration={0.5}>
+                      <h1 className="  text-4xl font-bold">
+                        Besoin d`aide ou dinformations ?
+                
+                      </h1>
+                    </BoxReveal>
+    
+                    <BoxReveal boxColor={"#5046e6"} duration={0.5}>
+                      <p className="text-lg mt-4">
+                     Contactez-nous, nous sommes à votre écoute pour répondre à vos questions, suggestions ou réclamations.
+                      </p>
+                    </BoxReveal>
+    
+                  
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+            
+          </section>
+                   
+
     <section
       className="bg-cover bg-center w-screen min-h-screen flex items-center justify-center px-4 py-12"
       style={{
@@ -210,6 +278,7 @@ export default function ContactPage() {
         </div>
       </div>
     </section>
+    </>
   );
 }
 
@@ -221,3 +290,4 @@ function InfoCard({ icon, text }: { icon: React.ReactNode; text: React.ReactNode
     </div>
   );
 }
+

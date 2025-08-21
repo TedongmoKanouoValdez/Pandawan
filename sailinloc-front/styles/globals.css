@@ -514,3 +514,519 @@ div[data-slot="content"].bg-content1 {
   width: 68rem;
   height: 43rem;
 }
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap");
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 224 71.4% 4.1%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 71.4% 4.1%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71.4% 4.1%;
+    --primary: 220.9 39.3% 11%;
+    --primary-foreground: 210 20% 98%;
+    --secondary: 220 14.3% 95.9%;
+    --secondary-foreground: 220.9 39.3% 11%;
+    --muted: 220 14.3% 95.9%;
+    --muted-foreground: 220 8.9% 46.1%;
+    --accent: 220 14.3% 95.9%;
+    --accent-foreground: 220.9 39.3% 11%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 224 71.4% 4.1%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+  .dark {
+    --background: 224 71.4% 4.1%;
+    --foreground: 210 20% 98%;
+    --card: 224 71.4% 4.1%;
+    --card-foreground: 210 20% 98%;
+    --popover: 224 71.4% 4.1%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 210 20% 98%;
+    --primary-foreground: 220.9 39.3% 11%;
+    --secondary: 215 27.9% 16.9%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 215 27.9% 16.9%;
+    --muted-foreground: 217.9 10.6% 64.9%;
+    --accent: 215 27.9% 16.9%;
+    --accent-foreground: 210 20% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 215 27.9% 16.9%;
+    --input: 215 27.9% 16.9%;
+    --ring: 216 12.2% 83.9%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+  .theme {
+    --animate-rippling: rippling var(--duration) ease-out;
+    --animate-shimmer-slide: shimmer-slide var(--speed) ease-in-out infinite
+      alternate;
+    --animate-spin-around: spin-around calc(var(--speed) * 2) infinite linear;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+* {
+  font-family: "Playfair Display", serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* .contentvideohome::before {
+  content: "";
+  position: absolute;
+  left: 0%;
+  bottom: 0;
+  width: 58rem;
+  height: 100vh;
+  clip-path: polygon(0 0, calc(100% - 20px) 0, 75% 100%, 0% 100%);
+  background-color: #000;
+  opacity: 0.8;
+} */
+
+.contenttext {
+  position: absolute;
+  top: 14rem;
+  left: 10rem;
+}
+
+.contenttext .Textheader h1 {
+  width: 46rem;
+}
+
+@theme inline {
+  @keyframes rippling {
+    0% {
+      opacity: 1;
+    }
+    100% {
+      transform: scale(2);
+      opacity: 0;
+    }
+  }
+  @keyframes shimmer-slide {
+    to {
+      transform: translate(calc(100cqw - 100%), 0);
+    }
+  }
+  @keyframes spin-around {
+    0% {
+      transform: translateZ(0) rotate(0);
+    }
+    15%,
+    35% {
+      transform: translateZ(0) rotate(90deg);
+    }
+    65%,
+    85% {
+      transform: translateZ(0) rotate(270deg);
+    }
+    100% {
+      transform: translateZ(0) rotate(360deg);
+    }
+  }
+}
+
+.contentFormHome {
+  position: absolute;
+  left: 10rem;
+  bottom: 5rem;
+}
+
+.contentFormHome input {
+  width: 12rem;
+  color: #fff;
+}
+
+.contentFormHome div#react-aria-«Rufal7H2» div {
+  color: #fff;
+}
+
+.contentFormHome
+  .inputformhome
+  div[class="group flex flex-col data-[hidden=true]:hidden w-full"] {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.contentFormHome .inputformhome div[class="group flex flex-col group w-full"] {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.descriptionallsectionhome {
+  width: 35rem;
+}
+
+.cardcategorie {
+  width: 23rem;
+  height: 16rem;
+}
+
+.cardcategoriecontent {
+  position: relative;
+  display: inline-block;
+  width: 23rem;
+  height: 16rem;
+  border-radius: 10px;
+  background-position: bottom;
+  background-repeat: no-repeat;
+  background-size: 100%;
+}
+
+.cardcategoriecontent::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); /* noir avec opacité 50% */
+  border-radius: 10px;
+}
+
+.logocategrie1 {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  z-index: 1;
+  width: 4rem;
+  height: 4rem;
+  right: 1rem;
+  top: 1rem;
+}
+
+.allogo {
+  width: 56%;
+}
+
+.contentcategoriehome {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 69.5rem;
+}
+
+.bg-glace {
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.bg-glacev2 {
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow:
+    rgba(0, 0, 0, 0.16) 0px 10px 36px 0px,
+    rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.bg-glacev2::-webkit-scrollbar {
+  width: 8px;
+}
+
+.bg-glacev2::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+  border: 1px solid #ccc; /* Bordure sur la piste */
+}
+
+.bg-glacev2::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.bg-glacev2::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.contentswitch {
+  margin-left: 0 !important;
+}
+
+.contentdestinationshome .swiper {
+  width: 100%;
+  height: 39rem;
+}
+
+.contentdestinationshome .swiper-slide {
+  text-align: center;
+  font-size: 18px;
+  /* background: #444; */
+
+  /* Center slide text vertically */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.contentdestinationshome .swiper-slide img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.swiper-button-next,
+.swiper-rtl .swiper-button-prev {
+  top: 21rem !important;
+}
+
+.swiper-button-prev,
+.swiper-rtl .swiper-button-next {
+  top: 21rem !important;
+}
+
+.carddestinationshome {
+  background-size: 100%;
+  background-repeat: no-repeat;
+  border-radius: 10px;
+  width: 21rem;
+}
+
+.carddestinationshome::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); /* noir avec opacité 50% */
+  border-radius: 10px;
+}
+
+.contentinfocarddestination {
+  border-radius: 10px;
+}
+
+.swiper-button-prev {
+  color: #fff !important;
+  background-color: #000;
+  border-radius: 50%;
+  width: 2rem !important;
+  height: 2rem !important;
+}
+
+.swiper-button-next {
+  color: #fff !important;
+  background-color: #000;
+  border-radius: 50%;
+  width: 2rem !important;
+  height: 2rem !important;
+}
+
+.swiper-button-next:after,
+.swiper-rtl .swiper-button-prev:after {
+  font-size: 1rem !important;
+  font-weight: 800;
+}
+
+.swiper-button-prev:after,
+.swiper-rtl .swiper-button-next:after {
+  font-size: 1rem !important;
+  font-weight: 800;
+}
+
+.iconecardpourquoi {
+  top: -27%;
+  left: 33%;
+  z-index: 1;
+}
+
+.imagedecouverturepourdevenirpartenaire {
+  width: 50%;
+}
+
+.imagedecouverturepourdevenirpartenaire img {
+  width: 100%;
+  border-radius: 10px;
+}
+
+.logodevenirpartenaire {
+  position: absolute;
+  right: -12%;
+  bottom: 79%;
+}
+
+/*----------- Témoignage ----------- */
+.contentavishome .swiper {
+  width: 100%;
+  height: 24rem;
+}
+
+.contentavishome .swiper-slide {
+  text-align: center;
+  font-size: 18px;
+  /* background: #444; */
+
+  /* Center slide text vertically */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.contentavishome .swiper-slide img {
+  display: block;
+  width: 4rem;
+  height: 4rem;
+  object-fit: cover;
+}
+
+.QuoteAvis {
+  top: 2.5rem;
+  left: 7.5rem;
+}
+
+.contentavishome .swiper-button-next,
+.contentavishome .swiper-button-prev {
+  display: none;
+}
+
+.bg-blueGray-800 {
+  --tw-bg-opacity: 1;
+  background-color: rgba(30, 41, 59, var(--tw-bg-opacity));
+}
+
+.avatarProfil > :first-child {
+  width: 5rem;
+  height: 5rem;
+}
+
+.avatarProfil > :nth-child(2) span {
+  font-size: 1rem;
+}
+
+.MoyenDePaimentDefault {
+  background-color: #17c964;
+}
+
+div[data-slot="content"].bg-content1 {
+  min-width: 1rem;
+}
+
+.contentLang {
+  width: 4rem;
+}
+
+.contentLang .liLang span {
+  display: flex;
+  justify-content: center;
+}
+
+#react-aria-«R36ql7H2» {
+  width: 7rem;
+}
+
+.ant-select-selector {
+  background: transparent !important;
+  border: none !important;
+}
+
+.bgBlue {
+  background-color: rgb(30 64 175 / var(--tw-bg-opacity, 1));
+}
+
+.contentTitleBoat span:nth-child(1) {
+  background-color: rgb(30 64 175 / var(--tw-bg-opacity, 1));
+}
+
+/* Masquer le select de l'année */
+.ant-picker-calendar-header .ant-picker-calendar-year-select {
+  display: none !important;
+}
+
+/* Masquer le bouton "Year" */
+.ant-picker-calendar-header .ant-picker-calendar-mode-switch {
+  display: none !important;
+}
+
+.sticky {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.contentsingleimageboat img {
+  object-fit: cover;
+  object-position: bottom;
+}
+
+.contenttitresectionprofile span:nth-child(1) {
+  background: rgba(6, 136, 201, 0.69);
+  box-shadow:
+    rgba(0, 0, 0, 0.16) 0px 10px 36px 0px,
+    rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.bannerpagedevenirpartenaire::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); /* noir avec opacité 50% */
+  border-radius: 10px;
+}
+
+.contentsingleimageboat .visuelImage {
+  width: 68rem;
+  height: 43rem;
+}
