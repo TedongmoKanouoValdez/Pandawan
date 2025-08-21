@@ -22,6 +22,7 @@ import { siteConfig } from "@/config/site";
 import { FaUser } from "react-icons/fa";
 import { SearchIcon, Logo } from "@/components/icons";
 import { useState } from "react";
+import ForgotPasswordModal from "@/components/ForgotPasswordModal";
 
 import {
   Modal,
@@ -89,6 +90,7 @@ export const LockIcon = (props: React.SVGProps<SVGSVGElement>) => {
 
 export const Navbar = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const { isOpen: isOpenPass, onOpen: onOpenPass, onOpenChange: onOpenChangePass } = useDisclosure();
   const {
     isOpen: isOpenRegister,
     onOpen: onOpenRegister,
@@ -116,12 +118,12 @@ export const Navbar = () => {
     />
   );
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-   const [email, setEmail] = useState("");
-   const [password, setPassword] = useState("");
-   const [nom, setNom] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
-  
- const handleRegister = async (onClose: () => void) => {
+
+  const handleRegister = async (onClose: () => void) => {
     try {
       const response = await fetch("http://localhost:3001/api/auth/register", {
         method: "POST",
@@ -129,11 +131,10 @@ export const Navbar = () => {
         body: JSON.stringify({ nom, prenom, email, password, role: "CLIENT" }),
       });
 
-      
       const data = await response.json();
       if (response.ok) {
         alert("Inscription réussie !");
-        onClose(); 
+        onClose();
       } else {
         alert(data.message || "Une erreur est survenue.");
       }
@@ -142,32 +143,31 @@ export const Navbar = () => {
       console.error(err);
     }
   };
-    
+
   const handleLogin = async (e) => {
-    e.preventDefault(); 
+    e.preventDefault();
     try {
-      const response = await fetch('http://localhost:3001/api/auth/login', {
-        method: 'POST',
+      const response = await fetch("http://localhost:3001/api/auth/login", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
       });
-  
+
       const data = await response.json();
-  
+
       if (response.ok) {
-        alert('Connexion réussie !');
-        localStorage.setItem('token', data.token); 
+        alert("Connexion réussie !");
+        localStorage.setItem("token", data.token);
       } else {
-        alert(data.message || 'Erreur de connexion');
+        alert(data.message || "Erreur de connexion");
       }
     } catch (err) {
-      alert('Erreur serveur');
-      console.error('Erreur lors de la connexion :', err);
+      alert("Erreur serveur");
+      console.error("Erreur lors de la connexion :", err);
     }
   };
-  
 
   return (
     <HeroUINavbar
@@ -301,55 +301,56 @@ export const Navbar = () => {
                   <ModalHeader className="flex flex-col gap-1">
                     Bienvenue sur votre espace
                   </ModalHeader>
-                   <form onSubmit={handleLogin}>
-                  <ModalBody>
-                    <Input
-                      endContent={
-                        <MailIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
-                      }
-                      label="Email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter your email"
-                      variant="bordered"
-                    />
-                    <Input
-                      endContent={
-                        <LockIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
-                      }
-                      label="Password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Enter your password"
-                      type="password"
-                      variant="bordered"
-                    />
-                    <div className="flex py-2 px-1 justify-between">
-                      <Checkbox
-                        classNames={{
-                          label: "text-small",
-                        }}
-                      >
-                        Souviens-toi de moi
-                      </Checkbox>
-                      <Link color="primary" href="#" size="sm">
-                        Mot de passe oublié ?
-                      </Link>
-                    </div>
-                  </ModalBody>
-                  <ModalFooter>
-                    <Button color="danger" variant="flat" onPress={onClose}>
-                      Fermer
-                    </Button>
-                    <Button color="primary" onPress={onClose} type="submit">
-                      Se connecter
-                    </Button>
-                  </ModalFooter>
-                   </form>
+                  <form onSubmit={handleLogin}>
+                    <ModalBody>
+                      <Input
+                        endContent={
+                          <MailIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
+                        }
+                        label="Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Enter your email"
+                        variant="bordered"
+                      />
+                      <Input
+                        endContent={
+                          <LockIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
+                        }
+                        label="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter your password"
+                        type="password"
+                        variant="bordered"
+                      />
+                      <div className="flex py-2 px-1 justify-between">
+                        <Checkbox
+                          classNames={{
+                            label: "text-small",
+                          }}
+                        >
+                          Souviens-toi de moi
+                        </Checkbox>
+                        <Link color="primary" href="#" size="sm" onClick={onOpenPass}>
+                          Mot de passe oublié ?
+                        </Link>
+                      </div>
+                    </ModalBody>
+                    <ModalFooter>
+                      <Button color="danger" variant="flat" onPress={onClose}>
+                        Fermer
+                      </Button>
+                      <Button color="primary" onPress={onClose} type="submit">
+                        Se connecter
+                      </Button>
+                    </ModalFooter>
+                  </form>
                 </>
               )}
             </ModalContent>
           </Modal>
+          <ForgotPasswordModal isOpen={isOpenPass} onOpenChange={onOpenChangePass} />
         </NavbarItem>
         <NavbarItem className="space-x-3">
           <Button
@@ -382,7 +383,7 @@ export const Navbar = () => {
                       label="Nom"
                       type="text"
                       value={nom}
-                     onChange={(e) => setNom(e.target.value)}
+                      onChange={(e) => setNom(e.target.value)}
                       placeholder="Veuillez saisir votre nom"
                       variant="bordered"
                     />
@@ -438,7 +439,10 @@ export const Navbar = () => {
                     <Button color="danger" variant="flat" onPress={onClose}>
                       Fermer
                     </Button>
-                    <Button color="primary" onPress={() => handleRegister(onClose)}>
+                    <Button
+                      color="primary"
+                      onPress={() => handleRegister(onClose)}
+                    >
                       S&apos;inscrire
                     </Button>
                   </ModalFooter>

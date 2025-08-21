@@ -72,7 +72,7 @@ async function updateUserWithPhoto(id, data, file) {
     throw new Error("Utilisateur non trouvé");
   }
 
-  // 🔹 Hash du mot de passe si modifié
+  // Hash du mot de passe si modifié
   if (data.motDePasse) {
     const salt = await bcrypt.genSalt(10);
     data.motDePasse = await bcrypt.hash(data.motDePasse, salt);

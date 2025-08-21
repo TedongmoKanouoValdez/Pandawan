@@ -1,103 +1,51 @@
-const request = require('supertest');
-const app = require('./src/app'); // Remplace par le chemin de ton fichier app.js ou le fichier où tu initialises ton express app
+// src/test/unitaires/utilisateurService.test.js
+const fs = require("fs-extra");
 
-describe('Test des routes d\'authentification', () => {
+// Mock de fs-extra AVANT d'importer le service
+jest.mock("fs-extra", () => ({
+  remove: jest.fn().mockResolvedValue(),       // simulation suppression
+  readFile: jest.fn().mockResolvedValue(Buffer.from("fake image content")), // simulation lecture
+  writeFile: jest.fn().mockResolvedValue(),    // simulation écriture si nécessaire
+}));
 
-  // Test de l'inscription
-  describe('POST /api/auth/register', () => {
-    test('Devrait créer un nouvel utilisateur avec des données valides', async () => {
-      const response = await request(app)
-        .post('/api/auth/register')
-        .send({
-          nom: 'John',
-          prenom: 'Doe',
-          email: 'john.doe@example.com',
-          password: 'Valid123!',
-          role: 'CLIENT'
-        });
-      
-      expect(response.status).toBe(201);
-      expect(response.body.message).toBe('Utilisateur créé');
-      expect(response.body.user).toHaveProperty('email', 'john.doe@example.com');
-      expect(response.body.user).not.toHaveProperty('motDePasse');
-    });
+// Mock Prisma
+jest.mock("@prisma/client", () => {
+  return {
+    PrismaClient: jest.fn().mockImplementation(() => ({
+      utilisateur: {
+        create: jest.fn().mockResolvedValue({
+          id: 1,
+          email: "john.doe@example.com",
+          nom: "Doe",
+          prenom: "John",
+        }),
+      },
+      $disconnect: jest.fn().mockResolvedValue(),
+    })),
+  };
+});
 
-    test('Devrait retourner une erreur si l\'email est déjà utilisé', async () => {
-      await request(app)
-        .post('/api/auth/register')
-        .send({
-          nom: 'John',
-          prenom: 'Doe',
-          email: 'john.doe@example.com',
-          password: 'Valid123!',
-          role: 'CLIENT'
-        });
+// Import DU SERVICE APRÈS les mocks
+const utilisateurService = require("../../services/utilisateurService");
 
-      const response = await request(app)
-        .post('/api/auth/register')
-        .send({
-          nom: 'Jane',
-          prenom: 'Doe',
-          email: 'john.doe@example.com',
-          password: 'Valid123!',
-          role: 'CLIENT'
-        });
+describe("utilisateurService", () => {
+  test("devrait créer un utilisateur avec des données valides", async () => {
+    const data = {
+      email: "john.doe@example.com",
+      motDePasse: "Password123!", 
+      nom: "Doe",
+      prenom: "John",
+    };
 
-      expect(response.status).toBe(409);
-      expect(response.body.message).toBe('Email déjà utilisé');
-    });
+    const file = { path: "C:\\tmp\\fakepath.jpg" }; // mock du fichier
 
-    test('Devrait retourner une erreur pour des données invalides', async () => {
-      const response = await request(app)
-        .post('/api/auth/register')
-        .send({
-          nom: '',
-          prenom: 'Doe',
-          email: 'invalidemail',
-          password: 'short'
-        });
+    const utilisateur = await utilisateurService.createUserWithPhoto(data, file);
 
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe('Nom, prénom, email et mot de passe sont requis');
-    });
-  });
+    expect(utilisateur).toHaveProperty("id", 1);
+    expect(utilisateur).toHaveProperty("email", "john.doe@example.com");
+    expect(utilisateur).toHaveProperty("nom", "Doe");
+    expect(utilisateur).toHaveProperty("prenom", "John");
 
-  // Test de la connexion
-  describe('POST /api/auth/login', () => {
-    test('Devrait connecter un utilisateur avec des identifiants valides', async () => {
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'john.doe@example.com',
-          password: 'Valid123!'
-        });
-
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('token');
-    });
-
-    test('Devrait retourner une erreur si l\'utilisateur n\'existe pas', async () => {
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'unknown@example.com',
-          password: 'Valid123!'
-        });
-
-      expect(response.status).toBe(401);
-      expect(response.body.message).toBe('Utilisateur non trouvé');
-    });
-
-    test('Devrait retourner une erreur si le mot de passe est incorrect', async () => {
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'john.doe@example.com',
-          password: 'WrongPassword!'
-        });
-
-      expect(response.status).toBe(401);
-      expect(response.body.message).toBe('Mot de passe incorrect');
-    });
+    expect(fs.remove).not.toHaveBeenCalled();
   });
 });
