@@ -23,8 +23,8 @@ app.use('/upload-documents', uploadRoute);
 const userRoutes = require('./routes/utilisateurRoute');
 app.use('/api/utilisateur', userRoutes);
 
-const paymentRoutes = require('./routes/paymentRoutes'); 
-app.use("/api/payment", paymentRoutes);
+// const paymentRoutes = require('./routes/paymentRoutes'); 
+// app.use("/api/payment", paymentRoutes);
 
 
 const emailRoutes = require('./routes/contactRoutes');
