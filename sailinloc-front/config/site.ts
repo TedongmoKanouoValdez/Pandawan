@@ -21,10 +21,10 @@ export const siteConfig = {
       label: "Devenir partenaire",
       href: "/devenirpartenaire",
     },
-    // {
-    //   label: "A propos",
-    //   href: "/about",
-    // },
+    {
+      label: "Nous Contacter",
+      href: "/contact",
+    },
   ],
   navMenuItems: [
     {
@@ -42,6 +42,10 @@ export const siteConfig = {
     {
       label: "Devenir partenaire",
       href: "/devenirpartenaire",
+    },
+     {
+      label: "Nous Contacter",
+      href: "/contact",
     },
   ],
   links: {

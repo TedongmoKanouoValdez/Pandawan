@@ -40,9 +40,13 @@ export default function RootLayout({
         )}
       >
         <Providers themeProps={{ attribute: "class", defaultTheme: "light" }}>
+<<<<<<< HEAD
           <GlobalLoader>
             <ClientLayout>{children}</ClientLayout>
           </GlobalLoader>
+=======
+          <ClientLayout>{children}</ClientLayout>
+>>>>>>> main
         </Providers>
       </body>
     </html>

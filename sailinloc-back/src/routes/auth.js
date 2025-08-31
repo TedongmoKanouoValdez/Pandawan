@@ -2,6 +2,12 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+<<<<<<< HEAD
+=======
+const nodemailer = require('nodemailer'); // <- ajoute en haut de auth.js
+const { sendMail } = require('../utils/mailer');
+const { resetPasswordTemplate } = require('../utils/emailTemplate');
+>>>>>>> main
 const { PrismaClient, RoleUtilisateur } = require("@prisma/client");
 const prisma = new PrismaClient();
 
@@ -98,7 +104,6 @@ function isSafeInput(input) {
 // Route POST /api/auth/login
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
-
   // Vérifie la présence des champs
   if (!email || !password) {
     return res.status(400).json({ message: "Email et mot de passe requis" });
@@ -120,8 +125,8 @@ router.post("/login", async (req, res) => {
     if (!user) {
       return res.status(401).json({ message: "Utilisateur non trouvé" });
     }
-
     const validPassword = await bcrypt.compare(password, user.motDePasse);
+    
     if (!validPassword) {
       return res.status(401).json({ message: "Mot de passe incorrect" });
     }
@@ -146,4 +151,72 @@ router.post("/login", async (req, res) => {
   }
 });
 
+
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+
+  if (!email || !isSafeInput(email) || !emailRegex.test(email)) {
+    return res.status(400).json({ message: "Email invalide" });
+  }
+
+  const user = await prisma.utilisateur.findUnique({ where: { email } });
+  if (!user) {
+    return res.json({ message: "Si l’email existe, un lien a été envoyé." });
+  }
+
+  const token = jwt.sign(
+    { email: user.email },
+    process.env.JWT_SECRET,
+    { expiresIn: '15m' }
+  );
+
+  const resetUrl = `http://localhost:3000/resetpassword/${token}`;
+  console.log("Reset URL (DEV) :", resetUrl);
+
+  try {
+    await sendMail({
+      to: user.email,
+      subject: "Réinitialisation de votre mot de passe",
+      html:  resetPasswordTemplate(resetUrl),
+    });
+
+    res.json({ message: "Email envoyé avec success!!!" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Erreur lors de l’envoi de l’email" });
+  }
+});
+// Route : /api/auth/reset-password
+router.post('/reset-password', async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  if (!token || !newPassword) {
+    return res.status(400).json({ message: "Token et nouveau mot de passe requis" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const email = decoded.email;
+
+    const user = await prisma.utilisateur.findUnique({ where: { email } });
+    if (!user) {
+      return res.status(404).json({ message: "Utilisateur introuvable" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await prisma.utilisateur.update({
+      where: { email },
+      data: { motDePasse: hashedPassword },
+    });
+
+    res.json({ message: "Mot de passe mis à jour avec succès" });
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: "Token expiré" });
+    }
+    console.error(err);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
 module.exports = router;
