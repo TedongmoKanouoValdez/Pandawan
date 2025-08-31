@@ -40,10 +40,9 @@ model Proprietaire {
 model Bateau {
   id                 Int           @id @default(autoincrement())
   nom                String
-  slug               String        @unique @default("sailingloc-slug")
+  slug               String        @unique @default(dbgenerated("gen_random_uuid()"))
   modele             String
   portdefault        String?
-  prix               Decimal
   description        String?
   typeBateau         String?
   datesIndisponibles String?
@@ -60,44 +59,57 @@ model Bateau {
 }
 
 model DetailsBateau {
-  id                    Int      @id @default(autoincrement())
-  longueur              Float?
-  largeur               Float?
-  tirantEau             Float?
-  capaciteMax           Int?
-  nombreCabines         Int?
-  nombreCouchages       Int?
-  equipements           String?
-  optionsPayantes       String?
-  zonesNavigation       String?
-  depotgarantie         String?
-  dureeLocation         String?
-  portDeplacement       String?
-  portArriver           String?
-  politiqueAnnulation   String?
-  locationSansPermis    Boolean?
-  numeroPoliceAssurance String?
-  certificatNavigation  String?
-  anneeConstruction     String?
-  tarifications         String?
-  portdedepart          String?
-  portdarriver          String?
+  id                                   Int      @id @default(autoincrement())
+  longueur                             Float?
+  largeur                              Float?
+  tirantEau                            Float?
+  capaciteMax                          Int?
+  nombreCabines                        Int?
+  nombreCouchages                      Int?
+  equipements                          String?
+  optionsPayantes                      String?
+  zonesNavigation                      String?
+  depotgarantie                        String?
+  PassagersInclusDansLePrix            String?
+  SupplementParPassagerSupplémentaire String?
+  moteur                               String?
+  reservoirEau                         String?
+  reservoirCarburant                   String?
+  dureeLocation                        String?
+  politiqueAnnulation                  String?
+  locationSansPermis                   Boolean?
+  numeroPoliceAssurance                String?
+  certificatNavigation                 String?
+  anneeConstruction                    String?
+  tarifications                        String?
+  portdedepart                         String?
+  portdarriver                         String?
 
   bateau   Bateau @relation(fields: [bateauId], references: [id])
   bateauId Int    @unique
 }
 
 model Reservation {
-  id                 Int               @id @default(autoincrement())
-  utilisateur        Utilisateur       @relation(fields: [utilisateurId], references: [id])
-  utilisateurId      Int
-  bateau             Bateau            @relation(fields: [bateauId], references: [id])
-  bateauId           Int
-  dateDebut          DateTime
-  dateFin            DateTime
-  statut             StatutReservation
-  creeLe             DateTime          @default(now())
-  urlDocumentContrat String?
+  id                      Int               @id @default(autoincrement())
+  utilisateur             Utilisateur       @relation(fields: [utilisateurId], references: [id])
+  utilisateurId           Int
+  bateau                  Bateau            @relation(fields: [bateauId], references: [id])
+  bateauId                Int
+  dateDebut               DateTime
+  dateFin                 DateTime
+  plage                   String?
+  numbreDePassage         String?
+  supplement              String?
+  prixDeBase              Decimal?
+  prixSupplementPassagers Decimal?
+  prixOptionsPayantes     Decimal?
+  Total                   Decimal?
+  heure                   String?
+  statut                  StatutReservation
+  data                    String?
+  creeLe                  DateTime          @default(now())
+  urlDocumentContrat      String?
+  urlRecu                 String?
 
   paiement     Paiement?
   contrat      Contrat?      @relation(name: "ContratToReservation")
@@ -156,13 +168,14 @@ model Message {
   id             Int          @id @default(autoincrement())
   expediteur     Utilisateur  @relation("MessagesEnvoyes", fields: [expediteurId], references: [id])
   expediteurId   Int
-  destinataire   Utilisateur  @relation("MessagesRecus", fields: [destinataireId], references: [id])
-  destinataireId Int
+  destinataire   Utilisateur? @relation("MessagesRecus", fields: [destinataireId], references: [id])
+  destinataireId Int?
   reservation    Reservation? @relation(fields: [reservationId], references: [id])
   reservationId  Int?
   bateau         Bateau?      @relation(fields: [bateauId], references: [id])
   bateauId       Int?
   contenu        String
+  object         String?
   dateEnvoi      DateTime
   lu             Boolean      @default(false)
   creeLe         DateTime     @default(now())
@@ -197,13 +210,13 @@ model DemandeProprietaire {
 }
 
 model Media {
-  id          Int       @id @default(autoincrement())
-  url         String
-  type        TypeMedia
-  titre       String?
-  description String?
-  numeroPolice   String? 
-  creeLe      DateTime  @default(now())
+  id           Int       @id @default(autoincrement())
+  url          String
+  type         TypeMedia
+  titre        String?
+  description  String?
+  numeroPolice String?
+  creeLe       DateTime  @default(now())
 
   utilisateur   Utilisateur? @relation(fields: [utilisateurId], references: [id])
   utilisateurId Int?
@@ -238,7 +251,7 @@ enum StatutReservation {
 
 enum MethodePaiement {
   CARTE
-  VIREMENT
+  APPLE_PAY
   PAYPAL
 }
 
@@ -259,6 +272,8 @@ enum TypeMedia {
   ATTESTATION_ASSURANCE
   CERTIFICAT_NAVIGATION
   PROFIL
+  CONTRAT
+  RECUS
 }
 
 enum EtatPaiement {

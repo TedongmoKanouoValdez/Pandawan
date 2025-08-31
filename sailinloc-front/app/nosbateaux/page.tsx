@@ -18,6 +18,7 @@ import { HiUserGroup } from "react-icons/hi2";
 import { GiCaptainHatProfile } from "react-icons/gi";
 import { GiTakeMyMoney } from "react-icons/gi";
 import { useRouter } from "next/navigation";
+import { Empty } from "antd";
 
 import {
   Pagination,
@@ -246,224 +247,232 @@ export default function NosBateauxPage() {
             </div>
             <hr className="mb-8 border border-black" />
             <div>
-              <div className="grid grid-cols-3 gap-3 place-items-center">
-                {pagedData.map((bateau) => {
-                  const cover = bateau.medias.find((m) => m.type === "COVER");
-                  let optionsPayantes = [];
-                  if (bateau?.detail?.optionsPayantes) {
-                    optionsPayantes = JSON.parse(bateau.detail.optionsPayantes);
-                  }
-                  const hasSkipper = optionsPayantes.some(
-                    (option) => option.id === "Skipper"
-                  );
-
-                  if (!bateau?.detail?.tarifications) return null;
-
-                  let affichage = "";
-
-                  try {
-                    const tarifs = JSON.parse(
-                      bateau.detail.tarifications || "[]"
+              <div className={`grid ${pagedData && pagedData.length > 0 ? 'grid-cols-3 gap-3' : 'grid-cols-1 gap-1' } place-items-center`}>
+                {pagedData && pagedData.length > 0 ? (
+                  pagedData.map((bateau) => {
+                    const cover = bateau.medias.find((m) => m.type === "COVER");
+                    let optionsPayantes = [];
+                    if (bateau?.detail?.optionsPayantes) {
+                      optionsPayantes = JSON.parse(
+                        bateau.detail.optionsPayantes
+                      );
+                    }
+                    const hasSkipper = optionsPayantes.some(
+                      (option) => option.id === "Skipper"
                     );
 
-                    affichage = tarifs
-                      .map((tarif: any) => {
-                        const montant = parseFloat(tarif.montant);
-                        const label = typeToLabel[tarif.type] || "";
-                        return `${montant}€ ${label}`;
-                      })
-                      .join(", ");
-                  } catch (error) {
-                    console.error(
-                      `Erreur parsing tarifications pour ${bateau.header} :`,
-                      error
-                    );
-                  }
+                    if (!bateau?.detail?.tarifications) return null;
 
-                  return (
-                    <div
-                      key={bateau.id}
-                      className="relative carddestinationshome flex flex-col space-y-24"
-                      style={{
-                        backgroundImage: `url(${cover?.url || "https://res.cloudinary.com/dluqkutu8/image/upload/v1754741102/view-boat-water_razzxb.jpg"})`,
-                        backgroundPositionX: "center",
-                        backgroundSize: "26rem",
-                      }}
-                    >
-                      <div className="flex flex-row justify-between mx-4 mt-4 items-center">
-                        <div className="bg-glace flex flex-row space-x-4 items-center px-2.5 py-1 rounded-full">
-                          <div>
-                            <PiSunDimFill className="text-yellow-400 w-6 h-6" />
-                          </div>
-                          <div className="text-white text-base">
-                            25°C en été -{" "}
-                            <span className="font-bold">France</span>
-                          </div>
-                        </div>
-                        <div className="cursor-pointer z-10">
-                          <BiSolidBookmark className="w-8 h-8 text-white" />
-                        </div>
-                      </div>
-                      <div>
-                        <Space
-                          direction="vertical"
-                          size="middle"
-                          style={{ width: "100%", gap: "2rem" }}
-                        >
-                          <Badge.Ribbon
-                            text="Croisières le long de la Côte d'Azur."
-                            className="bg-glacev2"
-                          ></Badge.Ribbon>
-                        </Space>
-                      </div>
-                      <div className="bg-glace contentinfocarddestination text-left text-base space-y-4 px-2">
-                        <div className="space-y-2 px-2">
-                          <div>
-                            <Chip
-                              color="warning"
-                              className="text-white text-lg font-medium mt-2 border-none"
-                              variant="dot"
-                            >
-                              {bateau.header}
-                            </Chip>
-                          </div>
-                        </div>
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <div className="space-x-2">
-                              <Space>
-                                <Tooltip title={bateau.type} color="#000">
-                                  <Chip
-                                    color="warning"
-                                    className="cursor-pointer"
-                                    variant="shadow"
-                                  >
-                                    <div className="flex space-x-2 items-cenyter">
-                                      <div>
-                                        <FaSailboat />
-                                      </div>
-                                      <div>
-                                        <MonTexte texte={bateau.type} />
-                                      </div>
-                                    </div>
-                                  </Chip>
-                                </Tooltip>
-                              </Space>
-                              <Space>
-                                <Tooltip
-                                  title={hasSkipper ? "Inclus" : "Non inclus"}
-                                  color="#000"
-                                >
-                                  <Chip
-                                    color="warning"
-                                    className="cursor-pointer"
-                                    variant="shadow"
-                                  >
-                                    <div className="flex space-x-2 items-center">
-                                      <div>
-                                        <GiCaptainHatProfile />
-                                      </div>
-                                      <div>
-                                        <MonTexte
-                                          texte={
-                                            hasSkipper ? "Inclus" : "Non inclus"
-                                          }
-                                        />
-                                      </div>
-                                    </div>
-                                  </Chip>
-                                </Tooltip>
-                              </Space>
-                              <Space>
-                                <Tooltip title={affichage} color="#000">
-                                  <Chip
-                                    color="warning"
-                                    className="cursor-pointer"
-                                    variant="shadow"
-                                  >
-                                    <div className="flex space-x-2 items-center">
-                                      <div>
-                                        <GiTakeMyMoney />
-                                      </div>
-                                      <div>
-                                        <MonTexte texte={affichage} />
-                                      </div>
-                                    </div>
-                                  </Chip>
-                                </Tooltip>
-                              </Space>
-                            </div>
-                            <div className="space-x-2">
-                              <Space>
-                                <Tooltip title={bateau.port} color="#000">
-                                  <Chip
-                                    color="warning"
-                                    className="cursor-pointer"
-                                    variant="shadow"
-                                  >
-                                    <div className="flex space-x-2 items-center">
-                                      <div>
-                                        <IoMdPin />
-                                      </div>
-                                      <div>
-                                        <MonTexte texte={bateau.port} />
-                                      </div>
-                                    </div>
-                                  </Chip>
-                                </Tooltip>
-                              </Space>
-                              <Space>
-                                <Tooltip
-                                  title={`${bateau?.detail?.capaciteMax} personnes`}
-                                  color="#000"
-                                >
-                                  <Chip
-                                    color="warning"
-                                    className="cursor-pointer"
-                                    variant="shadow"
-                                  >
-                                    <div className="flex space-x-2 items-center">
-                                      <div>
-                                        <HiUserGroup />
-                                      </div>
-                                      <div>
-                                        <MonTexte
-                                          texte={`${bateau?.detail?.capaciteMax} personnes`}
-                                        />
-                                      </div>
-                                    </div>
-                                  </Chip>
-                                </Tooltip>
-                              </Space>
-                            </div>
-                          </div>
-                          <div
-                            className="flex flex-row justify-between items-center"
-                            style={{ marginBottom: "1rem" }}
-                          >
+                    let affichage = "";
+
+                    try {
+                      const tarifs = JSON.parse(
+                        bateau.detail.tarifications || "[]"
+                      );
+
+                      affichage = tarifs
+                        .map((tarif: any) => {
+                          const montant = parseFloat(tarif.montant);
+                          const label = typeToLabel[tarif.type] || "";
+                          return `${montant}€ ${label}`;
+                        })
+                        .join(", ");
+                    } catch (error) {
+                      console.error(
+                        `Erreur parsing tarifications pour ${bateau.header} :`,
+                        error
+                      );
+                    }
+
+                    return (
+                      <div
+                        key={bateau.id}
+                        className="relative carddestinationshome flex flex-col space-y-24"
+                        style={{
+                          backgroundImage: `url(${cover?.url || "https://res.cloudinary.com/dluqkutu8/image/upload/v1754741102/view-boat-water_razzxb.jpg"})`,
+                          backgroundPositionX: "center",
+                          backgroundSize: "26rem",
+                        }}
+                      >
+                        <div className="flex flex-row justify-between mx-4 mt-4 items-center">
+                          <div className="bg-glace flex flex-row space-x-4 items-center px-2.5 py-1 rounded-full">
                             <div>
-                              <RippleButton
-                                onClick={() =>
-                                  router.push(`/boat/${bateau.slug}`)
-                                }
-                                className="bg-white text-black"
-                              >
-                                Voir les bateaux
-                              </RippleButton>
+                              <PiSunDimFill className="text-yellow-400 w-6 h-6" />
                             </div>
-                            <div className="flex flex-row space-x-2">
-                              <FaStar className="text-amber-400" />
-                              <FaStar className="text-amber-400" />
-                              <FaStar className="text-amber-400" />
-                              <FaStar className="text-amber-400" />
-                              <FaStar className="text-white" />
+                            <div className="text-white text-base">
+                              25°C en été -{" "}
+                              <span className="font-bold">France</span>
+                            </div>
+                          </div>
+                          <div className="cursor-pointer z-10">
+                            <BiSolidBookmark className="w-8 h-8 text-white" />
+                          </div>
+                        </div>
+                        <div>
+                          <Space
+                            direction="vertical"
+                            size="middle"
+                            style={{ width: "100%", gap: "2rem" }}
+                          >
+                            <Badge.Ribbon
+                              text="Croisières le long de la Côte d'Azur."
+                              className="bg-glacev2"
+                            ></Badge.Ribbon>
+                          </Space>
+                        </div>
+                        <div className="bg-glace contentinfocarddestination text-left text-base space-y-4 px-2">
+                          <div className="space-y-2 px-2">
+                            <div>
+                              <Chip
+                                color="warning"
+                                className="text-white text-lg font-medium mt-2 border-none"
+                                variant="dot"
+                              >
+                                {bateau.header}
+                              </Chip>
+                            </div>
+                          </div>
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <div className="space-x-2">
+                                <Space>
+                                  <Tooltip title={bateau.type} color="#000">
+                                    <Chip
+                                      color="warning"
+                                      className="cursor-pointer"
+                                      variant="shadow"
+                                    >
+                                      <div className="flex space-x-2 items-cenyter">
+                                        <div>
+                                          <FaSailboat />
+                                        </div>
+                                        <div>
+                                          <MonTexte texte={bateau.type} />
+                                        </div>
+                                      </div>
+                                    </Chip>
+                                  </Tooltip>
+                                </Space>
+                                <Space>
+                                  <Tooltip
+                                    title={hasSkipper ? "Inclus" : "Non inclus"}
+                                    color="#000"
+                                  >
+                                    <Chip
+                                      color="warning"
+                                      className="cursor-pointer"
+                                      variant="shadow"
+                                    >
+                                      <div className="flex space-x-2 items-center">
+                                        <div>
+                                          <GiCaptainHatProfile />
+                                        </div>
+                                        <div>
+                                          <MonTexte
+                                            texte={
+                                              hasSkipper
+                                                ? "Inclus"
+                                                : "Non inclus"
+                                            }
+                                          />
+                                        </div>
+                                      </div>
+                                    </Chip>
+                                  </Tooltip>
+                                </Space>
+                                <Space>
+                                  <Tooltip title={affichage} color="#000">
+                                    <Chip
+                                      color="warning"
+                                      className="cursor-pointer"
+                                      variant="shadow"
+                                    >
+                                      <div className="flex space-x-2 items-center">
+                                        <div>
+                                          <GiTakeMyMoney />
+                                        </div>
+                                        <div>
+                                          <MonTexte texte={affichage} />
+                                        </div>
+                                      </div>
+                                    </Chip>
+                                  </Tooltip>
+                                </Space>
+                              </div>
+                              <div className="space-x-2">
+                                <Space>
+                                  <Tooltip title={bateau.port} color="#000">
+                                    <Chip
+                                      color="warning"
+                                      className="cursor-pointer"
+                                      variant="shadow"
+                                    >
+                                      <div className="flex space-x-2 items-center">
+                                        <div>
+                                          <IoMdPin />
+                                        </div>
+                                        <div>
+                                          <MonTexte texte={bateau.port} />
+                                        </div>
+                                      </div>
+                                    </Chip>
+                                  </Tooltip>
+                                </Space>
+                                <Space>
+                                  <Tooltip
+                                    title={`${bateau?.detail?.capaciteMax} personnes`}
+                                    color="#000"
+                                  >
+                                    <Chip
+                                      color="warning"
+                                      className="cursor-pointer"
+                                      variant="shadow"
+                                    >
+                                      <div className="flex space-x-2 items-center">
+                                        <div>
+                                          <HiUserGroup />
+                                        </div>
+                                        <div>
+                                          <MonTexte
+                                            texte={`${bateau?.detail?.capaciteMax} personnes`}
+                                          />
+                                        </div>
+                                      </div>
+                                    </Chip>
+                                  </Tooltip>
+                                </Space>
+                              </div>
+                            </div>
+                            <div
+                              className="flex flex-row justify-between items-center"
+                              style={{ marginBottom: "1rem" }}
+                            >
+                              <div>
+                                <RippleButton
+                                  onClick={() =>
+                                    router.push(`/boat/${bateau.slug}`)
+                                  }
+                                  className="bg-white text-black"
+                                >
+                                  Voir les bateaux
+                                </RippleButton>
+                              </div>
+                              <div className="flex flex-row space-x-2">
+                                <FaStar className="text-amber-400" />
+                                <FaStar className="text-amber-400" />
+                                <FaStar className="text-amber-400" />
+                                <FaStar className="text-amber-400" />
+                                <FaStar className="text-white" />
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                ) : (
+                  <Empty description={false} />
+                )}
               </div>
               <div className="flex justify-end w-full mt-8">
                 {/* <Pagination showControls initialPage={1} total={10} /> */}

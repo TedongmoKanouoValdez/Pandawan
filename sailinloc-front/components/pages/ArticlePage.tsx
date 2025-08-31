@@ -36,6 +36,7 @@ import CommentsSection from "@/components/pages/CommentsSection";
 import BateauSimilaireSection from "@/components/pages/BateauSimilaire";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { GiRadioTower, GiThermometerCold, GiBunkBeds } from "react-icons/gi";
+import { GiPaddles } from "react-icons/gi";
 import { MdOutlineAutoMode } from "react-icons/md";
 import {
   FaUserTie,
@@ -52,11 +53,14 @@ import {
   FaDrumstickBite,
 } from "react-icons/fa";
 import { MdAirportShuttle } from "react-icons/md";
-import { GiWaterLadder, GiKayak } from "react-icons/gi";
+import { TbKayak } from "react-icons/tb";
 import { BsDot } from "react-icons/bs";
-import { jwtDecode } from "jwt-decode";
 import { useAppStore } from "@/store/appStore";
 import { useRouter } from "next/navigation";
+import { CustomModal } from "@/components/CustomModal";
+import { useDisclosure } from "@heroui/modal";
+import OptionPaiement from "@/components/pages/OptionPaiement";
+import { Radio, Affix } from "antd";
 
 interface ArticlePageProps {
   slug: string;
@@ -73,6 +77,25 @@ const typeToLabel: Record<string, string> = {
   "Par séjour (forfait global, peu importe la durée)": "/ séjour",
 };
 
+function decodeJWT(token: string): Token | null {
+  try {
+    const payload = token.split(".")[1];
+    const decoded = JSON.parse(atob(payload));
+    return decoded as Token;
+  } catch (e) {
+    console.error("Erreur decoding JWT :", e);
+    return null;
+  }
+}
+
+interface Token {
+  nom: string;
+  prenom: string;
+  email: string;
+  telephone: string;
+  userId: string;
+}
+
 export default function ArticlePage({ slug }: ArticlePageProps) {
   const divRef = useRef<HTMLDivElement | null>(null);
   const [isSticky, setSticky] = useState(false);
@@ -81,12 +104,83 @@ export default function ArticlePage({ slug }: ArticlePageProps) {
   const { date1, date2, fullRange } = useDateRange();
   const [data, setData] = useState<Bateau[]>([]);
   const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState<string | null>(null);
+  const [token, setToken] = useState<Token | null>(null);
   const [utilisateurId, setUtilisateurId] = useState<number>(0);
   const setUserData = useAppStore((state) => state.setUserData);
   const router = useRouter();
+  const [selectedPrice, setSelectedPrice] = useState<number>(0);
+  const [selectedFormule, setSelectedFormule] = useState<string>("");
+  const [plagehoraire, setPlagehoraire] = useState<string | null>(null);
+  const [top, setTop] = React.useState<number>(100);
+
+  const handleSelectPrice = (data: { prix: number; periode: string }) => {
+    setSelectedPrice(data.prix);
+    setSelectedFormule(data.periode);
+    console.log("Prix reçu du composant enfant :", data);
+  };
+
+  const handleChange = (e: any) => {
+    setPlagehoraire(e.target.value);
+    console.log("Valeur sélectionnée :", e.target.value);
+  };
+
+  // Pour le modal
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [modalProps, setModalProps] = React.useState({
+    title: "",
+    message: "",
+    backdrop: "opaque" as "opaque" | "transparent",
+    primaryAction: undefined as
+      | { label: string; onPress: () => void }
+      | undefined,
+    secondaryAction: undefined as
+      | { label: string; onPress: () => void }
+      | undefined,
+  });
+
+  const handleOpenModal = (message: string, title?: string) => {
+    setModalProps({
+      title,
+      message,
+      backdrop: "opaque",
+      primaryAction: { label: "OK", onPress: onClose },
+    });
+    onOpen();
+  };
 
   function handleNext() {
+    if (!token?.userId) {
+      handleOpenModal(
+        "Vous devez être connecté pour commenter.",
+        "Connexion requise"
+      );
+      return;
+    }
+
+    if (!date1 || !date2) {
+      handleOpenModal(
+        "Veuillez sélectionner les deux dates.",
+        "Dates manquantes"
+      );
+      return;
+    }
+
+    if (selectedFormule === "demi-journée") {
+      if (!plagehoraire) {
+        handleOpenModal(
+          "Veuillez sélectionner une heures pour le démi-journée.",
+          "Horaires manquantes"
+        );
+        return;
+      }
+    }
+
+    // ensuite tu peux utiliser format en toute sécurité
+    if (!date1.isValid() || !date2.isValid()) {
+      handleOpenModal("Format de date invalide.", "Erreur de date");
+      return;
+    }
+
     setUserData({
       DateDeReservation: [
         date1.format("YYYY-MM-DD"),
@@ -100,16 +194,21 @@ export default function ArticlePage({ slug }: ArticlePageProps) {
       nomdubateau: data[0].header,
       port: data[0].port,
       dureeLocation: data[0].dureeLocation,
-      politiqueAnnulation: data[0].politiqueAnnulation.split(":")[1]?.trim(),
-      tarifs: affichageTarifs,
+      politiqueAnnulation: (
+        data[0].politiqueAnnulation.split(":")[1] ?? ""
+      ).trim(),
+      tarifs: (Number(selectedPrice) || 0) * (fullRange?.length ?? 1),
       SupplementParPassagerSupplémentaire:
         data[0].SupplementParPassagerSupplémentaire,
       PassagersInclusDansLePrix: data[0].PassagersInclusDansLePrix,
       comition: data[0].depotgarantie,
       capaciteMax: data[0].capaciteMax,
       plage: fullRange,
-      idUser: token.userId,
+      idUser: utilisateurId,
       prenom: token.prenom,
+      plagehoraire: plagehoraire,
+      selectedFormule: selectedFormule,
+      typeBateau: data[0].type,
     });
     router.push("/reservation");
   }
@@ -117,11 +216,11 @@ export default function ArticlePage({ slug }: ArticlePageProps) {
   useEffect(() => {
     const sessionData = localStorage.getItem("token");
     if (sessionData) {
-      const Token = jwtDecode(sessionData);
-      setUtilisateurId(Token.userId);
-      setToken(Token);
-      // console.log("Token JWT :", Token);
-      // console.log("ID :", Token.userId);
+      const decodedToken = decodeJWT(sessionData);
+      if (decodedToken) {
+        setUtilisateurId(Number(decodedToken.userId));
+        setToken(decodedToken);
+      }
     }
   }, []);
 
@@ -139,8 +238,8 @@ export default function ArticlePage({ slug }: ArticlePageProps) {
     Hôtesse: <FaUserNurse />,
     "Chef cuisinier": <FaUtensils />,
     "Instructeur de plongée": <FaWater />,
-    Paddle: <GiWaterLadder />,
-    Kayak: <GiKayak />,
+    Paddle: <GiPaddles />,
+    Kayak: <TbKayak />,
     Wakeboard: <FaWater />,
     Jetski: <FaMotorcycle />,
     "Bouée tractée": <BsDot />,
@@ -296,7 +395,9 @@ export default function ArticlePage({ slug }: ArticlePageProps) {
 
   if (loading) return <p>Chargement…</p>;
 
-  console.log(fullRange);
+  console.log(fullRange?.length);
+  console.log(date1);
+  console.log(date2);
 
   return (
     <>
@@ -474,24 +575,53 @@ export default function ArticlePage({ slug }: ArticlePageProps) {
                         />
                       </LinkPreview>
                     </div>
+
                     <div className="mt-[3rem]">
                       <div className="text-xl text-black font-bold underline underline-offset-8 mb-4">
-                        Disponibilités
+                        Sélectionnez votre formule
                       </div>
-                      <div className="flex items-center justify-center w-full mb-4">
-                        <div className="flex flex-col w-full">
-                          <div className="w-full flex items-center my-3">
-                            <Alert
-                              color="warning"
-                              title="Sélectionnez la plage de dates souhaitée pour commencer votre réservation."
-                            />
+                      <OptionPaiement
+                        tarifs={affichageTarifs}
+                        onSelectPrice={handleSelectPrice}
+                      />
+                    </div>
+
+                    <div className="mt-[3rem]">
+                      {/* <div className="text-xl text-black font-bold underline underline-offset-8 mb-4">
+                        Disponibilités
+                      </div> */}
+                      <div>
+                        <div className="flex items-center justify-center w-full mb-4">
+                          <div className="flex flex-col w-full">
+                            <div className="w-full flex items-center my-3">
+                              <Alert
+                                color="warning"
+                                title="Sélectionnez la plage de dates souhaitée pour commencer votre réservation."
+                              />
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div>
-                        <CalendarSingleBoat
-                          datesIndisponibles={data[0].datesIndisponibles}
-                        />
+                        {selectedFormule === "demi-journée" && (
+                          <div className="my-4">
+                            <Radio.Group
+                              onChange={handleChange}
+                              value={plagehoraire}
+                            >
+                              <Radio value="Matin (08h-12h)">
+                                Matin (08h-12h)
+                              </Radio>
+                              <Radio value="Après-midi (13h-17h)">
+                                Après-midi (13h-17h)
+                              </Radio>
+                            </Radio.Group>
+                          </div>
+                        )}
+                        <div>
+                          <CalendarSingleBoat
+                            datesIndisponibles={data[0].datesIndisponibles}
+                            typeLocation={selectedFormule}
+                          />
+                        </div>
                       </div>
                     </div>
                     <div className="text-lg text-gray-700 mt-4">
@@ -513,10 +643,6 @@ export default function ArticlePage({ slug }: ArticlePageProps) {
                             ? "Permis bateau côtier obligatoire"
                             : "Permis bateau côtier non obligatoire"}
                         </li>
-                        <li>
-                          Politique d'annulation :{" "}
-                          {data[0].politiqueAnnulation.split(":")[1]?.trim()}
-                        </li>
                         <li>Contrat de location signé avant le départ.</li>
                       </ul>
                     </div>
@@ -534,108 +660,119 @@ export default function ArticlePage({ slug }: ArticlePageProps) {
                 </div>
               </div>
               <div>
-                <div
-                  ref={divRef}
-                  style={{
-                    // background: "lightblue",
-                    // padding: "20px",
-                    // width: "100%",
-                    ...(isSticky
-                      ? {
-                          position: "fixed",
-                          top: "6rem",
-                          left: "58rem",
-                          right: 0,
-                          zIndex: 30,
-                        }
-                      : {}),
-                  }}
-                >
-                  <Card className="w-full max-w-sm">
-                    <CardHeader>
-                      <CardTitle>
-                        Réservez votre bateau en quelques clics
-                      </CardTitle>
-                      <CardDescription>
-                        <div className="flex items-center justify-center w-full mb-4">
-                          <div className="flex flex-col w-full">
-                            <div className="w-full flex items-center my-3">
-                              <Alert
-                                color="warning"
-                                title="En cas d'annulation plus de 30 jours avant le départ, remboursement intégral. Passé ce délai, voir nos conditions d'annulation."
-                              />
+                <Affix offsetTop={top}>
+                  <div ref={divRef}>
+                    <Card className="w-full max-w-sm">
+                      <CardHeader>
+                        <CardTitle>
+                          Réservez votre bateau en quelques clics
+                        </CardTitle>
+                        <CardDescription>
+                          <div
+                            className={`flex items-center justify-center w-full mb-4 ${data[0].politiqueAnnulation.split(":")[1]?.trim() ? "" : "hidden"}`}
+                          >
+                            <div className="flex flex-col w-full">
+                              <div className="w-full flex items-center my-3">
+                                <Alert
+                                  color="warning"
+                                  title={data[0].politiqueAnnulation
+                                    .split(":")[1]
+                                    ?.trim()}
+                                />
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <form>
-                        <div className="flex flex-col gap-6">
-                          <div className="grid gap-2">
-                            <Label htmlFor="datedebut">Date de début</Label>
-                            <Input
-                              id="datedebut"
-                              type="text"
-                              value={
-                                date1
-                                  ? date1.format("YYYY-MM-DD")
-                                  : "Non définie"
-                              }
-                              //   placeholder="m@example.com"
-                              //   required
-                              disabled
-                            />
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex flex-wrap justify-between items-center pb-4">
+                          <div className="text-[1.5rem] font-semibold">
+                            {data[0].header}
                           </div>
-                          <div className="grid gap-2">
-                            <Label htmlFor="datefin">Date de fin</Label>
-                            <Input
-                              id="datefin"
-                              type="text"
-                              value={
-                                date2
-                                  ? date2.format("YYYY-MM-DD")
-                                  : "Non définie"
-                              }
-                              disabled
-                            />
-                          </div>
-                          <div className="grid gap-2">
-                            <Checkbox
-                              isSelected={isAccepted}
-                              onValueChange={setIsAccepted}
-                              radius="full"
-                            >
-                              J'accepte les conditions de location et la
-                              politique d'annulation.
-                            </Checkbox>
+                          <div className="flex items-center text-lg font-semibold">
+                            {selectedPrice * (fullRange?.length || 1)} €{" "}
+                            <p className="text-xs font-normal">
+                              {selectedPrice ? `/ ${selectedFormule}` : ""}
+                            </p>
                           </div>
                         </div>
-                      </form>
-                    </CardContent>
-                    <CardFooter className="flex-col gap-2">
-                      <form
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          handleNext();
-                        }}
-                      >
-                        <Button
-                          type="submit"
-                          className="w-full"
-                          disabled={!isAccepted}
+                        <form>
+                          <div className="flex flex-col gap-6">
+                            <div className="grid gap-2">
+                              <Label htmlFor="datedebut">Date de début</Label>
+                              <Input
+                                id="datedebut"
+                                type="text"
+                                value={
+                                  date1
+                                    ? date1.format("YYYY-MM-DD")
+                                    : "Non définie"
+                                }
+                                //   placeholder="m@example.com"
+                                //   required
+                                disabled
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="datefin">Date de fin</Label>
+                              <Input
+                                id="datefin"
+                                type="text"
+                                value={
+                                  date2
+                                    ? date2.format("YYYY-MM-DD")
+                                    : "Non définie"
+                                }
+                                disabled
+                              />
+                            </div>
+                            {/* <div className="grid gap-2">
+                              <Checkbox
+                                isSelected={isAccepted}
+                                onValueChange={setIsAccepted}
+                                radius="full"
+                              >
+                                J'accepte les conditions de location et la
+                                politique d'annulation.
+                              </Checkbox>
+                            </div> */}
+                          </div>
+                        </form>
+                      </CardContent>
+                      <CardFooter className="flex-col gap-2">
+                        <form
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            handleNext();
+                          }}
                         >
-                          Réserver maintenant
-                        </Button>
-                      </form>
-                    </CardFooter>
-                  </Card>
-                </div>
+                          <Button
+                            type="submit"
+                            className="w-full"
+                            // disabled={!isAccepted}
+                          >
+                            Réserver maintenant
+                          </Button>
+                        </form>
+                      </CardFooter>
+                    </Card>
+                  </div>
+                </Affix>
               </div>
             </div>
           </div>
         </div>
         <CommentsSection bateauId={data[0].id} utilisateurId={utilisateurId} />
+        <CustomModal
+          isOpen={isOpen}
+          onClose={onClose}
+          title={modalProps.title}
+          message={modalProps.message}
+          backdrop={modalProps.backdrop}
+          primaryAction={modalProps.primaryAction}
+          secondaryAction={modalProps.secondaryAction}
+        />
+
         {/* <BateauSimilaireSection /> */}
       </section>
     </>

@@ -1,27 +1,29 @@
 import * as React from "react";
 
+import Image from "next/image";
 import { IconSvgProps } from "@/types";
 
-export const Logo: React.FC<IconSvgProps> = ({
+interface LogoProps {
+  size?: number;
+  width?: number;
+  height?: number;
+  alt?: string;
+}
+
+export const Logo: React.FC<LogoProps> = ({
   size = 36,
   width,
   height,
+  alt = "Logo",
   ...props
 }) => (
-  <svg
-    fill="none"
-    height={size || height}
-    viewBox="0 0 32 32"
-    width={size || width}
+  <Image
+    src="https://res.cloudinary.com/dluqkutu8/image/upload/v1755867176/S-removebg-preview_illnml.png" // ton fichier placé dans /public/logo.svg
+    alt={alt}
+    width={width || size}
+    height={height || size}
     {...props}
-  >
-    <path
-      clipRule="evenodd"
-      d="M17.6482 10.1305L15.8785 7.02583L7.02979 22.5499H10.5278L17.6482 10.1305ZM19.8798 14.0457L18.11 17.1983L19.394 19.4511H16.8453L15.1056 22.5499H24.7272L19.8798 14.0457Z"
-      fill="currentColor"
-      fillRule="evenodd"
-    />
-  </svg>
+  />
 );
 
 export const DiscordIcon: React.FC<IconSvgProps> = ({

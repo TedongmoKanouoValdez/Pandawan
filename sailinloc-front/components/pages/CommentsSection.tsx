@@ -2,6 +2,15 @@
 import React, { useState, useEffect } from "react";
 import { FaThumbsUp, FaThumbsDown, FaPaperPlane } from "react-icons/fa";
 import StarsRating from "@/components/StarsRating";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
+} from "@heroui/modal";
+import { Button, ButtonGroup } from "@heroui/button";
 
 interface Commentaire {
   id: number;
@@ -25,6 +34,14 @@ export default function CommentsSection({
   const [rating, setRating] = useState(0);
   const [loading, setLoading] = useState(false);
 
+  // Pour le modal
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [backdrop, setBackdrop] = useState<"opaque" | "transparent">("opaque");
+  const handleOpen = (backdropType: "opaque" | "transparent") => {
+    setBackdrop(backdropType);
+    onOpen();
+  };
+
   useEffect(() => {
     setLoading(true);
     fetch(`http://localhost:3001/api/commentaires?bateauId=${bateauId}`)
@@ -37,6 +54,11 @@ export default function CommentsSection({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!utilisateurId) {
+      handleOpen("opaque");
+      return;
+    }
     if (!newCommentaire) return alert("Le commentaire est vide");
 
     const res = await fetch("http://localhost:3001/api/commentaires", {
@@ -134,32 +156,57 @@ export default function CommentsSection({
         <p>Chargement...</p>
       ) : (
         <>
-          {commentaires.length === 0 && <p>Aucun commentaire.</p>}
-          {commentaires.map((c) => (
-            <div
-              key={c.id}
-              className="bg-white rounded-lg shadow p-4 mb-4 w-[40rem]"
-            >
-              <div className="flex items-center space-x-3 mb-2">
-                <div className="w-8 h-8 rounded-full bg-gray-300 flex-shrink-0" />
-                <div>
-                  <p className="font-semibold">{c.auteur?.nom ?? "Anonyme"}</p>
-                  <p className="text-gray-400 text-xs">
-                    {new Date(c.creeLe).toLocaleDateString()}
-                  </p>
+          {Array.isArray(commentaires) && commentaires.length === 0 && (
+            <p>Aucun commentaire.</p>
+          )}
+          {Array.isArray(commentaires) &&
+            commentaires.map((c) => (
+              <div
+                key={c.id}
+                className="bg-white rounded-lg shadow p-4 mb-4 w-[40rem]"
+              >
+                <div className="flex items-center space-x-3 mb-2">
+                  <div className="w-8 h-8 rounded-full bg-gray-300 flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold">
+                      {c.auteur?.nom ?? "Anonyme"}
+                    </p>
+                    <p className="text-gray-400 text-xs">
+                      {new Date(c.creeLe).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-gray-800 text-sm mb-3">{c.contenu}</p>
+                <div className="flex items-center justify-between text-gray-500 text-xs">
+                  <div className="flex items-center space-x-4"></div>
+                  <div className="flex flex-row space-x-2">
+                    <StarsRating rating={c.note} />
+                  </div>
                 </div>
               </div>
-              <p className="text-gray-800 text-sm mb-3">{c.contenu}</p>
-              <div className="flex items-center justify-between text-gray-500 text-xs">
-                <div className="flex items-center space-x-4"></div>
-                <div className="flex flex-row space-x-2">
-                  <StarsRating rating={c.note} />
-                </div>
-              </div>
-            </div>
-          ))}
+            ))}
         </>
       )}
+
+      <Modal backdrop={backdrop} isOpen={isOpen} onClose={onClose}>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                Information
+              </ModalHeader>
+              <ModalBody>
+                <p>Vous devez être connecté pour commenter.</p>
+              </ModalBody>
+              <ModalFooter>
+                <Button color="danger" variant="light" onPress={onClose}>
+                  Fermer
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 }

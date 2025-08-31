@@ -21,8 +21,15 @@ import { GiArchiveRegister } from "react-icons/gi";
 import { siteConfig } from "@/config/site";
 import { FaUser } from "react-icons/fa";
 import { SearchIcon, Logo } from "@/components/icons";
-import { useState } from "react";
-
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownSection,
+  DropdownItem,
+} from "@heroui/dropdown";
 import {
   Modal,
   ModalContent,
@@ -32,8 +39,22 @@ import {
   useDisclosure,
 } from "@heroui/modal";
 import { Checkbox } from "@heroui/checkbox";
-// import { Select, SelectSection, SelectItem } from "@heroui/select";
+import { User } from "@heroui/user";
+import { Avatar, AvatarGroup, AvatarIcon } from "@heroui/avatar";
+import { IoIosMailUnread } from "react-icons/io";
+import Notification from "@/components/comp-292";
 import { Select, Space } from "antd";
+
+function decodeJWT(token: string): Token | null {
+  try {
+    const payload = token.split(".")[1];
+    const decoded = JSON.parse(atob(payload));
+    return decoded as Token;
+  } catch (e) {
+    console.error("Erreur decoding JWT :", e);
+    return null;
+  }
+}
 
 export const Iconlang = ({ url }: { url: string }) => {
   return <img src={url} className="w-[1.6rem]" alt="iconeSailingTime" />;
@@ -116,12 +137,26 @@ export const Navbar = () => {
     />
   );
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-   const [email, setEmail] = useState("");
-   const [password, setPassword] = useState("");
-   const [nom, setNom] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
-  
- const handleRegister = async (onClose: () => void) => {
+  const [token, setToken] = useState<Token | null>(null);
+  const [utilisateurId, setUtilisateurId] = useState<number>(0);
+  const router = useRouter();
+
+  useEffect(() => {
+    const sessionData = localStorage.getItem("token");
+    if (sessionData) {
+      const decodedToken = decodeJWT(sessionData);
+      if (decodedToken) {
+        setUtilisateurId(Number(decodedToken.userId));
+        setToken(decodedToken);
+      }
+    }
+  }, []);
+
+  const handleRegister = async (onClose: () => void) => {
     try {
       const response = await fetch("http://localhost:3001/api/auth/register", {
         method: "POST",
@@ -129,11 +164,10 @@ export const Navbar = () => {
         body: JSON.stringify({ nom, prenom, email, password, role: "CLIENT" }),
       });
 
-      
       const data = await response.json();
       if (response.ok) {
         alert("Inscription réussie !");
-        onClose(); 
+        onClose();
       } else {
         alert(data.message || "Une erreur est survenue.");
       }
@@ -142,32 +176,37 @@ export const Navbar = () => {
       console.error(err);
     }
   };
-    
+
   const handleLogin = async (e) => {
-    e.preventDefault(); 
+    e.preventDefault();
     try {
-      const response = await fetch('http://localhost:3001/api/auth/login', {
-        method: 'POST',
+      const response = await fetch("http://localhost:3001/api/auth/login", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
       });
-  
+
       const data = await response.json();
-  
+
       if (response.ok) {
-        alert('Connexion réussie !');
-        localStorage.setItem('token', data.token); 
+        alert("Connexion réussie !");
+        localStorage.setItem("token", data.token);
       } else {
-        alert(data.message || 'Erreur de connexion');
+        alert(data.message || "Erreur de connexion");
       }
     } catch (err) {
-      alert('Erreur serveur');
-      console.error('Erreur lors de la connexion :', err);
+      alert("Erreur serveur");
+      console.error("Erreur lors de la connexion :", err);
     }
   };
-  
+
+  const handleLogout = () => {
+    localStorage.removeItem("token"); // supprime la clé
+    setToken(null);
+    router.push("/");
+  };
 
   return (
     <HeroUINavbar
@@ -184,7 +223,7 @@ export const Navbar = () => {
         <NavbarBrand as="li" className="gap-3 max-w-fit">
           <NextLink className="flex justify-start items-center gap-1" href="/">
             <Logo />
-            <p className="font-bold text-inherit">ACME</p>
+            <p className="font-bold text-inherit">SailingLoc</p>
           </NextLink>
         </NavbarBrand>
         <ul className="hidden lg:flex gap-4 justify-start ml-2">
@@ -278,7 +317,7 @@ export const Navbar = () => {
             ]}
           />
         </NavbarItem>
-        <NavbarItem className="space-x-3">
+        <NavbarItem className={`space-x-3 ${utilisateurId ? "hidden" : ""}`}>
           <Button
             // as={Link}
             className="text-sm font-normal text-default-600 bg-default-100"
@@ -301,57 +340,57 @@ export const Navbar = () => {
                   <ModalHeader className="flex flex-col gap-1">
                     Bienvenue sur votre espace
                   </ModalHeader>
-                   <form onSubmit={handleLogin}>
-                  <ModalBody>
-                    <Input
-                      endContent={
-                        <MailIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
-                      }
-                      label="Email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter your email"
-                      variant="bordered"
-                    />
-                    <Input
-                      endContent={
-                        <LockIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
-                      }
-                      label="Password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Enter your password"
-                      type="password"
-                      variant="bordered"
-                    />
-                    <div className="flex py-2 px-1 justify-between">
-                      <Checkbox
-                        classNames={{
-                          label: "text-small",
-                        }}
-                      >
-                        Souviens-toi de moi
-                      </Checkbox>
-                      <Link color="primary" href="#" size="sm">
-                        Mot de passe oublié ?
-                      </Link>
-                    </div>
-                  </ModalBody>
-                  <ModalFooter>
-                    <Button color="danger" variant="flat" onPress={onClose}>
-                      Fermer
-                    </Button>
-                    <Button color="primary" onPress={onClose} type="submit">
-                      Se connecter
-                    </Button>
-                  </ModalFooter>
-                   </form>
+                  <form onSubmit={handleLogin}>
+                    <ModalBody>
+                      <Input
+                        endContent={
+                          <MailIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
+                        }
+                        label="Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Enter your email"
+                        variant="bordered"
+                      />
+                      <Input
+                        endContent={
+                          <LockIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
+                        }
+                        label="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter your password"
+                        type="password"
+                        variant="bordered"
+                      />
+                      <div className="flex py-2 px-1 justify-between">
+                        <Checkbox
+                          classNames={{
+                            label: "text-small",
+                          }}
+                        >
+                          Souviens-toi de moi
+                        </Checkbox>
+                        <Link color="primary" href="#" size="sm">
+                          Mot de passe oublié ?
+                        </Link>
+                      </div>
+                    </ModalBody>
+                    <ModalFooter>
+                      <Button color="danger" variant="flat" onPress={onClose}>
+                        Fermer
+                      </Button>
+                      <Button color="primary" onPress={onClose} type="submit">
+                        Se connecter
+                      </Button>
+                    </ModalFooter>
+                  </form>
                 </>
               )}
             </ModalContent>
           </Modal>
         </NavbarItem>
-        <NavbarItem className="space-x-3">
+        <NavbarItem className={`space-x-3 ${utilisateurId ? "hidden" : ""}`}>
           <Button
             // as={Link}
             className="text-sm font-normal text-default-600 bg-default-100"
@@ -382,7 +421,7 @@ export const Navbar = () => {
                       label="Nom"
                       type="text"
                       value={nom}
-                     onChange={(e) => setNom(e.target.value)}
+                      onChange={(e) => setNom(e.target.value)}
                       placeholder="Veuillez saisir votre nom"
                       variant="bordered"
                     />
@@ -438,7 +477,10 @@ export const Navbar = () => {
                     <Button color="danger" variant="flat" onPress={onClose}>
                       Fermer
                     </Button>
-                    <Button color="primary" onPress={() => handleRegister(onClose)}>
+                    <Button
+                      color="primary"
+                      onPress={() => handleRegister(onClose)}
+                    >
                       S&apos;inscrire
                     </Button>
                   </ModalFooter>
@@ -446,6 +488,47 @@ export const Navbar = () => {
               )}
             </ModalContent>
           </Modal>
+        </NavbarItem>
+        <NavbarItem className={`${utilisateurId ? "" : "hidden"}`}>
+          <Notification />
+        </NavbarItem>
+        <NavbarItem className={`${utilisateurId ? "" : "hidden"}`}>
+          <div className="flex items-center gap-4">
+            <Dropdown placement="bottom-start">
+              <DropdownTrigger>
+                <User
+                  as="button"
+                  avatarProps={{
+                    isBordered: true,
+                    src: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
+                  }}
+                  className="transition-transform border-red-500"
+                  color="success"
+                />
+              </DropdownTrigger>
+              <DropdownMenu aria-label="User Actions" variant="flat">
+                <DropdownItem key="settings">
+                  <Link href="/profil">Profil</Link>
+                </DropdownItem>
+                <DropdownItem key="team_settings">
+                  <Link href="/dashboard">Tableau de bord</Link>
+                </DropdownItem>
+                {/* <DropdownItem key="analytics">Analytics</DropdownItem>
+                <DropdownItem key="system">System</DropdownItem>
+                <DropdownItem key="configurations">Configurations</DropdownItem>
+                <DropdownItem key="help_and_feedback">
+                  Help & Feedback
+                </DropdownItem> */}
+                <DropdownItem
+                  onClick={handleLogout}
+                  key="logout"
+                  color="danger"
+                >
+                  Deconnexion
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+          </div>
         </NavbarItem>
       </NavbarContent>
 
