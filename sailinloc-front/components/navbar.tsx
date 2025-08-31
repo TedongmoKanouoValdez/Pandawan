@@ -21,21 +21,9 @@ import { GiArchiveRegister } from "react-icons/gi";
 import { siteConfig } from "@/config/site";
 import { FaUser } from "react-icons/fa";
 import { SearchIcon, Logo } from "@/components/icons";
-<<<<<<< HEAD
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import {
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownSection,
-  DropdownItem,
-} from "@heroui/dropdown";
-=======
 import { useState } from "react";
 import ForgotPasswordModal from "@/components/ForgotPasswordModal";
 
->>>>>>> main
 import {
   Modal,
   ModalContent,
@@ -45,22 +33,8 @@ import {
   useDisclosure,
 } from "@heroui/modal";
 import { Checkbox } from "@heroui/checkbox";
-import { User } from "@heroui/user";
-import { Avatar, AvatarGroup, AvatarIcon } from "@heroui/avatar";
-import { IoIosMailUnread } from "react-icons/io";
-import Notification from "@/components/comp-292";
+// import { Select, SelectSection, SelectItem } from "@heroui/select";
 import { Select, Space } from "antd";
-
-function decodeJWT(token: string): Token | null {
-  try {
-    const payload = token.split(".")[1];
-    const decoded = JSON.parse(atob(payload));
-    return decoded as Token;
-  } catch (e) {
-    console.error("Erreur decoding JWT :", e);
-    return null;
-  }
-}
 
 export const Iconlang = ({ url }: { url: string }) => {
   return <img src={url} className="w-[1.6rem]" alt="iconeSailingTime" />;
@@ -148,23 +122,6 @@ export const Navbar = () => {
   const [password, setPassword] = useState("");
   const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
-<<<<<<< HEAD
-  const [token, setToken] = useState<Token | null>(null);
-  const [utilisateurId, setUtilisateurId] = useState<number>(0);
-  const router = useRouter();
-
-  useEffect(() => {
-    const sessionData = localStorage.getItem("token");
-    if (sessionData) {
-      const decodedToken = decodeJWT(sessionData);
-      if (decodedToken) {
-        setUtilisateurId(Number(decodedToken.userId));
-        setToken(decodedToken);
-      }
-    }
-  }, []);
-=======
->>>>>>> main
 
   const handleRegister = async (onClose: () => void) => {
     try {
@@ -211,15 +168,6 @@ export const Navbar = () => {
       console.error("Erreur lors de la connexion :", err);
     }
   };
-<<<<<<< HEAD
-
-  const handleLogout = () => {
-    localStorage.removeItem("token"); // supprime la clé
-    setToken(null);
-    router.push("/");
-  };
-=======
->>>>>>> main
 
   return (
     <HeroUINavbar
@@ -236,7 +184,7 @@ export const Navbar = () => {
         <NavbarBrand as="li" className="gap-3 max-w-fit">
           <NextLink className="flex justify-start items-center gap-1" href="/">
             <Logo />
-            <p className="font-bold text-inherit">SailingLoc</p>
+            <p className="font-bold text-inherit">ACME</p>
           </NextLink>
         </NavbarBrand>
         <ul className="hidden lg:flex gap-4 justify-start ml-2">
@@ -330,7 +278,7 @@ export const Navbar = () => {
             ]}
           />
         </NavbarItem>
-        <NavbarItem className={`space-x-3 ${utilisateurId ? "hidden" : ""}`}>
+        <NavbarItem className="space-x-3">
           <Button
             // as={Link}
             className="text-sm font-normal text-default-600 bg-default-100"
@@ -384,11 +332,7 @@ export const Navbar = () => {
                         >
                           Souviens-toi de moi
                         </Checkbox>
-<<<<<<< HEAD
-                        <Link color="primary" href="#" size="sm">
-=======
                         <Link color="primary" href="#" size="sm" onClick={onOpenPass}>
->>>>>>> main
                           Mot de passe oublié ?
                         </Link>
                       </div>
@@ -408,7 +352,7 @@ export const Navbar = () => {
           </Modal>
           <ForgotPasswordModal isOpen={isOpenPass} onOpenChange={onOpenChangePass} />
         </NavbarItem>
-        <NavbarItem className={`space-x-3 ${utilisateurId ? "hidden" : ""}`}>
+        <NavbarItem className="space-x-3">
           <Button
             // as={Link}
             className="text-sm font-normal text-default-600 bg-default-100"
@@ -506,47 +450,6 @@ export const Navbar = () => {
               )}
             </ModalContent>
           </Modal>
-        </NavbarItem>
-        <NavbarItem className={`${utilisateurId ? "" : "hidden"}`}>
-          <Notification />
-        </NavbarItem>
-        <NavbarItem className={`${utilisateurId ? "" : "hidden"}`}>
-          <div className="flex items-center gap-4">
-            <Dropdown placement="bottom-start">
-              <DropdownTrigger>
-                <User
-                  as="button"
-                  avatarProps={{
-                    isBordered: true,
-                    src: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
-                  }}
-                  className="transition-transform border-red-500"
-                  color="success"
-                />
-              </DropdownTrigger>
-              <DropdownMenu aria-label="User Actions" variant="flat">
-                <DropdownItem key="settings">
-                  <Link href="/profil">Profil</Link>
-                </DropdownItem>
-                <DropdownItem key="team_settings">
-                  <Link href="/dashboard">Tableau de bord</Link>
-                </DropdownItem>
-                {/* <DropdownItem key="analytics">Analytics</DropdownItem>
-                <DropdownItem key="system">System</DropdownItem>
-                <DropdownItem key="configurations">Configurations</DropdownItem>
-                <DropdownItem key="help_and_feedback">
-                  Help & Feedback
-                </DropdownItem> */}
-                <DropdownItem
-                  onClick={handleLogout}
-                  key="logout"
-                  color="danger"
-                >
-                  Deconnexion
-                </DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
-          </div>
         </NavbarItem>
       </NavbarContent>
 
