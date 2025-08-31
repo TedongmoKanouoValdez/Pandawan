@@ -41,6 +41,7 @@ model Bateau {
   id                 Int           @id @default(autoincrement())
   nom                String
   slug               String        @unique @default(dbgenerated("gen_random_uuid()"))
+  slug               String        @unique @default(dbgenerated("gen_random_uuid()"))
   modele             String
   portdefault        String?
   description        String?
@@ -84,7 +85,7 @@ model DetailsBateau {
   tarifications                        String?
   portdedepart                         String?
   portdarriver                         String?
- 
+
   bateau   Bateau @relation(fields: [bateauId], references: [id])
   bateauId Int    @unique
 }
@@ -106,10 +107,11 @@ model Reservation {
   Total                   Decimal?
   heure                   String?
   statut                  StatutReservation
+  data                    String?
   creeLe                  DateTime          @default(now())
   urlDocumentContrat      String?
   urlRecu                 String?
- 
+
   paiement     Paiement?
   contrat      Contrat?      @relation(name: "ContratToReservation")
   contratId    Int?          @unique
@@ -167,13 +169,14 @@ model Message {
   id             Int          @id @default(autoincrement())
   expediteur     Utilisateur  @relation("MessagesEnvoyes", fields: [expediteurId], references: [id])
   expediteurId   Int
-  destinataire   Utilisateur  @relation("MessagesRecus", fields: [destinataireId], references: [id])
-  destinataireId Int
+  destinataire   Utilisateur? @relation("MessagesRecus", fields: [destinataireId], references: [id])
+  destinataireId Int?
   reservation    Reservation? @relation(fields: [reservationId], references: [id])
   reservationId  Int?
   bateau         Bateau?      @relation(fields: [bateauId], references: [id])
   bateauId       Int?
   contenu        String
+  object         String?
   dateEnvoi      DateTime
   lu             Boolean      @default(false)
   creeLe         DateTime     @default(now())
@@ -215,7 +218,7 @@ model Media {
   description  String?
   numeroPolice String?
   creeLe       DateTime  @default(now())
- 
+
   utilisateur   Utilisateur? @relation(fields: [utilisateurId], references: [id])
   utilisateurId Int?
  
@@ -249,7 +252,7 @@ enum StatutReservation {
  
 enum MethodePaiement {
   CARTE
-  VIREMENT
+  APPLE_PAY
   PAYPAL
 }
  
@@ -270,6 +273,8 @@ enum TypeMedia {
   ATTESTATION_ASSURANCE
   CERTIFICAT_NAVIGATION
   PROFIL
+  CONTRAT
+  RECUS
 }
  
 enum EtatPaiement {

@@ -11,12 +11,23 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
+  useDisclosure,
 } from "@heroui/modal";
 import { Button, ButtonGroup } from "@heroui/button";
 import { addToast, ToastProvider } from "@heroui/toast";
 import { useDateRange } from "@/context/DateRangeContext";
 
-export const CalendarSingleBoat = () => {
+type DisabledDateObj = { year: number; month: number; day: number };
+
+interface CalendarSingleBoatProps {
+  datesIndisponibles: string[]; // tableau de strings ISO dates
+  typeLocation: "demi-journée" | "jour" | "week-end" | "semaine" | "mois";
+}
+
+export const CalendarSingleBoat = ({
+  datesIndisponibles,
+  typeLocation,
+}: CalendarSingleBoatProps) => {
   //   const disabledDates = [
   //     dayjs().date(5).startOf("day"),
   //     dayjs().date(15).startOf("day"),
@@ -30,36 +41,61 @@ export const CalendarSingleBoat = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(dayjs());
   const [calendarKey, setCalendarKey] = useState(0);
-  const { date1, date2, setDates } = useDateRange();
+  const { date1, date2, fullRange, setDates } = useDateRange();
+  const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null]>([
+    null,
+    null,
+  ]);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [backdrop, setBackdrop] = useState<"opaque" | "blur">("opaque");
 
   useEffect(() => {
-    if (selectedDates.length === 2) {
-      // Met à jour le contexte
-      setDates(selectedDates[0], selectedDates[1]);
+    const [start, end] = dateRange;
+    if (start && end) {
+      // Créer le tableau complet de jours
+      let allDates: Dayjs[] = [];
+      let cursor = start.clone();
+      while (cursor.isBefore(end) || cursor.isSame(end, "day")) {
+        allDates.push(cursor);
+        cursor = cursor.add(1, "day");
+      }
+      setDates(start, end, allDates);
+    } else {
+      // Réinitialisation
+      setDates(null, null, []);
     }
-  }, [selectedDates, setDates]);
+  }, [dateRange, setDates]);
 
-  const disabledSpecificDates = [
-    { year: 2025, month: 6, day: 15 }, // attention: month = 0 pour janvier, donc 6 = juillet
-    { year: 2025, month: 6, day: 25 },
-    { year: 2025, month: 7, day: 5 }, // août 5, 2025
-  ];
+  const disabledSpecificDates: DisabledDateObj[] = React.useMemo(() => {
+    return datesIndisponibles.map((dateStr) => {
+      const d = dayjs(dateStr);
+      return {
+        year: d.year(),
+        month: d.month(), // dayjs month 0-based
+        day: d.date(),
+      };
+    });
+  }, [datesIndisponibles]);
 
   const handleReset = () => {
     setSelectedDates([]);
-    setDates(null, null); // remet aussi les dates du contexte à zéro
-    setCalendarKey((prev) => prev + 1);
+    setDateRange([null, null]);
+    setDates(null, null, []); // bien remettre le tableau vide aussi
+    setIsModalOpen(false);
+    setCalendarKey((prev) => prev + 1); // force re-render du Calendar
   };
 
   const disabledDate = (currentDate: Dayjs) => {
     const today = dayjs().startOf("day");
 
-    // Désactiver toutes les dates avant aujourd'hui
-    if (currentDate.isBefore(today, "day")) {
-      return true;
+    if (currentDate.isBefore(today, "day")) return true;
+
+    if (typeLocation === "week-end") {
+      // seuls vendredi, samedi et dimanche sont activables
+      const day = currentDate.day(); // 0 = dimanche, 5 = vendredi, 6 = samedi
+      return !(day === 5 || day === 6 || day === 0); // désactiver tout le reste
     }
 
-    // Désactiver les jours spécifiques avec leur mois et année
     const isSpecificallyDisabled = disabledSpecificDates.some(
       (d) =>
         currentDate.date() === d.day &&
@@ -67,9 +103,7 @@ export const CalendarSingleBoat = () => {
         currentDate.year() === d.year
     );
 
-    if (isSpecificallyDisabled) {
-      return true;
-    }
+    if (isSpecificallyDisabled) return true;
 
     return false;
   };
@@ -106,72 +140,77 @@ export const CalendarSingleBoat = () => {
   };
 
   const handleSelect = (date: Dayjs) => {
-    // Vérifie si la date sélectionnée correspond au mois affiché
-    if (!date.isSame(currentMonth, "month")) {
-      return; // sélection automatique: on ignore
+    if (disabledDate(date)) return;
+
+    if (!typeLocation) {
+      // typeLocation non choisi → ouvrir modal
+      setBackdrop("opaque");
+      onOpen();
+      return;
     }
 
-    if (disabledDate(date)) return; // bloquer sélection directe d'une date désactivée
+    if (typeLocation === "demi-journée" || typeLocation === "jour") {
+      // Sélection simple
+      setDateRange([date, date]);
+      setSelectedDates([date]);
+    } else if (typeLocation === "week-end") {
+      const isAlreadySelected = selectedDates.some((d) =>
+        d.isSame(date, "day")
+      );
 
-    setSelectedDates((prev) => {
-      if (prev.length === 0) {
-        return [date]; // première date
-      } else if (prev.length === 1) {
-        let [firstDate] = prev;
-        // Corriger l'ordre pour que la date la plus ancienne soit en première
-        let start = firstDate.isBefore(date) ? firstDate : date;
-        let end = firstDate.isAfter(date) ? firstDate : date;
-
-        // Vérifier si un jour désactivé existe dans l'intervalle
-        let cursor = start.clone().add(1, "day");
-        let hasDisabledInRange = false;
-
-        while (cursor.isBefore(end)) {
-          if (disabledDate(cursor)) {
-            hasDisabledInRange = true;
-            break;
-          }
-          cursor = cursor.add(1, "day");
-        }
-
-        if (hasDisabledInRange) {
-          // Forcer le reset puis réouvrir le modal
-          setIsModalOpen(false);
-          setTimeout(() => setIsModalOpen(true), 0);
-          return [start]; // recommencer à partir de la première date valide
-        }
-
-        return [start, end]; // plage valide, dans l'ordre correct
+      let updatedDates: Dayjs[];
+      if (isAlreadySelected) {
+        updatedDates = selectedDates.filter((d) => !d.isSame(date, "day"));
       } else {
-        let start = prev[0].isBefore(date) ? prev[0] : date;
-        let end = prev[0].isAfter(date) ? prev[0] : date;
-
-        let cursor = start.clone().add(1, "day");
-        let hasDisabledInRange = false;
-
-        while (cursor.isBefore(end)) {
-          if (disabledDate(cursor)) {
-            hasDisabledInRange = true;
-            break;
-          }
-          cursor = cursor.add(1, "day");
-        }
-
-        if (hasDisabledInRange) {
-          setIsModalOpen(false);
-          setTimeout(() => setIsModalOpen(true), 0);
-          return [start]; // recommencer à partir de la nouvelle date valide
-        }
-
-        return [start, end]; // nouvelle plage valide
+        updatedDates = [...selectedDates, date];
       }
-    });
+
+      setSelectedDates(updatedDates);
+
+      // update le range avec min et max des dates choisies
+      if (updatedDates.length > 0) {
+        const sorted = [...updatedDates].sort(
+          (a, b) => a.valueOf() - b.valueOf()
+        );
+        setDateRange([sorted[0], sorted[sorted.length - 1]]);
+      } else {
+        setDateRange([null, null]);
+      }
+    } else if (typeLocation === "semaine" || typeLocation === "mois") {
+      const start =
+        typeLocation === "semaine"
+          ? date.startOf("week")
+          : date.startOf("month");
+      const end =
+        typeLocation === "semaine" ? date.endOf("week") : date.endOf("month");
+
+      // Créer toutes les dates
+      let allDates: Dayjs[] = [];
+      let cursor = start.clone();
+      while (cursor.isBefore(end) || cursor.isSame(end, "day")) {
+        allDates.push(cursor);
+        cursor = cursor.add(1, "day");
+      }
+
+      // Vérifier s’il y a des dates désactivées
+      const hasDisabled = allDates.some((d) => disabledDate(d));
+      if (hasDisabled) {
+        setIsModalOpen(true); // modal pour dates invalides
+        return;
+      }
+
+      setDateRange([start, end]);
+      setSelectedDates(allDates);
+    }
   };
 
   return (
     <>
       <div className="flex items-center space-x-4 mt-4">
-        <Button onClick={handleReset} className="flex space-x-2 items-center bg-black text-white mb-4">
+        <Button
+          onClick={handleReset}
+          className="flex space-x-2 items-center bg-black text-white mb-4"
+        >
           <span>Réinitialiser la sélection</span>
           <AiOutlineSync />
         </Button>
@@ -182,10 +221,15 @@ export const CalendarSingleBoat = () => {
         fullCellRender={fullCellRender}
         onPanelChange={handlePanelChange}
         onSelect={handleSelect}
+        onSelect={(date, { source }) => {
+          if (source === "date") {
+            handleSelect(date);
+          }
+        }}
       />
       <div className="mt-4">
         <h4>Dates sélectionnées :</h4>
-        <ul className="flex flex-row space-x-4">
+        <ul className="flex flex-wrap gap-2">
           {selectedDates.map((d, idx) => (
             <li key={`${d.format("YYYY-MM-DD")}-${idx}`} id={`${idx + 1}`}>
               Date {idx + 1} : {d.format("YYYY-MM-DD")}
@@ -210,6 +254,25 @@ export const CalendarSingleBoat = () => {
                   La plage sélectionnée contient au moins un jour indisponible.
                   Merci de choisir une plage sans dates désactivées.
                 </p>
+              </ModalBody>
+              <ModalFooter>
+                <Button color="primary" onPress={onClose}>
+                  Fermer
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      <Modal backdrop="blur" isOpen={isOpen} onClose={onClose}>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader>Sélectionnez votre formule</ModalHeader>
+              <ModalBody>
+                Veuillez choisir un type de location avant de sélectionner une
+                date.
               </ModalBody>
               <ModalFooter>
                 <Button color="primary" onPress={onClose}>

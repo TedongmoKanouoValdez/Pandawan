@@ -2,7 +2,7 @@ import "@/styles/globals.css";
 import { Metadata, Viewport } from "next";
 import { Providers } from "./providers";
 import clsx from "clsx";
-
+import GlobalLoader from "@/components/GlobalLoader";
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 import ClientLayout from "@/components/pages/ClientLayout";
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   },
   description: siteConfig.description,
   icons: {
-    icon: "/favicon.ico",
+    icon: "/favicon.png",
   },
 };
 
@@ -40,7 +40,13 @@ export default function RootLayout({
         )}
       >
         <Providers themeProps={{ attribute: "class", defaultTheme: "light" }}>
+<<<<<<< HEAD
+          <GlobalLoader>
+            <ClientLayout>{children}</ClientLayout>
+          </GlobalLoader>
+=======
           <ClientLayout>{children}</ClientLayout>
+>>>>>>> main
         </Providers>
       </body>
     </html>

@@ -2,9 +2,12 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+<<<<<<< HEAD
+=======
 const nodemailer = require('nodemailer'); // <- ajoute en haut de auth.js
 const { sendMail } = require('../utils/mailer');
 const { resetPasswordTemplate } = require('../utils/emailTemplate');
+>>>>>>> main
 const { PrismaClient, RoleUtilisateur } = require("@prisma/client");
 const prisma = new PrismaClient();
 
@@ -129,7 +132,14 @@ router.post("/login", async (req, res) => {
     }
 
     const token = jwt.sign(
-      { userId: user.id, email: user.email, role: user.role },
+      {
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+        nom: user.nom,
+        prenom: user.prenom,
+        telephone: user.telephone,
+      },
       JWT_SECRET,
       { expiresIn: "1h" }
     );

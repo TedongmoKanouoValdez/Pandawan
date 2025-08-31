@@ -98,6 +98,16 @@
   font-style: normal;
 }
 
+/* .section1::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 50px; 
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #f0f0f0);
+} */
+
 /* .contentvideohome::before {
   content: "";
   position: absolute;
@@ -192,6 +202,29 @@
   width: 35rem;
 } */
 
+.contentbannerdestination::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); /* couleur + opacité */
+}
+
+.degrade {
+  border-bottom-left-radius: 15px;
+  border-bottom-right-radius: 15px;
+  width: 100%;
+  height: 11rem;
+  background: linear-gradient(
+    0deg,
+    rgb(0 0 0 / 71%) 47%,
+    rgb(89 89 89 / 0%) 80%,
+    rgba(245, 245, 245, 0) 100%
+  );
+}
+
 .cardcategorie {
   width: 23rem;
   height: 16rem;
@@ -206,6 +239,7 @@
   background-position: bottom;
   background-repeat: no-repeat;
   background-size: 100%;
+  border: 2px solid #fff;
 }
 
 .cardcategoriecontent::before {
@@ -250,6 +284,10 @@
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
   border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+:where(.css-dev-only-do-not-override-1v28nim).ant-select .ant-select-arrow {
+  color: #fff;
 }
 
 .bg-glacev2 {
@@ -514,6 +552,11 @@ div[data-slot="content"].bg-content1 {
   width: 68rem;
   height: 43rem;
 }
+<<<<<<< HEAD
+
+.contourselector {
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+=======
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -1029,4 +1072,5 @@ div[data-slot="content"].bg-content1 {
 .contentsingleimageboat .visuelImage {
   width: 68rem;
   height: 43rem;
+>>>>>>> main
 }
