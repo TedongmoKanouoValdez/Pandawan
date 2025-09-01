@@ -1,5 +1,5 @@
 const { PrismaClient } = require("@prisma/client");
-const cloudinary = require("../utils/cloudinaryConfig");
+const { cloudinary } = require("../utils/cloudinaryConfig");
 const fs = require("fs");
 const prisma = new PrismaClient();
 

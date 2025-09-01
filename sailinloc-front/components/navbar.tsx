@@ -21,21 +21,9 @@ import { GiArchiveRegister } from "react-icons/gi";
 import { siteConfig } from "@/config/site";
 import { FaUser } from "react-icons/fa";
 import { SearchIcon, Logo } from "@/components/icons";
-<<<<<<< HEAD
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import {
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownSection,
-  DropdownItem,
-} from "@heroui/dropdown";
-=======
-import { useState } from "react";
 import ForgotPasswordModal from "@/components/ForgotPasswordModal";
-
->>>>>>> main
+import { useRouter } from "next/navigation";
 import {
   Modal,
   ModalContent,
@@ -50,6 +38,13 @@ import { Avatar, AvatarGroup, AvatarIcon } from "@heroui/avatar";
 import { IoIosMailUnread } from "react-icons/io";
 import Notification from "@/components/comp-292";
 import { Select, Space } from "antd";
+import {
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownSection,
+  DropdownItem,
+} from "@heroui/dropdown";
 
 function decodeJWT(token: string): Token | null {
   try {
@@ -116,7 +111,11 @@ export const LockIcon = (props: React.SVGProps<SVGSVGElement>) => {
 
 export const Navbar = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const { isOpen: isOpenPass, onOpen: onOpenPass, onOpenChange: onOpenChangePass } = useDisclosure();
+  const {
+    isOpen: isOpenPass,
+    onOpen: onOpenPass,
+    onOpenChange: onOpenChangePass,
+  } = useDisclosure();
   const {
     isOpen: isOpenRegister,
     onOpen: onOpenRegister,
@@ -148,7 +147,6 @@ export const Navbar = () => {
   const [password, setPassword] = useState("");
   const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
-<<<<<<< HEAD
   const [token, setToken] = useState<Token | null>(null);
   const [utilisateurId, setUtilisateurId] = useState<number>(0);
   const router = useRouter();
@@ -163,8 +161,6 @@ export const Navbar = () => {
       }
     }
   }, []);
-=======
->>>>>>> main
 
   const handleRegister = async (onClose: () => void) => {
     try {
@@ -211,15 +207,12 @@ export const Navbar = () => {
       console.error("Erreur lors de la connexion :", err);
     }
   };
-<<<<<<< HEAD
 
   const handleLogout = () => {
     localStorage.removeItem("token"); // supprime la clé
     setToken(null);
     router.push("/");
   };
-=======
->>>>>>> main
 
   return (
     <HeroUINavbar
@@ -384,11 +377,12 @@ export const Navbar = () => {
                         >
                           Souviens-toi de moi
                         </Checkbox>
-<<<<<<< HEAD
-                        <Link color="primary" href="#" size="sm">
-=======
-                        <Link color="primary" href="#" size="sm" onClick={onOpenPass}>
->>>>>>> main
+                        <Link
+                          color="primary"
+                          href="#"
+                          size="sm"
+                          onClick={onOpenPass}
+                        >
                           Mot de passe oublié ?
                         </Link>
                       </div>
@@ -406,7 +400,10 @@ export const Navbar = () => {
               )}
             </ModalContent>
           </Modal>
-          <ForgotPasswordModal isOpen={isOpenPass} onOpenChange={onOpenChangePass} />
+          <ForgotPasswordModal
+            isOpen={isOpenPass}
+            onOpenChange={onOpenChangePass}
+          />
         </NavbarItem>
         <NavbarItem className={`space-x-3 ${utilisateurId ? "hidden" : ""}`}>
           <Button
