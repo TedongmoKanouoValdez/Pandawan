@@ -2,12 +2,9 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-<<<<<<< HEAD
-=======
 const nodemailer = require('nodemailer'); // <- ajoute en haut de auth.js
 const { sendMail } = require('../utils/mailer');
 const { resetPasswordTemplate } = require('../utils/emailTemplate');
->>>>>>> main
 const { PrismaClient, RoleUtilisateur } = require("@prisma/client");
 const prisma = new PrismaClient();
 
