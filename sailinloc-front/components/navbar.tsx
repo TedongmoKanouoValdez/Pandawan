@@ -21,11 +21,8 @@ import { GiArchiveRegister } from "react-icons/gi";
 import { siteConfig } from "@/config/site";
 import { FaUser } from "react-icons/fa";
 import { SearchIcon, Logo } from "@/components/icons";
-<<<<<<< HEAD
-import { useRef, useState } from "react";
-=======
+import { useRef } from "react";
 import { useState, useEffect } from "react";
->>>>>>> e4a564cd3067ac65e4e644141e16830082b12a32
 import ForgotPasswordModal from "@/components/ForgotPasswordModal";
 import { useRouter } from "next/navigation";
 import {
@@ -42,9 +39,7 @@ import { Avatar, AvatarGroup, AvatarIcon } from "@heroui/avatar";
 import { IoIosMailUnread } from "react-icons/io";
 import Notification from "@/components/comp-292";
 import { Select, Space } from "antd";
-<<<<<<< HEAD
 import ReCAPTCHA from "react-google-recaptcha";
-=======
 import {
   Dropdown,
   DropdownTrigger,
@@ -63,7 +58,6 @@ function decodeJWT(token: string): Token | null {
     return null;
   }
 }
->>>>>>> e4a564cd3067ac65e4e644141e16830082b12a32
 
 export const Iconlang = ({ url }: { url: string }) => {
   return <img src={url} className="w-[1.6rem]" alt="iconeSailingTime" />;
@@ -155,10 +149,9 @@ export const Navbar = () => {
   const [password, setPassword] = useState("");
   const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
-<<<<<<< HEAD
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const captchaRef = useRef<ReCAPTCHA>(null);
-=======
+
   const [token, setToken] = useState<Token | null>(null);
   const [utilisateurId, setUtilisateurId] = useState<number>(0);
   const router = useRouter();
@@ -173,7 +166,6 @@ export const Navbar = () => {
       }
     }
   }, []);
->>>>>>> e4a564cd3067ac65e4e644141e16830082b12a32
 
   const handleRegister = async (onClose: () => void) => {
     if (!captchaToken) {
@@ -232,7 +224,7 @@ export const Navbar = () => {
       console.error("Erreur lors de la connexion :", err);
     }
   };
-
+  
   const handleLogout = () => {
     localStorage.removeItem("token"); // supprime la clé
     setToken(null);
