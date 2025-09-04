@@ -1,5 +1,6 @@
-// src/test/unitaires/utilisateurService.test.js
+// src/test/unitaire/utilisateurService.test.js
 const fs = require("fs-extra");
+const { PrismaClient } = require("@prisma/client");
 
 // Mock de fs-extra AVANT d'importer le service
 jest.mock("fs-extra", () => ({
@@ -26,13 +27,13 @@ jest.mock("@prisma/client", () => {
 });
 
 // Import DU SERVICE APRÈS les mocks
-const utilisateurService = require("../../services/utilisateurService");
+const utilisateurService = require("./src/services/utilisateurService");
 
 describe("utilisateurService", () => {
   test("devrait créer un utilisateur avec des données valides", async () => {
     const data = {
       email: "john.doe@example.com",
-      motDePasse: "Password123!", 
+      motDePasse: "Password123!",
       nom: "Doe",
       prenom: "John",
     };
@@ -46,6 +47,8 @@ describe("utilisateurService", () => {
     expect(utilisateur).toHaveProperty("nom", "Doe");
     expect(utilisateur).toHaveProperty("prenom", "John");
 
+    // Vérifie que remove n'a pas été appelé (mock)
     expect(fs.remove).not.toHaveBeenCalled();
+    expect(fs.readFile).toHaveBeenCalledWith(file.path);
   });
 });

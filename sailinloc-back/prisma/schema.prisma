@@ -156,18 +156,19 @@ model Assurance {
 
 model Message {
   id             Int          @id @default(autoincrement())
+  expediteur     Utilisateur  @relation("MessagesEnvoyes", fields: [expediteurId], references: [id])
   expediteurId   Int
-  destinataireId Int
+  destinataire   Utilisateur? @relation("MessagesRecus", fields: [destinataireId], references: [id])
+  destinataireId Int?
+  reservation    Reservation? @relation(fields: [reservationId], references: [id])
   reservationId  Int?
+  bateau         Bateau?      @relation(fields: [bateauId], references: [id])
   bateauId       Int?
   contenu        String
+  object         String?
   dateEnvoi      DateTime
-  creeLe         DateTime     @default(now())
   lu             Boolean      @default(false)
-  bateau         Bateau?      @relation(fields: [bateauId], references: [id])
-  destinataire   Utilisateur  @relation("MessagesRecus", fields: [destinataireId], references: [id])
-  expediteur     Utilisateur  @relation("MessagesEnvoyes", fields: [expediteurId], references: [id])
-  reservation    Reservation? @relation(fields: [reservationId], references: [id])
+  creeLe         DateTime     @default(now())
 }
 
 model Commentaire {
@@ -192,6 +193,7 @@ model DemandeProprietaire {
   data           String
   utilisateur    Utilisateur   @relation(fields: [utilisateurId], references: [id])
   medias         Media[]
+  @@unique([utilisateurId, dateDemande]) 
 }
 
 model Media {

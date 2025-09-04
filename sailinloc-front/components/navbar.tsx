@@ -21,7 +21,7 @@ import { GiArchiveRegister } from "react-icons/gi";
 import { siteConfig } from "@/config/site";
 import { FaUser } from "react-icons/fa";
 import { SearchIcon, Logo } from "@/components/icons";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import ForgotPasswordModal from "@/components/ForgotPasswordModal";
 
 import {
@@ -35,6 +35,7 @@ import {
 import { Checkbox } from "@heroui/checkbox";
 // import { Select, SelectSection, SelectItem } from "@heroui/select";
 import { Select, Space } from "antd";
+import ReCAPTCHA from "react-google-recaptcha";
 
 export const Iconlang = ({ url }: { url: string }) => {
   return <img src={url} className="w-[1.6rem]" alt="iconeSailingTime" />;
@@ -90,7 +91,11 @@ export const LockIcon = (props: React.SVGProps<SVGSVGElement>) => {
 
 export const Navbar = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const { isOpen: isOpenPass, onOpen: onOpenPass, onOpenChange: onOpenChangePass } = useDisclosure();
+  const {
+    isOpen: isOpenPass,
+    onOpen: onOpenPass,
+    onOpenChange: onOpenChangePass,
+  } = useDisclosure();
   const {
     isOpen: isOpenRegister,
     onOpen: onOpenRegister,
@@ -122,8 +127,14 @@ export const Navbar = () => {
   const [password, setPassword] = useState("");
   const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<ReCAPTCHA>(null);
 
   const handleRegister = async (onClose: () => void) => {
+    if (!captchaToken) {
+      alert("Veuillez valider le CAPTCHA.");
+      return;
+    }
     try {
       const response = await fetch("http://localhost:3001/api/auth/register", {
         method: "POST",
@@ -134,6 +145,7 @@ export const Navbar = () => {
       const data = await response.json();
       if (response.ok) {
         alert("Inscription réussie !");
+        captchaRef.current?.reset(); // reset le captcha
         onClose();
       } else {
         alert(data.message || "Une erreur est survenue.");
@@ -146,6 +158,13 @@ export const Navbar = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+
+  
+    if (!captchaToken) {
+      alert("Veuillez valider le CAPTCHA.");
+      return;
+    }
+
     try {
       const response = await fetch("http://localhost:3001/api/auth/login", {
         method: "POST",
@@ -332,16 +351,31 @@ export const Navbar = () => {
                         >
                           Souviens-toi de moi
                         </Checkbox>
-                        <Link color="primary" href="#" size="sm" onClick={onOpenPass}>
+                        <Link
+                          color="primary"
+                          href="#"
+                          size="sm"
+                          onClick={onOpenPass}
+                        >
                           Mot de passe oublié ?
                         </Link>
                       </div>
+                      <ReCAPTCHA
+                        ref={captchaRef}
+                        sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+                        onChange={setCaptchaToken}
+                      />
                     </ModalBody>
                     <ModalFooter>
                       <Button color="danger" variant="flat" onPress={onClose}>
                         Fermer
                       </Button>
-                      <Button color="primary" onPress={onClose} type="submit">
+                      <Button
+                        color="primary"
+                        onPress={onClose}
+                        type="submit"
+                        
+                      >
                         Se connecter
                       </Button>
                     </ModalFooter>
@@ -350,7 +384,10 @@ export const Navbar = () => {
               )}
             </ModalContent>
           </Modal>
-          <ForgotPasswordModal isOpen={isOpenPass} onOpenChange={onOpenChangePass} />
+          <ForgotPasswordModal
+            isOpen={isOpenPass}
+            onOpenChange={onOpenChangePass}
+          />
         </NavbarItem>
         <NavbarItem className="space-x-3">
           <Button
@@ -434,6 +471,11 @@ export const Navbar = () => {
                         </Link>
                       </div>
                     </div>
+                    <ReCAPTCHA
+                      ref={captchaRef}
+                      sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+                      onChange={setCaptchaToken}
+                    />
                   </ModalBody>
                   <ModalFooter>
                     <Button color="danger" variant="flat" onPress={onClose}>

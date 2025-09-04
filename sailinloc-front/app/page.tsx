@@ -22,6 +22,20 @@ import { GrNext } from "react-icons/gr";
 import { GrPrevious } from "react-icons/gr";
 import { Form } from "@heroui/form";
 import { Button, ButtonGroup } from "@heroui/button";
+import useConsent from "@/hooks/useConsent";
+import { useEffect } from "react";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  SelectGroup,
+  SelectLabel,
+} from "@/components/ui/select";
+
+
 // Import Swiper styles
 import "swiper/css";
 import "swiper/css/free-mode";
@@ -968,34 +982,90 @@ export default function Home() {
             <form action="">
               <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <div className="inputformhome">
-                  <Input
-                    label="Veuillez saisire votre destination"
-                    type="text"
-                    variant="bordered"
-                    color="secondary"
-                  />
+                  <Select name="typeBateau">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Séléctionnez votre port" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Type de bateau à louer</SelectLabel>
+                        <SelectItem value="voilier">Voilier</SelectItem>
+                        <SelectItem value="catamaran">Catamaran</SelectItem>
+                        <SelectItem value="yacht à voile">
+                          Yacht à voile
+                        </SelectItem>
+                        <SelectItem value="yacht à moteur">
+                          Yacht à moteur
+                        </SelectItem>
+                        <SelectItem value="bateau à moteur">
+                          Bateau à moteur
+                        </SelectItem>
+                        <SelectItem value="semi-rigide">Semi-rigide</SelectItem>
+                        <SelectItem value="Goelétte">Goélette</SelectItem>
+                        <SelectItem value="trimaran">Trimaran</SelectItem>
+                        <SelectItem value="péniche">Péniche</SelectItem>
+                        <SelectItem value="jet-ski">Jet-ski</SelectItem>
+                        <SelectItem value="houseboat (péniche habitable)">
+                          Houseboat (péniche habitable)
+                        </SelectItem>
+                        <SelectItem value="bateau de pêche">
+                          Bateau de pêche
+                        </SelectItem>
+                        <SelectItem value="vedette rapide">
+                          Vedette rapide
+                        </SelectItem>
+                        <SelectItem value="catamaran à moteur">
+                          Catamaran à moteur
+                        </SelectItem>
+                        <SelectItem value="dinghy / annexe">
+                          Dinghy / Annexe
+                        </SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="inputformhome">
-                  <Input
-                    label="Type de bateau"
-                    type="text"
-                    variant="bordered"
-                    color="secondary"
-                  />
-                </div>
-                <div className="inputformhome">
-                  <DatePicker
-                    label={"Dates de navigation"}
-                    variant="bordered"
-                    color="secondary"
-                  />
-                </div>
-                <div className="inputformhome">
-                  <NumberInput
-                    label="Nombre de passagers"
-                    variant="bordered"
-                    color="secondary"
-                  />
+                  <Select name="typeBateau">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Séléctionnez votre type de bateau" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Type de bateau à louer</SelectLabel>
+                        <SelectItem value="voilier">Voilier</SelectItem>
+                        <SelectItem value="catamaran">Catamaran</SelectItem>
+                        <SelectItem value="yacht à voile">
+                          Yacht à voile
+                        </SelectItem>
+                        <SelectItem value="yacht à moteur">
+                          Yacht à moteur
+                        </SelectItem>
+                        <SelectItem value="bateau à moteur">
+                          Bateau à moteur
+                        </SelectItem>
+                        <SelectItem value="semi-rigide">Semi-rigide</SelectItem>
+                        <SelectItem value="Goelétte">Goélette</SelectItem>
+                        <SelectItem value="trimaran">Trimaran</SelectItem>
+                        <SelectItem value="péniche">Péniche</SelectItem>
+                        <SelectItem value="jet-ski">Jet-ski</SelectItem>
+                        <SelectItem value="houseboat (péniche habitable)">
+                          Houseboat (péniche habitable)
+                        </SelectItem>
+                        <SelectItem value="bateau de pêche">
+                          Bateau de pêche
+                        </SelectItem>
+                        <SelectItem value="vedette rapide">
+                          Vedette rapide
+                        </SelectItem>
+                        <SelectItem value="catamaran à moteur">
+                          Catamaran à moteur
+                        </SelectItem>
+                        <SelectItem value="dinghy / annexe">
+                          Dinghy / Annexe
+                        </SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="flex justify-center md:block">
                   <RippleButton rippleColor="#ADD8E6" className="py-3.5">

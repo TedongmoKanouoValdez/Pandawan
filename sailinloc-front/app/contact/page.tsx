@@ -1,16 +1,19 @@
-'use client';
+"use client";
 import React, { useState } from "react";
-import emailjs from 'emailjs-com';
+import emailjs from "emailjs-com";
 import { FaLocationDot } from "react-icons/fa6";
 import { IoIosTime } from "react-icons/io";
 import { BsSendFill } from "react-icons/bs";
-import { BsTelephoneFill} from "react-icons/bs";
+import { BsTelephoneFill } from "react-icons/bs";
 import { TbMailFilled } from "react-icons/tb";
-import toast, { Toaster } from 'react-hot-toast';
-
+import toast, { Toaster } from "react-hot-toast";
+import { useRef } from "react";
+import ReCAPTCHA from "react-google-recaptcha";
 
 export default function ContactPage() {
   const words = ["aventure", "voyage", "périple", "épopée", "exploration"];
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<ReCAPTCHA>(null);
 
   const [formData, setFormData] = useState({
     nom: "",
@@ -26,7 +29,9 @@ export default function ContactPage() {
     message: false,
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: false }));
@@ -34,6 +39,11 @@ export default function ContactPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!captchaToken) {
+      toast.error("Veuillez valider le CAPTCHA.");
+      return;
+    }
 
     const newErrors = {
       nom: formData.nom.trim() === "",
@@ -46,14 +56,14 @@ export default function ContactPage() {
 
     const hasError = Object.values(newErrors).some((val) => val === true);
 
-     if (hasError) {
+    if (hasError) {
       toast.error("Veuillez remplir tous les champs obligatoires.");
       return;
     }
 
-    const SERVICE_ID = 'service_29gmwal';
-    const TEMPLATE_ID = 'template_rq3pwru';
-    const PUBLIC_KEY = '7EUjUve2HG1kZcB1t';
+    const SERVICE_ID = "service_29gmwal";
+    const TEMPLATE_ID = "template_rq3pwru";
+    const PUBLIC_KEY = "7EUjUve2HG1kZcB1t";
 
     const templateParams = {
       from_name: formData.nom,
@@ -62,7 +72,8 @@ export default function ContactPage() {
       message: formData.message,
     };
 
-    emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY)
+    emailjs
+      .send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY)
       .then(() => {
         toast.success("Votre message a bien été envoyé !");
         setFormData({ nom: "", email: "", objet: "", message: "" });
@@ -98,7 +109,9 @@ export default function ContactPage() {
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
-              {errors.nom && <p className="text-red-500 text-sm mt-1">Champ requis.</p>}
+              {errors.nom && (
+                <p className="text-red-500 text-sm mt-1">Champ requis.</p>
+              )}
             </div>
 
             <div>
@@ -112,7 +125,9 @@ export default function ContactPage() {
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
-              {errors.email && <p className="text-red-500 text-sm mt-1">Champ requis.</p>}
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1">Champ requis.</p>
+              )}
             </div>
 
             <div>
@@ -126,7 +141,9 @@ export default function ContactPage() {
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
-              {errors.objet && <p className="text-red-500 text-sm mt-1">Champ requis.</p>}
+              {errors.objet && (
+                <p className="text-red-500 text-sm mt-1">Champ requis.</p>
+              )}
             </div>
 
             <div>
@@ -139,9 +156,14 @@ export default function ContactPage() {
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 h-32 resize-none bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               ></textarea>
-              {errors.message && <p className="text-red-500 text-sm mt-1">Champ requis.</p>}
+              {errors.message && (
+                <p className="text-red-500 text-sm mt-1">Champ requis.</p>
+              )}
             </div>
-
+            <ReCAPTCHA
+              sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+              onChange={setCaptchaToken}
+            />
             <button
               type="submit"
               className="mx-auto flex items-center gap-2 bg-black text-white px-6 py-3 rounded-md shadow hover:bg-gray-800 transition"
@@ -170,7 +192,10 @@ export default function ContactPage() {
               <InfoCard
                 icon={<TbMailFilled className="text-4xl" />}
                 text={
-                  <a href="mailto:contact@example.com" className="hover:text-blue-500">
+                  <a
+                    href="mailto:contact@example.com"
+                    className="hover:text-blue-500"
+                  >
                     contact@example.com
                   </a>
                 }
@@ -213,11 +238,19 @@ export default function ContactPage() {
   );
 }
 
-function InfoCard({ icon, text }: { icon: React.ReactNode; text: React.ReactNode }) {
+function InfoCard({
+  icon,
+  text,
+}: {
+  icon: React.ReactNode;
+  text: React.ReactNode;
+}) {
   return (
     <div className="bg-glass border border-gray-200 rounded-xl shadow-md w-full aspect-square flex flex-col items-center justify-center p-4 text-center space-y-2">
       <div className="text-4xl text-black">{icon}</div>
-      <p className="text-[13px] font-semibold text-gray-800 leading-tight">{text}</p>
+      <p className="text-[13px] font-semibold text-gray-800 leading-tight">
+        {text}
+      </p>
     </div>
   );
 }

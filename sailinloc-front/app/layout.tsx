@@ -1,3 +1,4 @@
+// app/layout.tsx
 import "@/styles/globals.css";
 import { Metadata, Viewport } from "next";
 import { Providers } from "./providers";
@@ -6,6 +7,8 @@ import clsx from "clsx";
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 import ClientLayout from "@/components/pages/ClientLayout";
+import CookieBanner from "@/components/CookieBanner";
+import { CookieConsentProvider } from '@/context/CookieConsentContext';
 
 export const metadata: Metadata = {
   title: {
@@ -40,7 +43,12 @@ export default function RootLayout({
         )}
       >
         <Providers themeProps={{ attribute: "class", defaultTheme: "light" }}>
-          <ClientLayout>{children}</ClientLayout>
+          <CookieConsentProvider> 
+            <ClientLayout>
+              {children}
+              <CookieBanner /> 
+            </ClientLayout>
+          </CookieConsentProvider>
         </Providers>
       </body>
     </html>
