@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 "use client";
+=======
+"use client"
+>>>>>>> ea0937cd57c221cfee4b59a9c6c7b96220081499
 import { title } from "@/components/primitives";
 import Link from "next/link";
 import { RippleButton } from "@/components/magicui/ripple-button";

@@ -83,8 +83,53 @@ export default function ContactPage() {
         toast.error("Une erreur s'est produite. Veuillez réessayer.");
       });
   };
+  
 
   return (
+    <>
+
+     <section className="">
+            <div className="relative">
+              <div className="contentvideohome">
+                <video
+                  muted
+                  autoPlay
+                  loop
+                  playsInline
+                  controls={false}
+                  style={{ width: "100%", height: "100vh", objectFit: "cover" }}
+                  src="https://res.cloudinary.com/dluqkutu8/video/upload/v1750331153/14637966-uhd_2560_1440_60fps_tli0wh.mp4"
+                />
+              </div>
+              <div className="contenttext">
+                <div className="flex flex-row space-x-2">
+                  {/* <div>
+                    <LogoSecondaire />
+                  </div> */}
+                  <div className="justify-items-center  Textheader text-white">
+                    <BoxReveal boxColor={"#5046e6"} duration={0.5}>
+                      <h1 className="  text-4xl font-bold">
+                        Besoin d`aide ou dinformations ?
+                
+                      </h1>
+                    </BoxReveal>
+    
+                    <BoxReveal boxColor={"#5046e6"} duration={0.5}>
+                      <p className="text-lg mt-4">
+                     Contactez-nous, nous sommes à votre écoute pour répondre à vos questions, suggestions ou réclamations.
+                      </p>
+                    </BoxReveal>
+    
+                  
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+            
+          </section>
+                   
+
     <section
       className="bg-cover bg-center w-screen min-h-screen flex items-center justify-center px-4 py-12"
       style={{
@@ -235,6 +280,7 @@ export default function ContactPage() {
         </div>
       </div>
     </section>
+    </>
   );
 }
 
@@ -254,3 +300,4 @@ function InfoCard({
     </div>
   );
 }
+

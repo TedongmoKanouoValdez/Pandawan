@@ -63,6 +63,7 @@ export const LogoSecondaire: React.FC = () => {
         fill="#fff"
         stroke="none"
       >
+        
         <path
           d="M4665 12791 c-198 -32 -420 -142 -587 -290 -111 -98 -223 -282 -271
 -441 -51 -168 -62 -306 -49 -585 5 -104 8 -191 8 -192 -1 -1 -107 -30 -236
@@ -2396,3 +2397,12 @@ export default function Home() {
     </>
   );
 }
+
+
+
+
+
+
+
+
+

@@ -18,7 +18,7 @@ const transporter = nodemailer.createTransport({
  */
 async function sendMail({ to, subject, html }) {
   return transporter.sendMail({
-    from: `"SailInLoc" <${process.env.EMAIL_USER}>`,
+    from: `"SailingLoc" <${process.env.EMAIL_USER}>`,
     to,
     subject,
     html,
