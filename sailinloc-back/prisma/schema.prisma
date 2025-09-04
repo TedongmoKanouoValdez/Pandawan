@@ -84,7 +84,7 @@ model DetailsBateau {
   tarifications                        String?
   portdedepart                         String?
   portdarriver                         String?
- 
+
   bateau   Bateau @relation(fields: [bateauId], references: [id])
   bateauId Int    @unique
 }
@@ -106,10 +106,11 @@ model Reservation {
   Total                   Decimal?
   heure                   String?
   statut                  StatutReservation
+  data                    String?
   creeLe                  DateTime          @default(now())
   urlDocumentContrat      String?
   urlRecu                 String?
- 
+
   paiement     Paiement?
   contrat      Contrat?      @relation(name: "ContratToReservation")
   contratId    Int?          @unique
@@ -218,7 +219,7 @@ model Media {
   description  String?
   numeroPolice String?
   creeLe       DateTime  @default(now())
- 
+
   utilisateur   Utilisateur? @relation(fields: [utilisateurId], references: [id])
   utilisateurId Int?
  
@@ -252,7 +253,7 @@ enum StatutReservation {
  
 enum MethodePaiement {
   CARTE
-  VIREMENT
+  APPLE_PAY
   PAYPAL
 }
  
@@ -273,6 +274,8 @@ enum TypeMedia {
   ATTESTATION_ASSURANCE
   CERTIFICAT_NAVIGATION
   PROFIL
+  CONTRAT
+  RECUS
 }
  
 enum EtatPaiement {

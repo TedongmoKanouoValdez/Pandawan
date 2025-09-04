@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useState } from "react";
 import { SplitText } from "@/components/split-text";
 import { BoxReveal } from "@/components/magicui/box-reveal";
 import { FlipWords } from "@/components/ui/flip-words";
@@ -16,6 +17,8 @@ import { IoMdPin } from "react-icons/io";
 import { HiUserGroup } from "react-icons/hi2";
 import { GiCaptainHatProfile } from "react-icons/gi";
 import { GiTakeMyMoney } from "react-icons/gi";
+import { useRouter } from "next/navigation";
+import { Empty } from "antd";
 
 import {
   Pagination,
@@ -29,6 +32,36 @@ const handleAnimationComplete = () => {
 
 type Props = {
   texte: string; // Définit que 'texte' doit être une chaîne de caractères
+};
+
+interface Media {
+  id: number;
+  url: string;
+  type: string;
+  titre: string;
+}
+
+interface Bateau {
+  id: number;
+  header: string;
+  slug: string | number;
+  modele: string;
+  type: string;
+  port: string;
+  target: string;
+  description: string;
+  medias: Media[];
+}
+
+const typeToLabel: Record<string, string> = {
+  Aucun: "",
+  "Par heure": "/ heure",
+  "Par demi-journée": "/ demi-journée",
+  "Par jour (journalier)": "/ jour",
+  "Par week-end": "/ week-end",
+  "Par semaine (hebdomadaire)": "/ semaine",
+  "Par mois (mensuel)": "/ mois",
+  "Par séjour (forfait global, peu importe la durée)": "/ séjour",
 };
 
 export const MonTexte = ({ texte }: Props) => {
@@ -54,6 +87,56 @@ export default function NosBateauxPage() {
     "Offrez-vous un moment unique avec",
     "Embarquez avec",
   ];
+  const [data, setData] = useState<Bateau[]>([]);
+  const [loading, setLoading] = useState(true);
+  const itemsPerPage = 9;
+  const [totalPages, setTotalPages] = useState(1);
+  const [page, setPage] = useState(1);
+  const router = useRouter();
+
+  useEffect(() => {
+    setLoading(true);
+    fetch("http://localhost:3001/api/bateaux")
+      .then((res) => res.json())
+      .then((json) => {
+        if (!json || !Array.isArray(json.bateaux)) {
+          console.error("Format de données inattendu :", json);
+          setLoading(false);
+          return;
+        }
+        // console.log(json.bateaux);
+
+        const bateauxMapped = json.bateaux.map((bateau: any) => ({
+          id: bateau.id,
+          header: bateau.nom ?? "Nom inconnu",
+          slug: bateau.slug ?? 0,
+          modele: bateau.modele ?? "Modèle inconnu",
+          type: bateau.typeBateau ?? "Modèle inconnu",
+          port: bateau.portdefault ?? "Port inconnu",
+          target: bateau.prix ?? "0",
+          detail: bateau.details ?? [],
+          description: bateau.description ?? "",
+          datesIndisponibles: bateau.datesIndisponibles ?? [],
+          proprietaireId: bateau.proprietaireId ?? 0,
+          medias: bateau.medias ?? [],
+        }));
+
+        setData(bateauxMapped);
+        setLoading(false);
+        setTotalPages(Math.ceil(bateauxMapped.length / itemsPerPage));
+      })
+      .catch((err) => {
+        console.error("Erreur lors du rafraîchissement :", err);
+        setLoading(false);
+      });
+  }, []);
+
+  const pagedData = data.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+
+  if (loading) return <p>Chargement…</p>;
+
+  console.log(data);
+
   return (
     <>
       <section className="">
@@ -164,1270 +247,244 @@ export default function NosBateauxPage() {
             </div>
             <hr className="mb-8 border border-black" />
             <div>
-              <div className="grid grid-cols-3 gap-3 place-items-center">
-                <div
-                  className="relative carddestinationshome flex flex-col space-y-24"
-                  style={{
-                    backgroundImage:
-                      "url(https://res.cloudinary.com/dluqkutu8/image/upload/v1751018808/parking-marin-de-bateaux-et-yachts-en-turquie-yacht-amarre-dans-le-port-maritime_ecsqlq.jpg)",
-                    backgroundPositionX: "center",
-                    backgroundSize: "26rem",
-                  }}
-                >
-                  <div className="flex flex-row justify-between mx-4 mt-4 items-center">
-                    <div className="bg-glace flex flex-row space-x-4 items-center px-2.5 py-1 rounded-full">
-                      <div>
-                        <PiSunDimFill className="text-yellow-400 w-6 h-6" />
-                      </div>
-                      <div className="text-white text-base">
-                        25°C en été - <span className="font-bold">France</span>
-                      </div>
-                    </div>
-                    <div className="cursor-pointer z-10">
-                      <BiSolidBookmark className="w-8 h-8 text-white" />
-                    </div>
-                  </div>
-                  <div>
-                    <Space
-                      direction="vertical"
-                      size="middle"
-                      style={{ width: "100%", gap: "2rem" }}
-                    >
-                      <Badge.Ribbon text="Croisières le long de la Côte d'Azur." className="bg-glacev2"></Badge.Ribbon>
-                    </Space>
-                  </div>
-                  <div className="bg-glace contentinfocarddestination text-left text-base space-y-4 px-2">
-                    <div className="space-y-2 px-2">
-                      <div>
-                        <Chip
-                          color="warning"
-                          className="text-white text-lg font-medium mt-2 border-none"
-                          variant="dot"
-                        >
-                          Ocean Breeze 42
-                        </Chip>
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <div className="space-x-2">
-                          <Space>
-                            <Tooltip title="Voilier" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <FaSailboat />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="Voilier" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                          <Space>
-                            <Tooltip title="Inclus" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <GiCaptainHatProfile />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="Inclus" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                          <Space>
-                            <Tooltip title="320€/jour" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <GiTakeMyMoney />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="320€/jour" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                        </div>
-                        <div className="space-x-2">
-                          <Space>
-                            <Tooltip title="Marseille" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <IoMdPin />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="Marseille" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                          <Space>
-                            <Tooltip title="6 personnes" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <HiUserGroup />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="6 personnes" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                        </div>
-                      </div>
+              <div className={`grid ${pagedData && pagedData.length > 0 ? 'grid-cols-3 gap-3' : 'grid-cols-1 gap-1' } place-items-center`}>
+                {pagedData && pagedData.length > 0 ? (
+                  pagedData.map((bateau) => {
+                    const cover = bateau.medias.find((m) => m.type === "COVER");
+                    let optionsPayantes = [];
+                    if (bateau?.detail?.optionsPayantes) {
+                      optionsPayantes = JSON.parse(
+                        bateau.detail.optionsPayantes
+                      );
+                    }
+                    const hasSkipper = optionsPayantes.some(
+                      (option) => option.id === "Skipper"
+                    );
+
+                    if (!bateau?.detail?.tarifications) return null;
+
+                    let affichage = "";
+
+                    try {
+                      const tarifs = JSON.parse(
+                        bateau.detail.tarifications || "[]"
+                      );
+
+                      affichage = tarifs
+                        .map((tarif: any) => {
+                          const montant = parseFloat(tarif.montant);
+                          const label = typeToLabel[tarif.type] || "";
+                          return `${montant}€ ${label}`;
+                        })
+                        .join(", ");
+                    } catch (error) {
+                      console.error(
+                        `Erreur parsing tarifications pour ${bateau.header} :`,
+                        error
+                      );
+                    }
+
+                    return (
                       <div
-                        className="flex flex-row justify-between items-center"
-                        style={{ marginBottom: "1rem" }}
+                        key={bateau.id}
+                        className="relative carddestinationshome flex flex-col space-y-24"
+                        style={{
+                          backgroundImage: `url(${cover?.url || "https://res.cloudinary.com/dluqkutu8/image/upload/v1754741102/view-boat-water_razzxb.jpg"})`,
+                          backgroundPositionX: "center",
+                          backgroundSize: "26rem",
+                        }}
                       >
+                        <div className="flex flex-row justify-between mx-4 mt-4 items-center">
+                          <div className="bg-glace flex flex-row space-x-4 items-center px-2.5 py-1 rounded-full">
+                            <div>
+                              <PiSunDimFill className="text-yellow-400 w-6 h-6" />
+                            </div>
+                            <div className="text-white text-base">
+                              25°C en été -{" "}
+                              <span className="font-bold">France</span>
+                            </div>
+                          </div>
+                          <div className="cursor-pointer z-10">
+                            <BiSolidBookmark className="w-8 h-8 text-white" />
+                          </div>
+                        </div>
                         <div>
-                          <RippleButton className="bg-white text-black">
-                            Voir les bateaux
-                          </RippleButton>
-                        </div>
-                        <div className="flex flex-row space-x-2">
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-white" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  className="relative carddestinationshome flex flex-col space-y-24"
-                  style={{
-                    backgroundImage:
-                      "url(https://res.cloudinary.com/dluqkutu8/image/upload/v1751020033/white-yacht-with-mountains_1_mj6jqe.jpg)",
-                    backgroundPositionX: "center",
-                    backgroundSize: "26rem",
-                  }}
-                >
-                  <div className="flex flex-row justify-between mx-4 mt-4 items-center">
-                    <div className="bg-glace flex flex-row space-x-4 items-center px-2.5 py-1 rounded-full">
-                      <div>
-                        <PiSunDimFill className="text-yellow-400 w-6 h-6" />
-                      </div>
-                      <div className="text-white text-base">
-                        25°C en été - <span className="font-bold">France</span>
-                      </div>
-                    </div>
-                    <div className="cursor-pointer z-10">
-                      <BiSolidBookmark className="w-8 h-8 text-white" />
-                    </div>
-                  </div>
-                  <div>
-                    <Space
-                      direction="vertical"
-                      size="middle"
-                      style={{ width: "100%", gap: "2rem" }}
-                    >
-                      <Badge.Ribbon text="Croisières le long de la Côte d'Azur." className="bg-glacev2"></Badge.Ribbon>
-                    </Space>
-                  </div>
-                  <div className="bg-glace contentinfocarddestination text-left text-base space-y-4 px-2">
-                    <div className="space-y-2 px-2">
-                      <div>
-                        <Chip
-                          color="warning"
-                          className="text-white text-lg font-medium mt-2 border-none"
-                          variant="dot"
-                        >
-                          Luxor Cat 45
-                        </Chip>
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <div className="space-x-2">
-                          <Space>
-                            <Tooltip title="Catamaran" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <FaSailboat />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="Catamaran" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                          <Space>
-                            <Tooltip title="Inclus" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <GiCaptainHatProfile />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="Inclus" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                          <Space>
-                            <Tooltip title="720€/jour" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <GiTakeMyMoney />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="720€/jour" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
+                          <Space
+                            direction="vertical"
+                            size="middle"
+                            style={{ width: "100%", gap: "2rem" }}
+                          >
+                            <Badge.Ribbon
+                              text="Croisières le long de la Côte d'Azur."
+                              className="bg-glacev2"
+                            ></Badge.Ribbon>
                           </Space>
                         </div>
-                        <div className="space-x-2">
-                          <Space>
-                            <Tooltip title="Saint-Tropez" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <IoMdPin />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="Saint-Tropez" />
-                                  </div>
-                                </div>
+                        <div className="bg-glace contentinfocarddestination text-left text-base space-y-4 px-2">
+                          <div className="space-y-2 px-2">
+                            <div>
+                              <Chip
+                                color="warning"
+                                className="text-white text-lg font-medium mt-2 border-none"
+                                variant="dot"
+                              >
+                                {bateau.header}
                               </Chip>
-                            </Tooltip>
-                          </Space>
-                          <Space>
-                            <Tooltip title="12 personnes" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <HiUserGroup />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="12 personnes" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
+                            </div>
+                          </div>
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <div className="space-x-2">
+                                <Space>
+                                  <Tooltip title={bateau.type} color="#000">
+                                    <Chip
+                                      color="warning"
+                                      className="cursor-pointer"
+                                      variant="shadow"
+                                    >
+                                      <div className="flex space-x-2 items-cenyter">
+                                        <div>
+                                          <FaSailboat />
+                                        </div>
+                                        <div>
+                                          <MonTexte texte={bateau.type} />
+                                        </div>
+                                      </div>
+                                    </Chip>
+                                  </Tooltip>
+                                </Space>
+                                <Space>
+                                  <Tooltip
+                                    title={hasSkipper ? "Inclus" : "Non inclus"}
+                                    color="#000"
+                                  >
+                                    <Chip
+                                      color="warning"
+                                      className="cursor-pointer"
+                                      variant="shadow"
+                                    >
+                                      <div className="flex space-x-2 items-center">
+                                        <div>
+                                          <GiCaptainHatProfile />
+                                        </div>
+                                        <div>
+                                          <MonTexte
+                                            texte={
+                                              hasSkipper
+                                                ? "Inclus"
+                                                : "Non inclus"
+                                            }
+                                          />
+                                        </div>
+                                      </div>
+                                    </Chip>
+                                  </Tooltip>
+                                </Space>
+                                <Space>
+                                  <Tooltip title={affichage} color="#000">
+                                    <Chip
+                                      color="warning"
+                                      className="cursor-pointer"
+                                      variant="shadow"
+                                    >
+                                      <div className="flex space-x-2 items-center">
+                                        <div>
+                                          <GiTakeMyMoney />
+                                        </div>
+                                        <div>
+                                          <MonTexte texte={affichage} />
+                                        </div>
+                                      </div>
+                                    </Chip>
+                                  </Tooltip>
+                                </Space>
+                              </div>
+                              <div className="space-x-2">
+                                <Space>
+                                  <Tooltip title={bateau.port} color="#000">
+                                    <Chip
+                                      color="warning"
+                                      className="cursor-pointer"
+                                      variant="shadow"
+                                    >
+                                      <div className="flex space-x-2 items-center">
+                                        <div>
+                                          <IoMdPin />
+                                        </div>
+                                        <div>
+                                          <MonTexte texte={bateau.port} />
+                                        </div>
+                                      </div>
+                                    </Chip>
+                                  </Tooltip>
+                                </Space>
+                                <Space>
+                                  <Tooltip
+                                    title={`${bateau?.detail?.capaciteMax} personnes`}
+                                    color="#000"
+                                  >
+                                    <Chip
+                                      color="warning"
+                                      className="cursor-pointer"
+                                      variant="shadow"
+                                    >
+                                      <div className="flex space-x-2 items-center">
+                                        <div>
+                                          <HiUserGroup />
+                                        </div>
+                                        <div>
+                                          <MonTexte
+                                            texte={`${bateau?.detail?.capaciteMax} personnes`}
+                                          />
+                                        </div>
+                                      </div>
+                                    </Chip>
+                                  </Tooltip>
+                                </Space>
+                              </div>
+                            </div>
+                            <div
+                              className="flex flex-row justify-between items-center"
+                              style={{ marginBottom: "1rem" }}
+                            >
+                              <div>
+                                <RippleButton
+                                  onClick={() =>
+                                    router.push(`/boat/${bateau.slug}`)
+                                  }
+                                  className="bg-white text-black"
+                                >
+                                  Voir les bateaux
+                                </RippleButton>
+                              </div>
+                              <div className="flex flex-row space-x-2">
+                                <FaStar className="text-amber-400" />
+                                <FaStar className="text-amber-400" />
+                                <FaStar className="text-amber-400" />
+                                <FaStar className="text-amber-400" />
+                                <FaStar className="text-white" />
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div
-                        className="flex flex-row justify-between items-center"
-                        style={{ marginBottom: "1rem" }}
-                      >
-                        <div>
-                          <RippleButton className="bg-white text-black">
-                            Voir les bateaux
-                          </RippleButton>
-                        </div>
-                        <div className="flex flex-row space-x-2">
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-white" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  className="relative carddestinationshome flex flex-col space-y-24"
-                  style={{
-                    backgroundImage:
-                      "url(https://res.cloudinary.com/dluqkutu8/image/upload/v1751020067/sailing-ship-sea-sunlight-cloudy-sky-daytime_1_ztf587.jpg)",
-                    backgroundPositionX: "center",
-                    backgroundSize: "26rem",
-                  }}
-                >
-                  <div className="flex flex-row justify-between mx-4 mt-4 items-center">
-                    <div className="bg-glace flex flex-row space-x-4 items-center px-2.5 py-1 rounded-full">
-                      <div>
-                        <PiSunDimFill className="text-yellow-400 w-6 h-6" />
-                      </div>
-                      <div className="text-white text-base">
-                        25°C en été - <span className="font-bold">France</span>
-                      </div>
-                    </div>
-                    <div className="cursor-pointer z-10">
-                      <BiSolidBookmark className="w-8 h-8 text-white" />
-                    </div>
-                  </div>
-                  <div>
-                    <Space
-                      direction="vertical"
-                      size="middle"
-                      style={{ width: "100%", gap: "2rem" }}
-                    >
-                      <Badge.Ribbon text="Croisières le long de la Côte d'Azur." className="bg-glacev2"></Badge.Ribbon>
-                    </Space>
-                  </div>
-                  <div className="bg-glace contentinfocarddestination text-left text-base space-y-4 px-2">
-                    <div className="space-y-2 px-2">
-                      <div>
-                        <Chip
-                          color="warning"
-                          className="text-white text-lg font-medium mt-2 border-none"
-                          variant="dot"
-                        >
-                          Luxor Cat 45
-                        </Chip>
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <div className="space-x-2">
-                          <Space>
-                            <Tooltip title="Bateau à moteur" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <FaSailboat />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="Bateau à moteur" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                          <Space>
-                            <Tooltip title="Sans" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <GiCaptainHatProfile />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="Sans" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                          <Space>
-                            <Tooltip title="310€/jour" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <GiTakeMyMoney />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="310€/jour" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                        </div>
-                        <div className="space-x-2">
-                          <Space>
-                            <Tooltip title="Arcachon" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <IoMdPin />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="Arcachon" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                          <Space>
-                            <Tooltip title="6 personnes" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <HiUserGroup />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="6 personnes" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                        </div>
-                      </div>
-                      <div
-                        className="flex flex-row justify-between items-center"
-                        style={{ marginBottom: "1rem" }}
-                      >
-                        <div>
-                          <RippleButton className="bg-white text-black">
-                            Voir le bateaux
-                          </RippleButton>
-                        </div>
-                        <div className="flex flex-row space-x-2">
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-white" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  className="relative carddestinationshome flex flex-col space-y-24"
-                  style={{
-                    backgroundImage:
-                      "url(https://res.cloudinary.com/dluqkutu8/image/upload/v1751020106/view-beautiful-white-yacht-daylight-horizontal-sea-background_bubbsa.jpg)",
-                    backgroundPositionX: "center",
-                    backgroundSize: "26rem",
-                  }}
-                >
-                  <div className="flex flex-row justify-between mx-4 mt-4 items-center">
-                    <div className="bg-glace flex flex-row space-x-4 items-center px-2.5 py-1 rounded-full">
-                      <div>
-                        <PiSunDimFill className="text-yellow-400 w-6 h-6" />
-                      </div>
-                      <div className="text-white text-base">
-                        25°C en été - <span className="font-bold">France</span>
-                      </div>
-                    </div>
-                    <div className="cursor-pointer z-10">
-                      <BiSolidBookmark className="w-8 h-8 text-white" />
-                    </div>
-                  </div>
-                  <div>
-                    <Space
-                      direction="vertical"
-                      size="middle"
-                      style={{ width: "100%", gap: "2rem" }}
-                    >
-                      <Badge.Ribbon text="Croisières le long de la Côte d'Azur." className="bg-glacev2"></Badge.Ribbon>
-                    </Space>
-                  </div>
-                  <div className="bg-glace contentinfocarddestination text-left text-base space-y-4 px-2">
-                    <div className="space-y-2 px-2">
-                      <div>
-                        <Chip
-                          color="warning"
-                          className="text-white text-lg font-medium mt-2 border-none"
-                          variant="dot"
-                        >
-                          Family Sea 30
-                        </Chip>
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <div className="space-x-2">
-                          <Space>
-                            <Tooltip title="Voilier" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <FaSailboat />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="Voilier" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                          <Space>
-                            <Tooltip title="Optionnel" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <GiCaptainHatProfile />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="Optionnel" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                          <Space>
-                            <Tooltip title="390€/jour" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <GiTakeMyMoney />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="390€/jour" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                        </div>
-                        <div className="space-x-2">
-                          <Space>
-                            <Tooltip title="Hyères" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <IoMdPin />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="Hyères" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                          <Space>
-                            <Tooltip title="8 personnes" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <HiUserGroup />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="8 personnes" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                        </div>
-                      </div>
-                      <div
-                        className="flex flex-row justify-between items-center"
-                        style={{ marginBottom: "1rem" }}
-                      >
-                        <div>
-                          <RippleButton className="bg-white text-black">
-                            Voir les bateaux
-                          </RippleButton>
-                        </div>
-                        <div className="flex flex-row space-x-2">
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-white" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  className="relative carddestinationshome flex flex-col space-y-24"
-                  style={{
-                    backgroundImage:
-                      "url(https://res.cloudinary.com/dluqkutu8/image/upload/v1751020142/parking-marin-de-bateaux-et-yachts-en-turquie-yacht-amarre-dans-le-port-maritime_1_rsjela.jpg)",
-                    backgroundPositionX: "center",
-                    backgroundSize: "26rem",
-                  }}
-                >
-                  <div className="flex flex-row justify-between mx-4 mt-4 items-center">
-                    <div className="bg-glace flex flex-row space-x-4 items-center px-2.5 py-1 rounded-full">
-                      <div>
-                        <PiSunDimFill className="text-yellow-400 w-6 h-6" />
-                      </div>
-                      <div className="text-white text-base">
-                        25°C en été - <span className="font-bold">France</span>
-                      </div>
-                    </div>
-                    <div className="cursor-pointer z-10">
-                      <BiSolidBookmark className="w-8 h-8 text-white" />
-                    </div>
-                  </div>
-                  <div>
-                    <Space
-                      direction="vertical"
-                      size="middle"
-                      style={{ width: "100%", gap: "2rem" }}
-                    >
-                      <Badge.Ribbon text="Croisières le long de la Côte d'Azur." className="bg-glacev2"></Badge.Ribbon>
-                    </Space>
-                  </div>
-                  <div className="bg-glace contentinfocarddestination text-left text-base space-y-4 px-2">
-                    <div className="space-y-2 px-2">
-                      <div>
-                        <Chip
-                          color="warning"
-                          className="text-white text-lg font-medium mt-2 border-none"
-                          variant="dot"
-                        >
-                          Serenity 36
-                        </Chip>
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <div className="space-x-2">
-                          <Space>
-                            <Tooltip title="Voilier" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <FaSailboat />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="Voilier" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                          <Space>
-                            <Tooltip title="Inclus" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <GiCaptainHatProfile />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="Inclus" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                          <Space>
-                            <Tooltip title="430/jour" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <GiTakeMyMoney />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="430/jour" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                        </div>
-                        <div className="space-x-2">
-                          <Space>
-                            <Tooltip title="Bastia" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <IoMdPin />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="Bastia" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                          <Space>
-                            <Tooltip title="9 personnes" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <HiUserGroup />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="9 personnes" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                        </div>
-                      </div>
-                      <div
-                        className="flex flex-row justify-between items-center"
-                        style={{ marginBottom: "1rem" }}
-                      >
-                        <div>
-                          <RippleButton className="bg-white text-black">
-                            Voir les bateaux
-                          </RippleButton>
-                        </div>
-                        <div className="flex flex-row space-x-2">
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-white" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  className="relative carddestinationshome flex flex-col space-y-24"
-                  style={{
-                    backgroundImage:
-                      "url(https://res.cloudinary.com/dluqkutu8/image/upload/v1751020192/yachts-de-luxe-dans-un-port-le-soir_1_vmgidd.jpg)",
-                    backgroundPositionX: "center",
-                    backgroundSize: "26rem",
-                  }}
-                >
-                  <div className="flex flex-row justify-between mx-4 mt-4 items-center">
-                    <div className="bg-glace flex flex-row space-x-4 items-center px-2.5 py-1 rounded-full">
-                      <div>
-                        <PiSunDimFill className="text-yellow-400 w-6 h-6" />
-                      </div>
-                      <div className="text-white text-base">
-                        25°C en été - <span className="font-bold">France</span>
-                      </div>
-                    </div>
-                    <div className="cursor-pointer z-10">
-                      <BiSolidBookmark className="w-8 h-8 text-white" />
-                    </div>
-                  </div>
-                  <div>
-                    <Space
-                      direction="vertical"
-                      size="middle"
-                      style={{ width: "100%", gap: "2rem" }}
-                    >
-                      <Badge.Ribbon text="Croisières le long de la Côte d'Azur." className="bg-glacev2"></Badge.Ribbon>
-                    </Space>
-                  </div>
-                  <div className="bg-glace contentinfocarddestination text-left text-base space-y-4 px-2">
-                    <div className="space-y-2 px-2">
-                      <div>
-                        <Chip
-                          color="warning"
-                          className="text-white text-lg font-medium mt-2 border-none"
-                          variant="dot"
-                        >
-                          Corsica Spirit 40
-                        </Chip>
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <div className="space-x-2">
-                          <Space>
-                            <Tooltip title="Catamaran" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <FaSailboat />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="Catamaran" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                          <Space>
-                            <Tooltip title="Inclus" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <GiCaptainHatProfile />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="Inclus" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                          <Space>
-                            <Tooltip title="680€/jour" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <GiTakeMyMoney />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="680€/jour" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                        </div>
-                        <div className="space-x-2">
-                          <Space>
-                            <Tooltip title="Ajaccio" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <IoMdPin />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="Ajaccio" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                          <Space>
-                            <Tooltip title="10 personnes" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <HiUserGroup />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="10 personnes" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                        </div>
-                      </div>
-                      <div
-                        className="flex flex-row justify-between items-center"
-                        style={{ marginBottom: "1rem" }}
-                      >
-                        <div>
-                          <RippleButton className="bg-white text-black">
-                            Voir les bateaux
-                          </RippleButton>
-                        </div>
-                        <div className="flex flex-row space-x-2">
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-white" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  className="relative carddestinationshome flex flex-col space-y-24"
-                  style={{
-                    backgroundImage:
-                      "url(https://res.cloudinary.com/dluqkutu8/image/upload/v1751020247/bateau-a-voile-reste-a-bay-a-st-john-iles-vierges_1_valwhy.jpg)",
-                    backgroundPositionX: "center",
-                    backgroundSize: "26rem",
-                  }}
-                >
-                  <div className="flex flex-row justify-between mx-4 mt-4 items-center">
-                    <div className="bg-glace flex flex-row space-x-4 items-center px-2.5 py-1 rounded-full">
-                      <div>
-                        <PiSunDimFill className="text-yellow-400 w-6 h-6" />
-                      </div>
-                      <div className="text-white text-base">
-                        25°C en été - <span className="font-bold">France</span>
-                      </div>
-                    </div>
-                    <div className="cursor-pointer z-10">
-                      <BiSolidBookmark className="w-8 h-8 text-white" />
-                    </div>
-                  </div>
-                  <div>
-                    <Space
-                      direction="vertical"
-                      size="middle"
-                      style={{ width: "100%", gap: "2rem" }}
-                    >
-                      <Badge.Ribbon text="Croisières le long de la Côte d'Azur." className="bg-glacev2"></Badge.Ribbon>
-                    </Space>
-                  </div>
-                  <div className="bg-glace contentinfocarddestination text-left text-base space-y-4 px-2">
-                    <div className="space-y-2 px-2">
-                      <div>
-                        <Chip
-                          color="warning"
-                          className="text-white text-lg font-medium mt-2 border-none"
-                          variant="dot"
-                        >
-                          Catana Dream 50
-                        </Chip>
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <div className="space-x-2">
-                          <Space>
-                            <Tooltip title="Bateau à moteur" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <FaSailboat />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="Bateau à moteur" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                          <Space>
-                            <Tooltip title="Optionnel" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <GiCaptainHatProfile />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="Optionnel" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                          <Space>
-                            <Tooltip title="270€/jour" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <GiTakeMyMoney />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="270€/jour" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                        </div>
-                        <div className="space-x-2">
-                          <Space>
-                            <Tooltip title="Cannes" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <IoMdPin />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="Cannes" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                          <Space>
-                            <Tooltip title="5 personnes" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <HiUserGroup />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="5 personnes" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                        </div>
-                      </div>
-                      <div
-                        className="flex flex-row justify-between items-center"
-                        style={{ marginBottom: "1rem" }}
-                      >
-                        <div>
-                          <RippleButton className="bg-white text-black">
-                            Voir les bateaux
-                          </RippleButton>
-                        </div>
-                        <div className="flex flex-row space-x-2">
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-white" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  className="relative carddestinationshome flex flex-col space-y-24"
-                  style={{
-                    backgroundImage:
-                      "url(https://res.cloudinary.com/dluqkutu8/image/upload/v1751020334/plage-tropicale-avec-des-bungalows-sur-l-eau-aux-maldives_st17mb.jpg)",
-                    backgroundPositionX: "center",
-                    backgroundSize: "26rem",
-                  }}
-                >
-                  <div className="flex flex-row justify-between mx-4 mt-4 items-center">
-                    <div className="bg-glace flex flex-row space-x-4 items-center px-2.5 py-1 rounded-full">
-                      <div>
-                        <PiSunDimFill className="text-yellow-400 w-6 h-6" />
-                      </div>
-                      <div className="text-white text-base">
-                        25°C en été - <span className="font-bold">France</span>
-                      </div>
-                    </div>
-                    <div className="cursor-pointer z-10">
-                      <BiSolidBookmark className="w-8 h-8 text-white" />
-                    </div>
-                  </div>
-                  <div>
-                    <Space
-                      direction="vertical"
-                      size="middle"
-                      style={{ width: "100%", gap: "2rem" }}
-                    >
-                      <Badge.Ribbon text="Croisières le long de la Côte d'Azur." className="bg-glacev2"></Badge.Ribbon>
-                    </Space>
-                  </div>
-                  <div className="bg-glace contentinfocarddestination text-left text-base space-y-4 px-2">
-                    <div className="space-y-2 px-2">
-                      <div>
-                        <Chip
-                          color="warning"
-                          className="text-white text-lg font-medium mt-2 border-none"
-                          variant="dot"
-                        >
-                          Sea Harmony 38
-                        </Chip>
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <div className="space-x-2">
-                          <Space>
-                            <Tooltip title="Voilier" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <FaSailboat />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="Voilier" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                          <Space>
-                            <Tooltip title="Optionnel" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <GiCaptainHatProfile />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="Optionnel" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                          <Space>
-                            <Tooltip title="340€/jour" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <GiTakeMyMoney />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="340€/jour" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                        </div>
-                        <div className="space-x-2">
-                          <Space>
-                            <Tooltip title="Toulon" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <IoMdPin />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="Toulon" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                          <Space>
-                            <Tooltip title="7 personnes" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <HiUserGroup />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="7 personnes" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                        </div>
-                      </div>
-                      <div
-                        className="flex flex-row justify-between items-center"
-                        style={{ marginBottom: "1rem" }}
-                      >
-                        <div>
-                          <RippleButton className="bg-white text-black">
-                            Voir le bateaux
-                          </RippleButton>
-                        </div>
-                        <div className="flex flex-row space-x-2">
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-white" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  className="relative carddestinationshome flex flex-col space-y-24"
-                  style={{
-                    backgroundImage:
-                      "url(https://res.cloudinary.com/dluqkutu8/image/upload/v1751020271/yachts-dans-le-port-de-monaco_ivlnh1.jpg)",
-                    backgroundPositionX: "center",
-                    backgroundSize: "26rem",
-                  }}
-                >
-                  <div className="flex flex-row justify-between mx-4 mt-4 items-center">
-                    <div className="bg-glace flex flex-row space-x-4 items-center px-2.5 py-1 rounded-full">
-                      <div>
-                        <PiSunDimFill className="text-yellow-400 w-6 h-6" />
-                      </div>
-                      <div className="text-white text-base">
-                        25°C en été - <span className="font-bold">France</span>
-                      </div>
-                    </div>
-                    <div className="cursor-pointer z-10">
-                      <BiSolidBookmark className="w-8 h-8 text-white" />
-                    </div>
-                  </div>
-                  <div>
-                    <Space
-                      direction="vertical"
-                      size="middle"
-                      style={{ width: "100%", gap: "2rem" }}
-                    >
-                      <Badge.Ribbon text="Croisières le long de la Côte d'Azur." className="bg-glacev2"></Badge.Ribbon>
-                    </Space>
-                  </div>
-                  <div className="bg-glace contentinfocarddestination text-left text-base space-y-4 px-2">
-                    <div className="space-y-2 px-2">
-                      <div>
-                        <Chip
-                          color="warning"
-                          className="text-white text-lg font-medium mt-2 border-none"
-                          variant="dot"
-                        >
-                          Lagoon Sun 46
-                        </Chip>
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <div className="space-x-2">
-                          <Space>
-                            <Tooltip title="Catamaran" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <FaSailboat />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="Catamaran" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                          <Space>
-                            <Tooltip title="Inclus" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <GiCaptainHatProfile />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="Inclus" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                          <Space>
-                            <Tooltip title="650€/jour" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <GiTakeMyMoney />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="650€/jour" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                        </div>
-                        <div className="space-x-2">
-                          <Space>
-                            <Tooltip title="Bormes-les-Mimosas" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <IoMdPin />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="Bormes-les-Mimosas" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                          <Space>
-                            <Tooltip title="10 personnes" color="#000">
-                              <Chip color="warning" className="cursor-pointer" variant="shadow">
-                                <div className="flex space-x-2 items-center">
-                                  <div>
-                                    <HiUserGroup />
-                                  </div>
-                                  <div>
-                                    <MonTexte texte="10 personnes" />
-                                  </div>
-                                </div>
-                              </Chip>
-                            </Tooltip>
-                          </Space>
-                        </div>
-                      </div>
-                      <div
-                        className="flex flex-row justify-between items-center"
-                        style={{ marginBottom: "1rem" }}
-                      >
-                        <div>
-                          <RippleButton className="bg-white text-black">
-                            Voir le bateaux
-                          </RippleButton>
-                        </div>
-                        <div className="flex flex-row space-x-2">
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-amber-400" />
-                          <FaStar className="text-white" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                    );
+                  })
+                ) : (
+                  <Empty description={false} />
+                )}
               </div>
               <div className="flex justify-end w-full mt-8">
-                <Pagination showControls initialPage={1} total={10} />
+                {/* <Pagination showControls initialPage={1} total={10} /> */}
+                {totalPages > 1 && (
+                  <Pagination
+                    page={page}
+                    onChange={setPage}
+                    total={totalPages}
+                    showControls
+                    initialPage={1}
+                  />
+                )}
               </div>
             </div>
           </div>

@@ -40,6 +40,11 @@ import { Button as ButtonHeroui, ButtonGroup } from "@heroui/button";
 import { useRouter } from "next/navigation";
 import { addToast, ToastProvider } from "@heroui/toast";
 import { Spinner } from "@heroui/spinner";
+import {
+  Select as Selectheroui,
+  SelectSection as SelectSectionheroui,
+  SelectItem as SelectItemheroui,
+} from "@heroui/select";
 
 const frameworks = [
   {
@@ -137,6 +142,7 @@ export default function GestionDesBateauxCreerPage() {
   const [placement, setPlacement] = React.useState("top-center");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [typeBateau, setTypeBateau] = useState<string>("");
+  const [portattache, setPortattache] = useState<string>("");
 
   const router = useRouter();
 
@@ -204,8 +210,7 @@ export default function GestionDesBateauxCreerPage() {
       zonesnavigation: (
         document.getElementById("zones-navigation") as HTMLInputElement
       ).value,
-      portattache: (document.getElementById("port-attache") as HTMLInputElement)
-        .value,
+      portattache: portattache,
       portdepart: (document.getElementById("port-depart") as HTMLInputElement)
         .value,
       portarriver: (document.getElementById("port-arriver") as HTMLInputElement)
@@ -237,8 +242,25 @@ export default function GestionDesBateauxCreerPage() {
         document.getElementById("duree-location") as HTMLInputElement
       ).value,
 
-      tarifbateau: (document.getElementById("tarif-bateau") as HTMLInputElement)
-        .value,
+      PassagersInclusDansLePrix: (
+        document.getElementById("PassagersInclusDansLePrix") as HTMLInputElement
+      ).value,
+
+      SupplementParPassagerSupplémentaire: (
+        document.getElementById(
+          "SupplementParPassagerSupplémentaire"
+        ) as HTMLInputElement
+      ).value,
+
+      reservoirCarburant: (
+        document.getElementById("reservoirCarburant") as HTMLInputElement
+      ).value,
+
+      reservoirEau: (
+        document.getElementById("reservoirEau") as HTMLInputElement
+      ).value,
+
+      Moteurs: (document.getElementById("Moteurs") as HTMLInputElement).value,
 
       // contact: {
       //   nom: (document.getElementById("nom-proprietaire") as HTMLInputElement)
@@ -406,11 +428,11 @@ export default function GestionDesBateauxCreerPage() {
                       <div className="grid grid-cols-2 gap-2 mb-4">
                         <div className="grid gap-3">
                           <Label htmlFor="longueur">Longueur (en mètres)</Label>
-                          <Input id="longueur" placeholder="Ex : 12.5m" />
+                          <Input id="longueur" placeholder="Ex : 12.5" />
                         </div>
                         <div className="grid gap-3">
                           <Label htmlFor="largeur">Largeur (en mètres)</Label>
-                          <Input id="largeur" placeholder="Ex : 4.2m" />
+                          <Input id="largeur" placeholder="Ex : 4.2" />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-2 mb-4">
@@ -418,7 +440,7 @@ export default function GestionDesBateauxCreerPage() {
                           <Label htmlFor="tirant-eau">
                             Tirant d'eau (en mètres)
                           </Label>
-                          <Input id="tirant-eau" placeholder="Ex : 1.8m" />
+                          <Input id="tirant-eau" placeholder="Ex : 1.8" />
                         </div>
                         <div className="grid gap-3">
                           <Label htmlFor="capacite-max">
@@ -439,6 +461,33 @@ export default function GestionDesBateauxCreerPage() {
                             Nombre de couchages
                           </Label>
                           <Input id="nombre-couchages" placeholder="Ex : 6" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mb-4">
+                        <div className="grid gap-3">
+                          <Label htmlFor="Moteurs">Moteurs</Label>
+                          <Input
+                            id="Moteurs"
+                            placeholder="Torqeedo Travel 1103 C"
+                          />
+                        </div>
+                        <div className="grid gap-3">
+                          <Label htmlFor="reservoirEau">réservoirs d’eau</Label>
+                          <Input
+                            id="reservoirEau"
+                            placeholder="Vetus FTANK série (PEHD, 100 à 400 L)"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mb-4">
+                        <div className="grid gap-3">
+                          <Label htmlFor="reservoirCarburant">
+                            réservoirs de carburant
+                          </Label>
+                          <Input
+                            id="reservoirCarburant"
+                            placeholder="12 L à 30 L"
+                          />
                         </div>
                       </div>
                     </div>
@@ -541,12 +590,211 @@ export default function GestionDesBateauxCreerPage() {
                       <div className="grid grid-cols-2 gap-2 mb-4">
                         <div className="grid gap-3">
                           <Label htmlFor="port-attache">
-                            Port d'attache (ville, marina)
+                            Port d&apos;attache (ville, marina)
                           </Label>
-                          <Input
-                            id="port-attache"
-                            placeholder="Ex : Marina de Cannes"
-                          />
+                          <Selectheroui
+                            className="max-w-xs"
+                            placeholder="Sélectionne un port"
+                            variant="bordered"
+                            value={portattache}
+                            onSelectionChange={(keys) => {
+                              const selected = Array.from(keys)[0] as string; // récupère la première clé
+                              setPortattache(selected);
+                            }}
+                          >
+                            <SelectSectionheroui showDivider title="France">
+                              <SelectItemheroui key="Marseille">
+                                Marseille
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Le Havre">
+                                Le Havre
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Dunkerque">
+                                Dunkerque
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Nantes – Saint-Nazaire">
+                                Nantes – Saint-Nazaire
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Bordeaux">
+                                Bordeaux
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Toulon">
+                                Toulon
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Nice">
+                                Nice
+                              </SelectItemheroui>
+                              <SelectItemheroui key="La Rochelle">
+                                La Rochelle
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Brest">
+                                Brest
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Calais">
+                                Calais
+                              </SelectItemheroui>
+                            </SelectSectionheroui>
+                            <SelectSectionheroui showDivider title="Espagne">
+                              <SelectItemheroui key="Barcelone">
+                                Barcelone
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Valence">
+                                Valence
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Algeciras">
+                                Algeciras
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Bilbao">
+                                Bilbao
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Las Palmas (Canaries)">
+                                Las Palmas (Canaries)
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Santa Cruz de Tenerife (Canaries)">
+                                Santa Cruz de Tenerife (Canaries)
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Malaga">
+                                Malaga
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Santander">
+                                Santander
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Vigo">
+                                Vigo
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Palma de Majorque">
+                                Palma de Majorque
+                              </SelectItemheroui>
+                            </SelectSectionheroui>
+                            <SelectSectionheroui showDivider title="Italie">
+                              <SelectItemheroui key="Gênes (Genova)">
+                                Gênes (Genova)
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Trieste">
+                                Trieste
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Naples (Napoli)">
+                                Naples (Napoli)
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Livourne (Livorno)">
+                                Livourne (Livorno)
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Civitavecchia (Rome)">
+                                Civitavecchia (Rome)
+                              </SelectItemheroui>
+                              <SelectItemheroui key="La Spezia">
+                                La Spezia
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Palerme (Palermo)">
+                                Palerme (Palermo)
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Venise (Venezia)">
+                                Venise (Venezia)
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Bari">
+                                Bari
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Messine (Messina)">
+                                Messine (Messina)
+                              </SelectItemheroui>
+                            </SelectSectionheroui>
+                            <SelectSectionheroui showDivider title="Portugal">
+                              <SelectItemheroui key="Lisbonne (Lisboa)">
+                                Lisbonne (Lisboa)
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Porto de Leixões">
+                                Porto de Leixões
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Sines">
+                                Sines
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Funchal (Madère)">
+                                Funchal (Madère)
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Ponta Delgada (Açores)">
+                                Ponta Delgada (Açores)
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Setúbal">
+                                Setúbal
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Aveiro">
+                                Aveiro
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Faro">
+                                Faro
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Viana do Castelo">
+                                Viana do Castelo
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Portimão">
+                                Portimão
+                              </SelectItemheroui>
+                            </SelectSectionheroui>
+                            <SelectSectionheroui showDivider title="Grèce">
+                              <SelectItemheroui key="Le Pirée (Athènes)">
+                                Le Pirée (Athènes)
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Thessalonique (Thessaloniki)">
+                                Thessalonique (Thessaloniki)
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Héraklion (Crète)">
+                                Héraklion (Crète)
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Patras">
+                                Patras
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Rhodes">
+                                Rhodes
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Corfou (Kerkyra)">
+                                Corfou (Kerkyra)
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Volos">
+                                Volos
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Mykonos">
+                                Mykonos
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Santorin (Santorini)">
+                                Santorin (Santorini)
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Kavala">
+                                Kavala
+                              </SelectItemheroui>
+                            </SelectSectionheroui>
+                            <SelectSectionheroui title="Croatie">
+                              <SelectItemheroui key="Rijeka">
+                                Rijeka
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Split">
+                                Split
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Dubrovnik">
+                                Dubrovnik
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Zadar">
+                                Zadar
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Ploče">
+                                Ploče
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Šibenik">
+                                Šibenik
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Rovinj">
+                                Rovinj
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Pula">
+                                Pula
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Umag">
+                                Umag
+                              </SelectItemheroui>
+                              <SelectItemheroui key="Makarska">
+                                Makarska
+                              </SelectItemheroui>
+                            </SelectSectionheroui>
+                          </Selectheroui>
                         </div>
                         <div className="grid gap-3">
                           <Label htmlFor="zones-navigation">
@@ -630,10 +878,7 @@ export default function GestionDesBateauxCreerPage() {
                           <Label htmlFor="depot-garantie">
                             Dépôt de garantie
                           </Label>
-                          <Input
-                            id="depot-garantie"
-                            placeholder="Ex : 1000 €"
-                          />
+                          <Input id="depot-garantie" placeholder="Ex : 1000" />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-2 mb-4">
@@ -646,11 +891,32 @@ export default function GestionDesBateauxCreerPage() {
                             placeholder="Ex : 2 jours / 1 mois"
                           />
                         </div>
+                      </div>
+                      <Alert
+                        color="warning"
+                        title="Si vous souhaitez facturer un supplément au-delà d’un certain nombre de passagers, indiquez ici le prix par passager supplémentaire et par jour.
+Laissez vide ou mettez 0 si aucun supplément n’est appliqué."
+                      />
+                      <div className="grid grid-cols-2 gap-2 mt-2 mb-4">
                         <div className="grid gap-3">
                           <Label htmlFor="depot-garantie-2">
-                            Tarif du bateau
+                            Passagers inclus dans le prix
                           </Label>
-                          <Input id="tarif-bateau" placeholder="Ex : 1000.00" />
+                          <Input
+                            id="PassagersInclusDansLePrix"
+                            placeholder="ex : 4"
+                          />
+                        </div>
+                        <div className="grid gap-3">
+                          <Label htmlFor="depot-garantie-2">
+                            Supplément par passager supplémentaire (€ / jour)
+                          </Label>
+                          <Input
+                            type="number"
+                            id="SupplementParPassagerSupplémentaire"
+                            placeholder="ex : 20"
+                            step="0.01"
+                          />
                         </div>
                       </div>
                       <Alert

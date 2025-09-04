@@ -4,6 +4,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import { LucideIcon } from "lucide-react";
 import { SiSailsdotjs } from "react-icons/si";
+import { SearchIcon, Logo } from "@/components/icons";
 
 interface SocialLink {
   name: string;
@@ -39,8 +40,8 @@ export const Footer = React.forwardRef<HTMLDivElement, FooterProps>(
         <div className="max-w-screen-xl mx-auto px-4 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12">
             <div className="lg:col-span-2">
-              <SiSailsdotjs className="w-28 h-28" />
-              <a href="#" className="text-xl font-semibold">
+              <Logo className="w-36 h-36" />
+              <a href="/" className="text-xl font-semibold">
                 {brand.name}
               </a>
               {/* <p className="text-sm text-foreground/60">{brand.description}</p> */}

@@ -9,7 +9,7 @@ export default function Page() {
 
   return (
     <DateRangeProvider>
-      <ArticlePage />
+      <ArticlePage slug={slug} />
     </DateRangeProvider>
   );
 }

@@ -39,10 +39,9 @@ router.post("/", async (req, res) => {
         modele: data.modeleMarque,
         portdefault: data.portattache || "Port inconnu",
         typeBateau: data.typeBateau || "inconnu",
-        prix: data.tarifbateau || new Prisma.Decimal("0"),
         description: data.description,
         datesIndisponibles: JSON.stringify(data.indisponibilites || []),
-        proprietaireId: 1, // À remplacer si besoin
+        // proprietaireId: 1, // À remplacer si besoin
 
         details: {
           create: {
@@ -65,6 +64,12 @@ router.post("/", async (req, res) => {
             portdarriver: data.portarriver || "",
             anneeConstruction: data.anneeConstruction || "",
             tarifications: JSON.stringify(data.tarifications || []),
+            PassagersInclusDansLePrix: data.PassagersInclusDansLePrix || "",
+            SupplementParPassagerSupplémentaire:
+              data.SupplementParPassagerSupplémentaire || "",
+            moteur: data.Moteurs || "",
+            reservoirEau: data.reservoirEau || "",
+            reservoirCarburant: data.reservoirCarburant || "",
           },
         },
       },
@@ -81,12 +86,14 @@ router.post("/", async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const bateaux = await prisma.bateau.findMany({
-      include: { details: true },
+      include: { details: true, medias: true },
     });
     res.json({ success: true, bateaux });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Erreur lors de la récupération des bateaux" });
+    res
+      .status(500)
+      .json({ error: "Erreur lors de la récupération des bateaux" });
   }
 });
 
@@ -95,13 +102,15 @@ router.get("/:id", async (req, res) => {
   try {
     const bateau = await prisma.bateau.findUnique({
       where: { id: parseInt(req.params.id) },
-      include: { 
-        details: true, 
+      include: {
+        details: true,
+        medias: true,
         proprietaire: {
           include: {
             utilisateur: true,
           },
-        }, },
+        },
+      },
     });
 
     if (!bateau) {
@@ -120,14 +129,14 @@ router.get("/slug/:slug", async (req, res) => {
   try {
     const bateau = await prisma.bateau.findUnique({
       where: { slug: req.params.slug },
-      include: { 
+      include: {
         details: true,
         medias: true,
         proprietaire: {
           include: {
             utilisateur: true,
           },
-        }, 
+        },
       },
     });
 
@@ -150,72 +159,66 @@ router.put("/:id", async (req, res) => {
   try {
     const bateauExistant = await prisma.bateau.findUnique({
       where: { id: parseInt(id) },
-      include: { details: true, medias: true },
+      include: { details: true },
     });
 
     if (!bateauExistant) {
       return res.status(404).json({ error: "Bateau non trouvé" });
     }
 
-    // Construire updateData sans redéclaration
     const updateData = {
       nom: data.nomBateau,
       modele: data.modeleMarque,
       port: data.portattache,
-      prix: new Prisma.Decimal(data.tarifbateau || "0"),
+      portdefault: data.portdefault,
+      typeBateau: data.typeBateau,
       description: data.description,
       datesIndisponibles: JSON.stringify(data.indisponibilites || []),
-      disponibilite: data.disponibilite ?? true,
+      details: {
+        [bateauExistant.details ? "update" : "create"]: {
+          anneeConstruction: data.anneeConstruction || "",
+          longueur: parseFloat(data.longueur) || null,
+          largeur: parseFloat(data.largeur) || null,
+          tirantEau: parseFloat(data.tirantEau) || null,
+          nombreCabines: parseInt(data.nombreCabines) || null,
+          nombreCouchages: parseInt(data.nombreCouchages) || null,
+          capaciteMax: parseInt(data.capaciteMax) || null,
+          portdedepart: data.portdedepart || "",
+          portdarriver: data.portdarriver || "",
+          depotgarantie: data.depotgarantie || "",
+          politiqueAnnulation: data.politiqueAnnulation || "",
+          dureeLocation: data.dureeLocation || "",
+          locationSansPermis: !!data.locationSansPermis,
+          equipements: JSON.stringify(data.equipementsInclus || []),
+          optionsPayantes: JSON.stringify(data.tags || []),
+          tarifications: JSON.stringify(data.tarifications || []),
+          zonesNavigation: data.zonesNavigation || "",
+          numeroPoliceAssurance: data.numeroPoliceAssurance || "",
+          certificatNavigation: data.certificatNavigation || "",
+          PassagersInclusDansLePrix: data.PassagersInclusDansLePrix || "",
+          SupplementParPassagerSupplémentaire:
+            data.SupplementParPassagerSupplémentaire || "",
+          moteur: data.Moteurs || "",
+          reservoirEau: data.reservoirEau || "",
+          reservoirCarburant: data.reservoirCarburant || "",
+        },
+      },
     };
-
-    const detailsPayload = {
-      longueur: parseFloat(data.longueur) || null,
-      largeur: parseFloat(data.largeur) || null,
-      tirantEau: parseFloat(data.tirantEau) || null,
-      capaciteMax: parseInt(data.capaciteMax) || null,
-      nombreCabines: parseInt(data.nombreCabines) || null,
-      nombreCouchages: parseInt(data.nombreCouchages) || null,
-      equipements: JSON.stringify(data.equipementsInclus || []),
-      optionsPayantes: JSON.stringify(data.tags || []),
-      zonesNavigation: data.zonesNavigation || "",
-      politiqueAnnulation: data.politiqueAnnulation || "",
-      locationSansPermis: !!data.locationSansPermis,
-      numeroPoliceAssurance: data.numeroPoliceAssurance || "",
-      certificatNavigation: data.certificatNavigation || "",
-      portdedepart: data.portdepart || "",
-      portdarriver: data.portarriver || "",
-      anneeConstruction: data.anneeConstruction || "",
-      tarifications: JSON.stringify(data.tarifications || []),
-    };
-
-    updateData.details = bateauExistant.details
-      ? { update: detailsPayload }
-      : { create: detailsPayload };
-
-    // Mettre à jour les médias si fournis
-    if (data.medias && Array.isArray(data.medias)) {
-      await prisma.media.deleteMany({
-        where: { bateauId: parseInt(id) },
-      });
-      await prisma.media.createMany({
-        data: data.medias.map((media) => ({
-          url: media.url,
-          type: media.type,
-          bateauId: parseInt(id),
-        })),
-      });
-    }
 
     const bateau = await prisma.bateau.update({
       where: { id: parseInt(id) },
       data: updateData,
-      include: { details: true, medias: true },
+      include: { details: true },
     });
 
     res.json({ success: true, bateau });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Erreur lors de la mise à jour du bateau" });
+    console.error("❌ Erreur :", error);
+    res.status(500).json({
+      error: "Erreur lors de la mise à jour du bateau",
+      message: error?.message,
+      stack: error?.stack,
+    });
   }
 });
 
@@ -245,6 +248,5 @@ router.delete("/slug/:slug", async (req, res) => {
     res.status(500).json({ error: "Erreur lors de la suppression du bateau" });
   }
 });
-
 
 module.exports = router;

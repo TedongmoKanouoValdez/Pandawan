@@ -20,7 +20,8 @@ export const FooterWrapper = () => {
       className="mt-2"
       brand={{
         name: "SailingLoc",
-        description: "Track and monitor your website traffic.",
+        description:
+          "Louez un voilier ou un bateau à moteur avec SailingLoc. Profitez de la Méditerranée, de la Côte Atlantique et vivez des expériences maritimes uniques.",
       }}
       socialLinks={[
         {

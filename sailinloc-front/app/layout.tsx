@@ -3,7 +3,7 @@ import "@/styles/globals.css";
 import { Metadata, Viewport } from "next";
 import { Providers } from "./providers";
 import clsx from "clsx";
-
+import GlobalLoader from "@/components/GlobalLoader";
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 import ClientLayout from "@/components/pages/ClientLayout";
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   },
   description: siteConfig.description,
   icons: {
-    icon: "/favicon.ico",
+    icon: "/favicon.png",
   },
 };
 
@@ -49,6 +49,9 @@ export default function RootLayout({
               <CookieBanner /> 
             </ClientLayout>
           </CookieConsentProvider>
+          <GlobalLoader>
+            <ClientLayout>{children}</ClientLayout>
+          </GlobalLoader>
         </Providers>
       </body>
     </html>
