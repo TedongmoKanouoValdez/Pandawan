@@ -42,15 +42,14 @@ export default function RootLayout({
           fontSans.variable
         )}
       >
-        <Providers themeProps={{ attribute: "class", defaultTheme: "light" }}>
-          <CookieConsentProvider> 
+        <Providers themeProps={{ attribute: "class", defaultTheme: "light" }}> 
+          <GlobalLoader>
+           <CookieConsentProvider> 
             <ClientLayout>
               {children}
               <CookieBanner /> 
             </ClientLayout>
           </CookieConsentProvider>
-          <GlobalLoader>
-            <ClientLayout>{children}</ClientLayout>
           </GlobalLoader>
         </Providers>
       </body>

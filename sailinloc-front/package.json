@@ -78,6 +78,8 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "cookies-next": "^6.1.0",
+    "country-telephone-data": "^0.6.3",
+    "dom-to-pdf": "^0.3.2",
     "emailjs-com": "^3.2.0",
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^11.13.1",

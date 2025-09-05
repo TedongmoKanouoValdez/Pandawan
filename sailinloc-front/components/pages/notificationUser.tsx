@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { Alert } from "@heroui/alert";
 import { cn } from "@/lib/utils";
 import { Button as Buttonheroui } from "@heroui/button";
 import { AnimatedList } from "@/components/magicui/animated-list";
+import { useMessages } from "@/hooks/useMessages";
+import { markMessageAsRead } from "@/services/notifications";
 
 interface CustomAlertProps {
   title?: React.ReactNode;
@@ -97,92 +99,82 @@ const CustomAlert = React.forwardRef<HTMLDivElement, CustomAlertProps>(
 
 CustomAlert.displayName = "CustomAlert";
 
+function decodeJWT(token: string): Token | null {
+  try {
+    const payload = token.split(".")[1];
+    const decoded = JSON.parse(atob(payload));
+    return decoded as Token;
+  } catch (e) {
+    console.error("Erreur decoding JWT :", e);
+    return null;
+  }
+}
+
+export const Descritpion = ({ texte }: Props) => {
+  const maxChars = 60; // Limite à 100 caractères
+  const courtTexte =
+    texte.length > maxChars ? texte.slice(0, maxChars) + "..." : texte;
+
+  return <p>{courtTexte}</p>;
+};
+
 export const NotificationsUsers = () => {
+  const token = localStorage.getItem("token") || "";
+  let userId = 0;
+  const [open, setOpen] = useState(false);
+
+  if (token) {
+    const decoded = decodeJWT(token);
+    if (decoded) userId = Number(decoded.userId);
+  }
+
+  const [type, setType] = useState<"recus" | "envoyes">("recus");
+  const { messages, setMessages, loading } = useMessages(token, userId, type);
+
+  const handleMarkAsRead = async (id: number) => {
+    try {
+      await markMessageAsRead(id, token);
+      setMessages(
+        messages.map((msg) => (msg.id === id ? { ...msg, lu: true } : msg))
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  if (loading) return <p>Recherche...</p>;
   return (
     <>
       <div className="flex flex-col space-y-2">
-        <AnimatedList>
-          <div className="flex flex-col w-full gap-y-6">
-            <CustomAlert
-              color="default"
-              title="The documents you requested are ready to be viewed"
-            >
-              <div className="flex items-center gap-1 mt-3">
-                <Buttonheroui
-                  className="bg-background text-default-700 font-medium border-1 shadow-small"
-                  size="sm"
-                  variant="bordered"
-                >
-                  Voir la notification
-                </Buttonheroui>
-              </div>
-            </CustomAlert>
+        {messages.length === 0 ? (
+          <div key="new" className="text-black text-center">
+            <p>Aucune notification</p>
           </div>
-          <div className="flex flex-col w-full gap-y-6">
-            <CustomAlert
-              color="default"
-              title="The documents you requested are ready to be viewed"
-            >
-              <div className="flex items-center gap-1 mt-3">
-                <Buttonheroui
-                  className="bg-background text-default-700 font-medium border-1 shadow-small"
-                  size="sm"
-                  variant="bordered"
-                >
-                  Voir la notification
-                </Buttonheroui>
-              </div>
-            </CustomAlert>
-          </div>
-          <div className="flex flex-col w-full gap-y-6">
-            <CustomAlert
-              color="default"
-              title="The documents you requested are ready to be viewed"
-            >
-              <div className="flex items-center gap-1 mt-3">
-                <Buttonheroui
-                  className="bg-background text-default-700 font-medium border-1 shadow-small"
-                  size="sm"
-                  variant="bordered"
-                >
-                  Voir la notification
-                </Buttonheroui>
-              </div>
-            </CustomAlert>
-          </div>
-          <div className="flex flex-col w-full gap-y-6">
-            <CustomAlert
-              color="default"
-              title="The documents you requested are ready to be viewed"
-            >
-              <div className="flex items-center gap-1 mt-3">
-                <Buttonheroui
-                  className="bg-background text-default-700 font-medium border-1 shadow-small"
-                  size="sm"
-                  variant="bordered"
-                >
-                  Voir la notification
-                </Buttonheroui>
-              </div>
-            </CustomAlert>
-          </div>
-          <div className="flex flex-col w-full gap-y-6">
-            <CustomAlert
-              color="default"
-              title="The documents you requested are ready to be viewed"
-            >
-              <div className="flex items-center gap-1 mt-3">
-                <Buttonheroui
-                  className="bg-background text-default-700 font-medium border-1 shadow-small"
-                  size="sm"
-                  variant="bordered"
-                >
-                  Voir la notification
-                </Buttonheroui>
-              </div>
-            </CustomAlert>
-          </div>
-        </AnimatedList>
+        ) : (
+          <>
+            <AnimatedList>
+              {messages.slice(0, 10).map((msg) => (
+                <div key={msg.id} className="flex flex-col w-full gap-y-6">
+                  <CustomAlert
+                    color="default"
+                    title={msg.object}
+                    description={<Descritpion texte={msg.contenu} />}
+                  >
+                    <div className="flex items-center gap-1 mt-3">
+                      <Buttonheroui
+                        className="bg-background text-default-700 font-medium border-1 shadow-small"
+                        size="sm"
+                        variant="bordered"
+                      >
+                        Voir la notification
+                      </Buttonheroui>
+                    </div>
+                  </CustomAlert>
+                </div>
+              ))}
+            </AnimatedList>
+          </>
+        )}
       </div>
     </>
   );

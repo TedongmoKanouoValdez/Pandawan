@@ -47,6 +47,9 @@ app.use('/api', demandeRoutes);
 const captchaRoutes = require('./routes/captcha');
 app.use('/api', captchaRoutes);
 
+const emailRoutes = require('./routes/contactRoutes');
+app.use("/emails", emailRoutes);
+
 // Démarrer le serveur une seule fois
 const PORT = process.env.PORT || 3001;
 if (require.main === module) {

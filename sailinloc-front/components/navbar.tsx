@@ -25,6 +25,8 @@ import { useRef } from "react";
 import { useState, useEffect } from "react";
 import ForgotPasswordModal from "@/components/ForgotPasswordModal";
 import { useRouter } from "next/navigation";
+import { useRef} from "react";
+import ReCAPTCHA from "react-google-recaptcha";
 import {
   Modal,
   ModalContent,
@@ -38,7 +40,10 @@ import { User } from "@heroui/user";
 import { Avatar, AvatarGroup, AvatarIcon } from "@heroui/avatar";
 import { IoIosMailUnread } from "react-icons/io";
 import Notification from "@/components/comp-292";
+import Component from "@/components/comp-378";
+import Dashboard from "@/components/comp-379";
 import { Select, Space } from "antd";
+import { addToast, ToastProvider } from "@heroui/toast";
 import ReCAPTCHA from "react-google-recaptcha";
 import {
   Dropdown,
@@ -154,6 +159,10 @@ export const Navbar = () => {
 
   const [token, setToken] = useState<Token | null>(null);
   const [utilisateurId, setUtilisateurId] = useState<number>(0);
+  const [placement, setPlacement] = React.useState("top-center");
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<ReCAPTCHA>(null);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -172,6 +181,7 @@ export const Navbar = () => {
       alert("Veuillez valider le CAPTCHA.");
       return;
     }
+  
     try {
       const response = await fetch("http://localhost:3001/api/auth/register", {
         method: "POST",
@@ -181,14 +191,23 @@ export const Navbar = () => {
 
       const data = await response.json();
       if (response.ok) {
-        alert("Inscription réussie !");
+        addToast({
+          title: "Félicitations",
+          description:
+            "Votre inscription a été effectuée avec succès. Bienvenue parmi nous !",
+          color: "success",
+        });
         captchaRef.current?.reset(); // reset le captcha
         onClose();
       } else {
         alert(data.message || "Une erreur est survenue.");
       }
     } catch (err) {
-      alert("Erreur lors de l'inscription.");
+      addToast({
+        title: "Erreur",
+        description: "Erreur lors de l'inscription.",
+        color: "danger",
+      });
       console.error(err);
     }
   };
@@ -196,12 +215,11 @@ export const Navbar = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-  
     if (!captchaToken) {
       alert("Veuillez valider le CAPTCHA.");
       return;
     }
-
+    
     try {
       const response = await fetch("http://localhost:3001/api/auth/login", {
         method: "POST",
@@ -214,165 +232,265 @@ export const Navbar = () => {
       const data = await response.json();
 
       if (response.ok) {
-        alert("Connexion réussie !");
         localStorage.setItem("token", data.token);
+        localStorage.setItem("refreshToken", data.refreshToken);
+        addToast({
+          title: "Connexion réussie !",
+          description: "Bienvenue, heureux de vous revoir",
+          color: "success",
+        });
+        window.location.href = "/profil";
       } else {
-        alert(data.message || "Erreur de connexion");
+        addToast({
+          title: "Erreur",
+          description: "Erreur de connexion",
+          color: "danger",
+        });
       }
     } catch (err) {
-      alert("Erreur serveur");
+      addToast({
+        title: "Erreur",
+        description: "Erreur serveur",
+        color: "danger",
+      });
       console.error("Erreur lors de la connexion :", err);
     }
   };
   
   const handleLogout = () => {
     localStorage.removeItem("token"); // supprime la clé
+    localStorage.removeItem("refreshToken"); // supprime la clé
+    addToast({
+      title: "Déconnexion réussie !",
+      description: "À bientôt !",
+      color: "success",
+    });
     setToken(null);
-    router.push("/");
+    window.location.href = "/";
   };
 
   return (
-    <HeroUINavbar
-      maxWidth="xl"
-      position="sticky"
-      onMenuOpenChange={setIsMenuOpen}
-      className="fixed top-0 left-0 w-full bg-black text-white shadow z-50"
-    >
-      <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
-        <NavbarMenuToggle
-          aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-          className="sm:hidden"
-        />
-        <NavbarBrand as="li" className="gap-3 max-w-fit">
-          <NextLink className="flex justify-start items-center gap-1" href="/">
-            <Logo />
-            <p className="font-bold text-inherit">SailingLoc</p>
-          </NextLink>
-        </NavbarBrand>
-        <ul className="hidden lg:flex gap-4 justify-start ml-2">
-          {siteConfig.navItems.map((item) => (
-            <NavbarItem key={item.href}>
-              <NextLink
-                className={clsx(
-                  linkStyles({ color: "foreground" }),
-                  "data-[active=true]:text-primary data-[active=true]:font-medium text-white"
-                )}
-                color="foreground"
-                href={item.href}
-              >
-                {item.label}
-              </NextLink>
-            </NavbarItem>
-          ))}
-        </ul>
-      </NavbarContent>
-
-      <NavbarContent
-        className="hidden sm:flex basis-1/5 sm:basis-full"
-        justify="end"
+    <>
+      <ToastProvider
+        placement={placement}
+        toastOffset={placement.includes("top") ? 60 : 0}
+        toastProps={{
+          radius: "lg",
+          color: "primary",
+          variant: "flat",
+          timeout: 9000,
+        }}
+      />
+      <HeroUINavbar
+        maxWidth="xl"
+        position="sticky"
+        onMenuOpenChange={setIsMenuOpen}
+        className="fixed top-0 left-0 w-full bg-black text-white shadow z-50"
       >
-        <NavbarItem className="space-x-3">
-          <Select
-            defaultValue="FR"
-            // style={{ width: 120 }}
-            onChange={handleChange}
-            options={[
-              {
-                value: "US",
-                label: (
-                  <Iconlang url="https://res.cloudinary.com/dluqkutu8/image/upload/v1751227231/united-kingdom_1_gihox0.png" />
-                ),
-              },
-              {
-                value: "CN",
-                label: (
-                  <Iconlang url="https://res.cloudinary.com/dluqkutu8/image/upload/v1751228300/china_1_nzkdzd.png" />
-                ),
-              },
-              {
-                value: "IN",
-                label: (
-                  <Iconlang url="https://res.cloudinary.com/dluqkutu8/image/upload/v1751227231/india_kwbcea.png" />
-                ),
-              },
-              {
-                value: "ES",
-                label: (
-                  <Iconlang url="https://res.cloudinary.com/dluqkutu8/image/upload/v1751227231/flag_sbnixy.png" />
-                ),
-              },
-              {
-                value: "FR",
-                label: (
-                  <Iconlang url="https://res.cloudinary.com/dluqkutu8/image/upload/v1751227231/france_gaq5eo.png" />
-                ),
-              },
-              {
-                value: "SA",
-                label: (
-                  <Iconlang url="https://res.cloudinary.com/dluqkutu8/image/upload/v1751227231/flag_1_qa5odr.png" />
-                ),
-              },
-              {
-                value: "BD",
-                label: (
-                  <Iconlang url="https://res.cloudinary.com/dluqkutu8/image/upload/v1751227231/bangladesh_tae0eb.png" />
-                ),
-              },
-              {
-                value: "RU",
-                label: (
-                  <Iconlang url="https://res.cloudinary.com/dluqkutu8/image/upload/v1751227232/russia_dyvhrz.png" />
-                ),
-              },
-              {
-                value: "PT",
-                label: (
-                  <Iconlang url="https://res.cloudinary.com/dluqkutu8/image/upload/v1751227232/portugal_kwbylu.png" />
-                ),
-              },
-              {
-                value: "ID",
-                label: (
-                  <Iconlang url="https://res.cloudinary.com/dluqkutu8/image/upload/v1751227232/indonesia_tg0x1c.png" />
-                ),
-              },
-            ]}
+        <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
+          <NavbarMenuToggle
+            aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+            className="sm:hidden"
           />
-        </NavbarItem>
-        <NavbarItem className={`space-x-3 ${utilisateurId ? "hidden" : ""}`}>
-          <Button
-            // as={Link}
-            className="text-sm font-normal text-default-600 bg-default-100"
-            // href="/login"
-            onPress={onOpen}
-            startContent={<RiLoginCircleFill />}
-            variant="flat"
-          >
-            Connexion
-          </Button>
-          <Modal
-            isOpen={isOpen}
-            backdrop="blur"
-            placement="top-center"
-            onOpenChange={onOpenChange}
-          >
-            <ModalContent>
-              {(onClose) => (
-                <>
-                  <ModalHeader className="flex flex-col gap-1">
-                    Bienvenue sur votre espace
-                  </ModalHeader>
-                  <form onSubmit={handleLogin}>
+          <NavbarBrand as="li" className="gap-3 max-w-fit">
+            <NextLink
+              className="flex justify-start items-center gap-1"
+              href="/"
+            >
+              <Logo />
+            </NextLink>
+          </NavbarBrand>
+          <ul className="hidden lg:flex gap-4 justify-start ml-2">
+            {siteConfig.navItems.map((item) => (
+              <NavbarItem key={item.href}>
+                <NextLink
+                  className={clsx(
+                    linkStyles({ color: "foreground" }),
+                    "data-[active=true]:text-primary data-[active=true]:font-medium text-white"
+                  )}
+                  color="foreground"
+                  href={item.href}
+                >
+                  {item.label}
+                </NextLink>
+              </NavbarItem>
+            ))}
+          </ul>
+        </NavbarContent>
+
+        <NavbarContent
+          className="hidden sm:flex basis-1/5 sm:basis-full"
+          justify="end"
+        >
+          <NavbarItem className="space-x-3">
+            <Select
+              defaultValue="FR"
+              // style={{ width: 120 }}
+              onChange={handleChange}
+              options={[
+                {
+                  value: "FR",
+                  label: (
+                    <Iconlang url="https://res.cloudinary.com/dluqkutu8/image/upload/v1751227231/france_gaq5eo.png" />
+                  ),
+                },
+                {
+                  value: "US",
+                  label: (
+                    <Iconlang url="https://res.cloudinary.com/dluqkutu8/image/upload/v1751227231/united-kingdom_1_gihox0.png" />
+                  ),
+                },
+              ]}
+            />
+          </NavbarItem>
+          <NavbarItem className={`${token && token.role === "PROPRIETAIRE" ? "" : "hidden"}`}>
+            <Dashboard />
+          </NavbarItem>
+          <NavbarItem>
+            <Component />
+          </NavbarItem>
+          <NavbarItem className={`space-x-3 ${utilisateurId ? "hidden" : ""}`}>
+            <Button
+              // as={Link}
+              className="text-sm font-normal text-default-600 bg-default-100"
+              // href="/login"
+              onPress={onOpen}
+              startContent={<RiLoginCircleFill />}
+              variant="flat"
+            >
+              Connexion
+            </Button>
+            <Modal
+              isOpen={isOpen}
+              backdrop="blur"
+              placement="top-center"
+              onOpenChange={onOpenChange}
+            >
+              <ModalContent>
+                {(onClose) => (
+                  <>
+                    <ModalHeader className="flex flex-col gap-1">
+                      Bienvenue sur votre espace
+                    </ModalHeader>
+                    <form onSubmit={handleLogin}>
+                      <ModalBody>
+                        <Input
+                          endContent={
+                            <MailIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
+                          }
+                          label="Email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="Enter your email"
+                          variant="bordered"
+                        />
+                        <Input
+                          endContent={
+                            <LockIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
+                          }
+                          label="Password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="Enter your password"
+                          type="password"
+                          variant="bordered"
+                        />
+                        <div className="flex py-2 px-1 justify-between">
+                          <Checkbox
+                            classNames={{
+                              label: "text-small",
+                            }}
+                          >
+                            Souviens-toi de moi
+                          </Checkbox>
+                          <Link
+                            color="primary"
+                            href="#"
+                            size="sm"
+                            onClick={onOpenPass}
+                          >
+                            Mot de passe oublié ?
+                          </Link>
+                        </div>
+                        <ReCAPTCHA
+                        ref={captchaRef}
+                        sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+                        onChange={setCaptchaToken}
+                      />
+                      </ModalBody>
+                      <ModalFooter>
+                        <Button color="danger" variant="flat" onPress={onClose}>
+                          Fermer
+                        </Button>
+                        <Button color="primary" onPress={onClose} type="submit">
+                          Se connecter
+                        </Button>
+                      </ModalFooter>
+                    </form>
+                  </>
+                )}
+              </ModalContent>
+            </Modal>
+            <ForgotPasswordModal
+              isOpen={isOpenPass}
+              onOpenChange={onOpenChangePass}
+            />
+          </NavbarItem>
+          <NavbarItem className={`space-x-3 ${utilisateurId ? "hidden" : ""}`}>
+            <Button
+              // as={Link}
+              className="text-sm font-normal text-default-600 bg-default-100"
+              // href="/register"
+              onPress={onOpenRegister}
+              startContent={<GiArchiveRegister />}
+              variant="flat"
+            >
+              Inscription
+            </Button>
+            <Modal
+              isOpen={isOpenRegister}
+              backdrop="blur"
+              placement="top-center"
+              onOpenChange={onOpenRegisterChange}
+            >
+              <ModalContent>
+                {(onClose) => (
+                  <>
+                    <ModalHeader className="flex flex-col gap-1">
+                      Créez votre compte
+                    </ModalHeader>
                     <ModalBody>
+                      <Input
+                        endContent={
+                          <FaUser className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
+                        }
+                        label="Nom"
+                        type="text"
+                        value={nom}
+                        onChange={(e) => setNom(e.target.value)}
+                        placeholder="Veuillez saisir votre nom"
+                        variant="bordered"
+                      />
+                      <Input
+                        endContent={
+                          <FaUser className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
+                        }
+                        label="Prénom"
+                        type="text"
+                        value={prenom}
+                        onChange={(e) => setPrenom(e.target.value)}
+                        placeholder="Veuillez saisir votre prénom"
+                        variant="bordered"
+                      />
                       <Input
                         endContent={
                           <MailIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
                         }
                         label="Email"
+                        type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="Enter your email"
+                        placeholder="Veuillez saisir votre email"
                         variant="bordered"
                       />
                       <Input
@@ -380,28 +498,25 @@ export const Navbar = () => {
                           <LockIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
                         }
                         label="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
                         placeholder="Enter your password"
                         type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         variant="bordered"
                       />
                       <div className="flex py-2 px-1 justify-between">
-                        <Checkbox
-                          classNames={{
-                            label: "text-small",
-                          }}
-                        >
-                          Souviens-toi de moi
-                        </Checkbox>
-                        <Link
-                          color="primary"
-                          href="#"
-                          size="sm"
-                          onClick={onOpenPass}
-                        >
-                          Mot de passe oublié ?
-                        </Link>
+                        <div className="space-x-1">
+                          <Checkbox
+                            classNames={{
+                              label: "text-small",
+                            }}
+                          >
+                            J'accepte la
+                          </Checkbox>
+                          <Link href="/" className="text-[#00ced1]">
+                            politique de confidentialité
+                          </Link>
+                        </div>
                       </div>
                       <ReCAPTCHA
                         ref={captchaRef}
@@ -415,192 +530,79 @@ export const Navbar = () => {
                       </Button>
                       <Button
                         color="primary"
-                        onPress={onClose}
-                        type="submit"
-                        
+                        onPress={() => handleRegister(onClose)}
                       >
-                        Se connecter
+                        S&apos;inscrire
                       </Button>
                     </ModalFooter>
-                  </form>
-                </>
-              )}
-            </ModalContent>
-          </Modal>
-          <ForgotPasswordModal
-            isOpen={isOpenPass}
-            onOpenChange={onOpenChangePass}
-          />
-        </NavbarItem>
-        <NavbarItem className={`space-x-3 ${utilisateurId ? "hidden" : ""}`}>
-          <Button
-            // as={Link}
-            className="text-sm font-normal text-default-600 bg-default-100"
-            // href="/register"
-            onPress={onOpenRegister}
-            startContent={<GiArchiveRegister />}
-            variant="flat"
-          >
-            Inscription
-          </Button>
-          <Modal
-            isOpen={isOpenRegister}
-            backdrop="blur"
-            placement="top-center"
-            onOpenChange={onOpenRegisterChange}
-          >
-            <ModalContent>
-              {(onClose) => (
-                <>
-                  <ModalHeader className="flex flex-col gap-1">
-                    Créez votre compte
-                  </ModalHeader>
-                  <ModalBody>
-                    <Input
-                      endContent={
-                        <FaUser className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
-                      }
-                      label="Nom"
-                      type="text"
-                      value={nom}
-                      onChange={(e) => setNom(e.target.value)}
-                      placeholder="Veuillez saisir votre nom"
-                      variant="bordered"
-                    />
-                    <Input
-                      endContent={
-                        <FaUser className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
-                      }
-                      label="Prénom"
-                      type="text"
-                      value={prenom}
-                      onChange={(e) => setPrenom(e.target.value)}
-                      placeholder="Veuillez saisir votre prénom"
-                      variant="bordered"
-                    />
-                    <Input
-                      endContent={
-                        <MailIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
-                      }
-                      label="Email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Veuillez saisir votre email"
-                      variant="bordered"
-                    />
-                    <Input
-                      endContent={
-                        <LockIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
-                      }
-                      label="Password"
-                      placeholder="Enter your password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      variant="bordered"
-                    />
-                    <div className="flex py-2 px-1 justify-between">
-                      <div className="space-x-1">
-                        <Checkbox
-                          classNames={{
-                            label: "text-small",
-                          }}
-                        >
-                          J'accepte la
-                        </Checkbox>
-                        <Link href="/" className="text-[#00ced1]">
-                          politique de confidentialité
-                        </Link>
-                      </div>
-                    </div>
-                    <ReCAPTCHA
-                      ref={captchaRef}
-                      sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
-                      onChange={setCaptchaToken}
-                    />
-                  </ModalBody>
-                  <ModalFooter>
-                    <Button color="danger" variant="flat" onPress={onClose}>
-                      Fermer
-                    </Button>
-                    <Button
-                      color="primary"
-                      onPress={() => handleRegister(onClose)}
-                    >
-                      S&apos;inscrire
-                    </Button>
-                  </ModalFooter>
-                </>
-              )}
-            </ModalContent>
-          </Modal>
-        </NavbarItem>
-        <NavbarItem className={`${utilisateurId ? "" : "hidden"}`}>
-          <Notification />
-        </NavbarItem>
-        <NavbarItem className={`${utilisateurId ? "" : "hidden"}`}>
-          <div className="flex items-center gap-4">
-            <Dropdown placement="bottom-start">
-              <DropdownTrigger>
-                <User
-                  as="button"
-                  avatarProps={{
-                    isBordered: true,
-                    src: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
-                  }}
-                  className="transition-transform border-red-500"
-                  color="success"
-                />
-              </DropdownTrigger>
-              <DropdownMenu aria-label="User Actions" variant="flat">
-                <DropdownItem key="settings">
-                  <Link href="/profil">Profil</Link>
-                </DropdownItem>
-                <DropdownItem key="team_settings">
-                  <Link href="/dashboard">Tableau de bord</Link>
-                </DropdownItem>
-                {/* <DropdownItem key="analytics">Analytics</DropdownItem>
+                  </>
+                )}
+              </ModalContent>
+            </Modal>
+          </NavbarItem>
+          <NavbarItem className={`${utilisateurId ? "" : "hidden"}`}>
+            <Notification />
+          </NavbarItem>
+          <NavbarItem className={`${utilisateurId ? "" : "hidden"}`}>
+            <div className="flex items-center gap-4">
+              <Dropdown placement="bottom-start">
+                <DropdownTrigger>
+                  <User
+                    as="button"
+                    avatarProps={{
+                      isBordered: true,
+                      src: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
+                    }}
+                    className="transition-transform border-red-500"
+                    color="success"
+                  />
+                </DropdownTrigger>
+                <DropdownMenu aria-label="User Actions" variant="flat">
+                  <DropdownItem key="settings">
+                    <Link href="/profil">Profil</Link>
+                  </DropdownItem>
+                  {/* <DropdownItem key="analytics">Analytics</DropdownItem>
                 <DropdownItem key="system">System</DropdownItem>
                 <DropdownItem key="configurations">Configurations</DropdownItem>
                 <DropdownItem key="help_and_feedback">
                   Help & Feedback
                 </DropdownItem> */}
-                <DropdownItem
-                  onClick={handleLogout}
-                  key="logout"
-                  color="danger"
-                >
-                  Deconnexion
-                </DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
-          </div>
-        </NavbarItem>
-      </NavbarContent>
+                  <DropdownItem
+                    onClick={handleLogout}
+                    key="logout"
+                    color="danger"
+                  >
+                    Deconnexion
+                  </DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
+            </div>
+          </NavbarItem>
+        </NavbarContent>
 
-      <NavbarMenu>
-        {searchInput}
-        <div className="mx-4 mt-2 flex flex-col gap-2">
-          {siteConfig.navMenuItems.map((item, index) => (
-            <NavbarMenuItem key={`${item}-${index}`}>
-              <Link
-                color={
-                  index === 2
-                    ? "primary"
-                    : index === siteConfig.navMenuItems.length - 1
-                      ? "danger"
-                      : "foreground"
-                }
-                href="#"
-                size="lg"
-              >
-                {item.label}
-              </Link>
-            </NavbarMenuItem>
-          ))}
-        </div>
-      </NavbarMenu>
-    </HeroUINavbar>
+        <NavbarMenu>
+          {searchInput}
+          <div className="mx-4 mt-2 flex flex-col gap-2">
+            {siteConfig.navMenuItems.map((item, index) => (
+              <NavbarMenuItem key={`${item}-${index}`}>
+                <Link
+                  color={
+                    index === 2
+                      ? "primary"
+                      : index === siteConfig.navMenuItems.length - 1
+                        ? "danger"
+                        : "foreground"
+                  }
+                  href="#"
+                  size="lg"
+                >
+                  {item.label}
+                </Link>
+              </NavbarMenuItem>
+            ))}
+          </div>
+        </NavbarMenu>
+      </HeroUINavbar>
+    </>
   );
 };
