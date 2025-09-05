@@ -63,6 +63,7 @@ import {
   DrawerBody,
   DrawerFooter,
 } from "@heroui/drawer";
+import { useRouter } from "next/navigation";
 import { useDisclosure } from "@heroui/modal";
 import { BsCreditCard2FrontFill } from "react-icons/bs";
 import { FaChevronDown } from "react-icons/fa";
@@ -78,6 +79,7 @@ import { FaqUser } from "@/components/pages/faquser";
 import ChatUI from "@/components/pages/chatui";
 import { Divider as Dividerhenoui } from "@heroui/divider";
 import { jwtDecode } from "jwt-decode";
+import { Component } from "@/components/stats-cards";
 
 type MoyenDePaimentIconProps = {
   icon: ElementType<{ size?: number | string; color?: string }>;
@@ -768,6 +770,17 @@ export const columns: ColumnDef<Reservation>[] = [
   },
 ];
 
+function decodeJWT(token: string): Token | null {
+  try {
+    const payload = token.split(".")[1];
+    const decoded = JSON.parse(atob(payload));
+    return decoded as Token;
+  } catch (e) {
+    console.error("Erreur decoding JWT :", e);
+    return null;
+  }
+}
+
 export default function ProfilPage() {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -806,6 +819,7 @@ export default function ProfilPage() {
   const inputFileRef = useRef<HTMLInputElement>(null);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [utilisateurId, setUtilisateurId] = useState<number>(0);
 
   const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
@@ -814,7 +828,7 @@ export default function ProfilPage() {
   const [telephone, setTelephone] = useState("");
   const [role, setRole] = useState("");
   const [urlProfileDefault, setUrlProfileDefault] = useState("");
-
+  const router = useRouter();
   const [successMessage, setSuccessMessage] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [submitted, setSubmitted] = useState(false);
@@ -829,30 +843,70 @@ export default function ProfilPage() {
   };
 
   useEffect(() => {
+    const sessionData = localStorage.getItem("token");
+    if (sessionData) {
+      const decodedToken = decodeJWT(sessionData);
+      if (decodedToken) {
+        setUtilisateurId(Number(decodedToken.userId));
+      }
+    } else {
+      router.push("/");
+    }
+  }, []);
+
+  useEffect(() => {
     const fetchUser = async () => {
       try {
-        const token = localStorage.getItem("token");
+        let token = localStorage.getItem("token");
+        const refreshToken = localStorage.getItem("refreshToken");
+
         if (!token) {
           setError("Vous devez être connecté");
           setLoading(false);
           return;
         }
 
-        setDecoded(jwtDecode(token));
-        console.log(token);
-        console.log(jwtDecode(token));
+        const fetchMe = async (jwt: string) => {
+          const res = await fetch("http://localhost:3001/api/utilisateur/me", {
+            headers: { Authorization: `Bearer ${jwt}` },
+          });
+          return res;
+        };
 
-        const res = await fetch("http://localhost:3001/api/utilisateur/me", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        let res = await fetchMe(token);
+
+        if (res.status === 401 && refreshToken) {
+          // accessToken expiré, appeler /refresh
+          const refreshRes = await fetch(
+            "http://localhost:3001/api/auth/refresh",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ refreshToken }),
+            }
+          );
+
+          if (!refreshRes.ok)
+            throw new Error(
+              "Votre session a expiré, veuillez vous reconnecter"
+            );
+
+          const refreshData = await refreshRes.json();
+          token = refreshData.token;
+          localStorage.setItem("token", token);
+
+          // Retenter /me avec le nouveau token
+          res = await fetchMe(token);
+        }
+
         if (!res.ok) {
           const errorData = await res.json();
           throw new Error(errorData.message || "Erreur serveur");
         }
+
         const data = await res.json();
         setUser(data);
+        setDecoded(jwtDecode(token));
 
         setNom(data.nom || "");
         setPrenom(data.prenom || "");
@@ -860,7 +914,7 @@ export default function ProfilPage() {
         setRole("CLIENT");
         setTelephone(data.telephone || "");
         setPreview(data.photoProfil || "/default-avatar.png");
-      } catch (err) {
+      } catch (err: any) {
         setError(err.message);
       } finally {
         setLoading(false);
@@ -1204,222 +1258,6 @@ export default function ProfilPage() {
                       </Chip>
 
                       <div className="flex flex-row space-x-3">
-                        <div className="bg-glacev2 flex flex-col space-y-4 p-4 w-[38.2rem] rounded-lg h-[21rem] overflow-y-scroll mt-2 contentswitch">
-                          <div className="flex justify-between items-center">
-                            <h2 className="text-lg text-black font-bold underline underline-offset-8">
-                              Moyens de paiement enregistrés
-                            </h2>
-                            <div>
-                              <Dialog>
-                                <form>
-                                  <DialogTrigger asChild>
-                                    <Button variant="outline">
-                                      <BsCreditCard2FrontFill /> Ajouter un
-                                      moyens de paiement
-                                    </Button>
-                                  </DialogTrigger>
-                                  <DialogContent className="sm:max-w-[425px]">
-                                    <DialogHeader>
-                                      <DialogTitle>
-                                        Ajouter un moyens de paiement
-                                      </DialogTitle>
-                                      <DialogDescription>
-                                        Ajoutez un nouveau moyen de paiement
-                                        pour simplifier vos prochaines
-                                        réservations et régler facilement vos
-                                        locations. Vos informations resteront
-                                        confidentielles et sécurisées.
-                                      </DialogDescription>
-                                    </DialogHeader>
-                                    <div className="grid gap-4">
-                                      <div className="grid gap-3">
-                                        <Label htmlFor="ncarte">
-                                          Numéro de carte
-                                        </Label>
-                                        <Input
-                                          id="ncarte"
-                                          name="numerodecarte"
-                                          defaultValue="4111 1111 1111 1111"
-                                        />
-                                      </div>
-                                      <div className="grid grid-cols-2 gap-1">
-                                        <div className="grid gap-3">
-                                          <Label htmlFor="nomtitulairecarte">
-                                            Nom du titulaire de la carte
-                                          </Label>
-                                          <Input
-                                            id="nomtitulairecarte"
-                                            name="nomtitulairecarte"
-                                            defaultValue="John Doe"
-                                          />
-                                        </div>
-                                        <div className="grid gap-3">
-                                          <Label htmlFor="datexpiration">
-                                            Date d&apos;expiration
-                                          </Label>
-                                          <Input
-                                            id="datexpiration"
-                                            name="username"
-                                            defaultValue="12/26"
-                                          />
-                                        </div>
-                                      </div>
-
-                                      <div className="grid gap-3">
-                                        <Label htmlFor="cryptogramme">
-                                          Cryptogramme (CVC/CVV)
-                                        </Label>
-                                        <Input
-                                          id="cryptogramme"
-                                          name="cryptogramme"
-                                          defaultValue="123"
-                                          className="w-[4rem]"
-                                        />
-                                      </div>
-                                    </div>
-                                    <DialogFooter>
-                                      <DialogClose asChild>
-                                        <Button variant="outline">
-                                          Annuler
-                                        </Button>
-                                      </DialogClose>
-                                      <Button type="submit">Enregistrer</Button>
-                                    </DialogFooter>
-                                  </DialogContent>
-                                </form>
-                              </Dialog>
-                            </div>
-                          </div>
-
-                          <div className="flex flex-col space-y-2">
-                            <Alert
-                              icon={<MoyenDePaimentIcon icon={FaCcVisa} />}
-                              color="primary"
-                              variant="faded"
-                            >
-                              <div className="flex justify-between w-full">
-                                <div>
-                                  <div>
-                                    <span>**** **** **** 1234</span>
-                                  </div>
-                                  <div className="flex flex-row space-x-2">
-                                    <div>
-                                      <span>Titulaire :</span>{" "}
-                                      <span>Jane Doe</span>
-                                    </div>
-                                    <div>|</div>
-                                    <div>
-                                      <span>Expire le :</span>{" "}
-                                      <span>08/25</span>
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="space-y-1">
-                                  <RippleButton rippleColor="#ADD8E6">
-                                    Retirer comme principale
-                                  </RippleButton>
-                                  <RippleButton rippleColor="#ADD8E6">
-                                    Supprimer
-                                  </RippleButton>
-                                </div>
-                              </div>
-                            </Alert>
-                            <Alert
-                              icon={
-                                <MoyenDePaimentIcon icon={FaCcMastercard} />
-                              }
-                            >
-                              <div className="flex justify-between w-full">
-                                <div>
-                                  <div>
-                                    <span>**** **** **** 1234</span>
-                                  </div>
-                                  <div className="flex flex-row space-x-2">
-                                    <div>
-                                      <span>Titulaire :</span>{" "}
-                                      <span>Jane Doe</span>
-                                    </div>
-                                    <div>|</div>
-                                    <div>
-                                      <span>Expire le :</span>{" "}
-                                      <span>08/25</span>
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="space-y-1">
-                                  <RippleButton rippleColor="#ADD8E6">
-                                    Définir comme principale
-                                  </RippleButton>
-                                  <RippleButton rippleColor="#ADD8E6">
-                                    Supprimer
-                                  </RippleButton>
-                                </div>
-                              </div>
-                            </Alert>
-                            <Alert
-                              icon={
-                                <MoyenDePaimentIcon icon={SiAmericanexpress} />
-                              }
-                            >
-                              <div className="flex justify-between w-full">
-                                <div>
-                                  <div>
-                                    <span>**** **** **** 1234</span>
-                                  </div>
-                                  <div className="flex flex-row space-x-2">
-                                    <div>
-                                      <span>Titulaire :</span>{" "}
-                                      <span>Jane Doe</span>
-                                    </div>
-                                    <div>|</div>
-                                    <div>
-                                      <span>Expire le :</span>{" "}
-                                      <span>08/25</span>
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="space-y-1">
-                                  <RippleButton rippleColor="#ADD8E6">
-                                    Définir comme principale
-                                  </RippleButton>
-                                  <RippleButton rippleColor="#ADD8E6">
-                                    Supprimer
-                                  </RippleButton>
-                                </div>
-                              </div>
-                            </Alert>
-                            <Alert
-                              icon={<MoyenDePaimentIcon icon={FaCcPaypal} />}
-                            >
-                              <div className="flex justify-between w-full">
-                                <div>
-                                  <div>
-                                    <span>**** **** **** 1234</span>
-                                  </div>
-                                  <div className="flex flex-row space-x-2">
-                                    <div>
-                                      <span>Titulaire :</span>{" "}
-                                      <span>Jane Doe</span>
-                                    </div>
-                                    <div>|</div>
-                                    <div>
-                                      <span>Expire le :</span>{" "}
-                                      <span>08/25</span>
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="space-y-1">
-                                  <RippleButton rippleColor="#ADD8E6">
-                                    Définir comme principale
-                                  </RippleButton>
-                                  <RippleButton rippleColor="#ADD8E6">
-                                    Supprimer
-                                  </RippleButton>
-                                </div>
-                              </div>
-                            </Alert>
-                          </div>
-                        </div>
                         <div className="bg-glacev2 flex flex-col space-y-4 p-4 w-[38.2rem] rounded-lg h-[21rem] overflow-y-scroll mt-2">
                           <div className="flex justify-between items-center">
                             <h2 className="text-lg text-black font-bold underline underline-offset-8">
@@ -1432,6 +1270,45 @@ export default function ProfilPage() {
                           </div>
                         </div>
                       </div>
+                    </div>
+
+                    <div className={`${user && user.role === "PROPRIETAIRE" ? "" : "hidden"}`}>
+                      <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-lg text-black font-bold underline underline-offset-8">
+                          Vos statistiques en un coup d œil
+                        </h2>
+                        <div className="space-x-4">
+                          <Buttonheroui
+                            color="primary"
+                            variant="solid"
+                            onClick={() =>
+                              router.push("/dashboard/gestiondesbateaux")
+                            }
+                          >
+                            Voir tous les bateaux
+                          </Buttonheroui>
+                          <Buttonheroui
+                            color="primary"
+                            variant="solid"
+                            onClick={() =>
+                              router.push("/dashboard/reservations")
+                            }
+                          >
+                            Gérer mes réservations
+                          </Buttonheroui>
+                          <Buttonheroui
+                            color="primary"
+                            variant="bordered"
+                            onClick={() => router.push("/dashboard")}
+                          >
+                            Plus de détails
+                          </Buttonheroui>
+                        </div>
+                      </div>
+                      <Component
+                        proprietaireId={utilisateurId}
+                        userId={utilisateurId}
+                      />
                     </div>
 
                     <div>

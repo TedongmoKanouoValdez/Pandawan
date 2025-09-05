@@ -2,9 +2,12 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const nodemailer = require('nodemailer'); // <- ajoute en haut de auth.js
-const { sendMail } = require('../utils/mailer');
-const { resetPasswordTemplate } = require('../utils/emailTemplate');
+const nodemailer = require("nodemailer"); // <- ajoute en haut de auth.js
+const { sendMail } = require("../utils/mailer");
+const { resetPasswordTemplate } = require("../utils/emailTemplate");
+const { hashPassword, comparePassword } = require("../utils/hashPassword");
+
+const axios = require("axios");
 const { PrismaClient, RoleUtilisateur } = require("@prisma/client");
 const prisma = new PrismaClient();
 
@@ -17,6 +20,7 @@ const emailRegex =
 const passwordRegex =
   /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{6,}$/;
 const nameRegex = /^[a-zA-ZÀ-ÿ\s\-']+$/;
+
 
 function hasNoDangerousChars(input) {
   return typeof input === "string" && !unsafePattern.test(input);
@@ -45,51 +49,33 @@ function validateRegisterInput({ nom, prenom, email, password }) {
 
 // Route POST /api/auth/register
 router.post("/register", async (req, res) => {
-  try {
-    const { nom, prenom, email, password, role } = req.body;
+  const { nom, prenom, email, password, role } = req.body;
 
-    // Validation via la fonction dédiée
-    const error = validateRegisterInput({ nom, prenom, email, password });
-    if (error) {
-      return res.status(400).json({ message: error });
-    }
+  const error = validateRegisterInput({ nom, prenom, email, password });
+  if (error) return res.status(400).json({ message: error });
 
-    // Vérifie si l'utilisateur existe déjà
-    const existingUser = await prisma.utilisateur.findUnique({
-      where: { email },
-    });
-    if (existingUser) {
-      return res.status(409).json({ message: "Email déjà utilisé" });
-    }
+  const existingUser = await prisma.utilisateur.findUnique({
+    where: { email },
+  });
+  if (existingUser)
+    return res.status(409).json({ message: "Email déjà utilisé" });
 
-    // Détermine le rôle (client par défaut si invalide)
-    const validRoles = Object.values(RoleUtilisateur);
-    const userRole = validRoles.includes(role) ? role : RoleUtilisateur.CLIENT;
+  const hashedPassword = await hashPassword(password); 
 
-    // Hash du mot de passe
-    const hashedPassword = await bcrypt.hash(password, 10);
+  const user = await prisma.utilisateur.create({
+    data: {
+      nom,
+      prenom,
+      email,
+      motDePasse: hashedPassword,
+      role: role || RoleUtilisateur.CLIENT,
+    },
+  });
 
-    // Création de l'utilisateur
-    const user = await prisma.utilisateur.create({
-      data: {
-        nom,
-        prenom,
-        email,
-        motDePasse: hashedPassword,
-        role: userRole,
-      },
-    });
-
-    // Supprime le mot de passe de la réponse
-    const { motDePasse, ...userWithoutPassword } = user;
-
-    res
-      .status(201)
-      .json({ message: "Utilisateur créé", user: userWithoutPassword });
-  } catch (error) {
-    console.error("Erreur lors de l’inscription :", error);
-    res.status(500).json({ message: "Erreur serveur" });
-  }
+  const { motDePasse, ...userWithoutPassword } = user;
+  res
+    .status(201)
+    .json({ message: "Utilisateur créé", user: userWithoutPassword });
 });
 
 // Fonction pour vérifier les caractères dangereux dans login
@@ -122,21 +108,12 @@ router.post("/login", async (req, res) => {
     if (!user) {
       return res.status(401).json({ message: "Utilisateur non trouvé" });
     }
-    const validPassword = await bcrypt.compare(password, user.motDePasse);
-    
-    if (!validPassword) {
-      return res.status(401).json({ message: "Mot de passe incorrect" });
-    }
 
+    const validPassword = await comparePassword(password, user.motDePasse);
+    if (!validPassword)
+      return res.status(401).json({ message: "Mot de passe incorrect" });
     const token = jwt.sign(
-      {
-        userId: user.id,
-        email: user.email,
-        role: user.role,
-        nom: user.nom,
-        prenom: user.prenom,
-        telephone: user.telephone,
-      },
+      { userId: user.id, email: user.email, role: user.role },
       JWT_SECRET,
       { expiresIn: "1h" }
     );
@@ -148,8 +125,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-
-router.post('/forgot-password', async (req, res) => {
+router.post("/forgot-password", async (req, res) => {
   const { email } = req.body;
 
   if (!email || !isSafeInput(email) || !emailRegex.test(email)) {
@@ -161,11 +137,9 @@ router.post('/forgot-password', async (req, res) => {
     return res.json({ message: "Si l’email existe, un lien a été envoyé." });
   }
 
-  const token = jwt.sign(
-    { email: user.email },
-    process.env.JWT_SECRET,
-    { expiresIn: '15m' }
-  );
+  const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, {
+    expiresIn: "15m",
+  });
 
   const resetUrl = `http://localhost:3000/resetpassword/${token}`;
   console.log("Reset URL (DEV) :", resetUrl);
@@ -174,7 +148,7 @@ router.post('/forgot-password', async (req, res) => {
     await sendMail({
       to: user.email,
       subject: "Réinitialisation de votre mot de passe",
-      html:  resetPasswordTemplate(resetUrl),
+      html: resetPasswordTemplate(resetUrl),
     });
 
     res.json({ message: "Email envoyé avec success!!!" });
@@ -184,11 +158,13 @@ router.post('/forgot-password', async (req, res) => {
   }
 });
 // Route : /api/auth/reset-password
-router.post('/reset-password', async (req, res) => {
+router.post("/reset-password", async (req, res) => {
   const { token, newPassword } = req.body;
 
   if (!token || !newPassword) {
-    return res.status(400).json({ message: "Token et nouveau mot de passe requis" });
+    return res
+      .status(400)
+      .json({ message: "Token et nouveau mot de passe requis" });
   }
 
   try {
@@ -200,7 +176,7 @@ router.post('/reset-password', async (req, res) => {
       return res.status(404).json({ message: "Utilisateur introuvable" });
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+  const hashedPassword = await hashPassword(newPassword);
 
     await prisma.utilisateur.update({
       where: { email },
@@ -209,7 +185,7 @@ router.post('/reset-password', async (req, res) => {
 
     res.json({ message: "Mot de passe mis à jour avec succès" });
   } catch (err) {
-    if (err.name === 'TokenExpiredError') {
+    if (err.name === "TokenExpiredError") {
       return res.status(401).json({ message: "Token expiré" });
     }
     console.error(err);

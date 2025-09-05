@@ -61,6 +61,7 @@ import { CustomModal } from "@/components/CustomModal";
 import { useDisclosure } from "@heroui/modal";
 import OptionPaiement from "@/components/pages/OptionPaiement";
 import { Radio, Affix } from "antd";
+import { calculatePrice } from "@/hooks/CalculatePriceParams";
 
 interface ArticlePageProps {
   slug: string;
@@ -393,6 +394,12 @@ export default function ArticlePage({ slug }: ArticlePageProps) {
     }
   })();
 
+  const prixTotal = calculatePrice({
+    forfait: selectedFormule as ForfaitType,
+    selectedPrice: selectedPrice || 0,
+    fullRange: fullRange?.map((d) => d.toDate()) || [],
+  });
+
   if (loading) return <p>Chargement…</p>;
 
   console.log(fullRange?.length);
@@ -690,7 +697,7 @@ export default function ArticlePage({ slug }: ArticlePageProps) {
                             {data[0].header}
                           </div>
                           <div className="flex items-center text-lg font-semibold">
-                            {selectedPrice * (fullRange?.length || 1)} €{" "}
+                            {prixTotal} €{" "}
                             <p className="text-xs font-normal">
                               {selectedPrice ? `/ ${selectedFormule}` : ""}
                             </p>

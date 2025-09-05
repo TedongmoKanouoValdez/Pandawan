@@ -6,6 +6,8 @@ import GlobalLoader from "@/components/GlobalLoader";
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 import ClientLayout from "@/components/pages/ClientLayout";
+import CookieBanner from "@/components/CookieBanner";
+import { CookieConsentProvider } from '@/context/CookieConsentContext';
 
 export const metadata: Metadata = {
   title: {
@@ -40,9 +42,12 @@ export default function RootLayout({
         )}
       >
         <Providers themeProps={{ attribute: "class", defaultTheme: "light" }}>
-          <GlobalLoader>
-            <ClientLayout>{children}</ClientLayout>
-          </GlobalLoader>
+          <CookieConsentProvider> 
+            <ClientLayout>
+              {children}
+              <CookieBanner /> 
+            </ClientLayout>
+          </CookieConsentProvider>
         </Providers>
       </body>
     </html>

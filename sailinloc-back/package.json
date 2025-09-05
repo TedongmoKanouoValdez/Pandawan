@@ -7,6 +7,15 @@
     "dev": "nodemon src/index.js",
     "test": "jest"
   },
+   "jest": {
+  "testMatch": [
+    "**/src/test/unitaire/**/*.test.js",
+    "**/src/test/fonctionnels/**/*.test.js"
+  ],
+  "testPathIgnorePatterns": [
+    "/node_modules/"
+  ]
+},
   "keywords": [],
   "author": "",
   "license": "ISC",

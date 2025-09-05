@@ -48,6 +48,7 @@ export const CalendarSingleBoat = ({
   ]);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [backdrop, setBackdrop] = useState<"opaque" | "blur">("opaque");
+  const [modalMessage, setModalMessage] = useState("");
 
   useEffect(() => {
     const [start, end] = dateRange;
@@ -143,14 +144,12 @@ export const CalendarSingleBoat = ({
     if (disabledDate(date)) return;
 
     if (!typeLocation) {
-      // typeLocation non choisi → ouvrir modal
       setBackdrop("opaque");
       onOpen();
       return;
     }
 
     if (typeLocation === "demi-journée" || typeLocation === "jour") {
-      // Sélection simple
       setDateRange([date, date]);
       setSelectedDates([date]);
     } else if (typeLocation === "week-end") {
@@ -167,7 +166,6 @@ export const CalendarSingleBoat = ({
 
       setSelectedDates(updatedDates);
 
-      // update le range avec min et max des dates choisies
       if (updatedDates.length > 0) {
         const sorted = [...updatedDates].sort(
           (a, b) => a.valueOf() - b.valueOf()
@@ -177,30 +175,56 @@ export const CalendarSingleBoat = ({
         setDateRange([null, null]);
       }
     } else if (typeLocation === "semaine" || typeLocation === "mois") {
-      const start =
-        typeLocation === "semaine"
-          ? date.startOf("week")
-          : date.startOf("month");
-      const end =
-        typeLocation === "semaine" ? date.endOf("week") : date.endOf("month");
-
-      // Créer toutes les dates
-      let allDates: Dayjs[] = [];
-      let cursor = start.clone();
-      while (cursor.isBefore(end) || cursor.isSame(end, "day")) {
-        allDates.push(cursor);
-        cursor = cursor.add(1, "day");
-      }
-
-      // Vérifier s’il y a des dates désactivées
-      const hasDisabled = allDates.some((d) => disabledDate(d));
-      if (hasDisabled) {
-        setIsModalOpen(true); // modal pour dates invalides
+      // Si aucune date n'est encore choisie → définir comme début
+      if (!dateRange[0]) {
+        setDateRange([date, null]);
+        setSelectedDates([date]);
         return;
       }
 
-      setDateRange([start, end]);
-      setSelectedDates(allDates);
+      // Si une date de début existe mais pas de fin → on complète le range
+      if (dateRange[0] && !dateRange[1]) {
+        const start = dateRange[0];
+        const end = date;
+
+        let rangeStart = start.isBefore(end) ? start : end;
+        let rangeEnd = start.isBefore(end) ? end : start;
+
+        const diffDays = rangeEnd.diff(rangeStart, "day") + 1;
+
+        // Vérifier la durée minimale
+        const minDays = typeLocation === "semaine" ? 7 : 30;
+        if (diffDays < minDays) {
+          setModalMessage(
+            `La durée minimale est de ${minDays} jours pour une location "${typeLocation}".`
+          );
+          setIsModalOpen(true); // affiche modal erreur
+          return;
+        }
+
+        // Générer toutes les dates entre start et end
+        let allDates: Dayjs[] = [];
+        let cursor = rangeStart.clone();
+        while (cursor.isBefore(rangeEnd) || cursor.isSame(rangeEnd, "day")) {
+          if (disabledDate(cursor)) {
+            setModalMessage(
+              "La plage sélectionnée contient au moins une date indisponible. Merci de choisir une autre période."
+            );
+            setIsModalOpen(true);
+            return;
+          }
+          allDates.push(cursor.clone());
+          cursor = cursor.add(1, "day");
+        }
+
+        setDateRange([rangeStart, rangeEnd]);
+        setSelectedDates(allDates);
+      }
+      // Si deux dates existent déjà → reset et recommencer
+      else {
+        setDateRange([date, null]);
+        setSelectedDates([date]);
+      }
     }
   };
 
@@ -273,6 +297,28 @@ export const CalendarSingleBoat = ({
               <ModalBody>
                 Veuillez choisir un type de location avant de sélectionner une
                 date.
+              </ModalBody>
+              <ModalFooter>
+                <Button color="primary" onPress={onClose}>
+                  Fermer
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      <Modal
+        backdrop="blur"
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader>Sélectionnez votre formule</ModalHeader>
+              <ModalBody>
+                <p>{modalMessage}</p>
               </ModalBody>
               <ModalFooter>
                 <Button color="primary" onPress={onClose}>

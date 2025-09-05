@@ -249,4 +249,25 @@ router.delete("/slug/:slug", async (req, res) => {
   }
 });
 
+// GET /bateaux/proprietaire/:proprietaireId
+router.get("/proprietaire/:proprietaireId", async (req, res) => {
+  const { proprietaireId } = req.params;
+
+  try {
+    const bateaux = await prisma.bateau.findMany({
+      where: { proprietaireId: parseInt(proprietaireId) },
+      include: { details: true, medias: true },
+    });
+
+    if (!bateaux || bateaux.length === 0) {
+      return res.status(404).json({ error: "Aucun bateau trouvé" });
+    }
+
+    res.json({ success: true, bateaux });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
 module.exports = router;

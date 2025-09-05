@@ -1,12 +1,12 @@
 generator client {
   provider = "prisma-client-js"
 }
- 
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
- 
+
 model Utilisateur {
   id           Int             @id @default(autoincrement())
   nom          String
@@ -18,7 +18,7 @@ model Utilisateur {
   adresse      String?
   dernierAcces DateTime?
   photoProfil  String?
- 
+
   proprietaire        Proprietaire?
   reservations        Reservation[]
   messagesEnvoyes     Message[]             @relation("MessagesEnvoyes")
@@ -26,17 +26,27 @@ model Utilisateur {
   demandes            DemandeProprietaire[]
   medias              Media[]
   commentairesRediges Commentaire[]
+
+  refreshTokens RefreshToken[]
 }
- 
+
+model RefreshToken {
+  id        Int         @id @default(autoincrement())
+  token     String      @unique
+  userId    Int         @unique
+  user      Utilisateur @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+}
+
 model Proprietaire {
   id            Int         @id @default(autoincrement())
   utilisateur   Utilisateur @relation(fields: [utilisateurId], references: [id])
   utilisateurId Int         @unique
   contact       String?
- 
+
   bateaux Bateau[]
 }
- 
+
 model Bateau {
   id                 Int           @id @default(autoincrement())
   nom                String
@@ -49,7 +59,7 @@ model Bateau {
   proprietaire       Proprietaire? @relation(fields: [proprietaireId], references: [id])
   proprietaireId     Int?
   creeLe             DateTime      @default(now())
- 
+
   reservations Reservation[]
   assurances   Assurance[]
   messages     Message[]
@@ -57,7 +67,7 @@ model Bateau {
   details      DetailsBateau?
   commentaires Commentaire[]
 }
- 
+
 model DetailsBateau {
   id                                   Int      @id @default(autoincrement())
   longueur                             Float?
@@ -88,7 +98,7 @@ model DetailsBateau {
   bateau   Bateau @relation(fields: [bateauId], references: [id])
   bateauId Int    @unique
 }
- 
+
 model Reservation {
   id                      Int               @id @default(autoincrement())
   utilisateur             Utilisateur       @relation(fields: [utilisateurId], references: [id])
@@ -117,7 +127,7 @@ model Reservation {
   messages     Message[]
   commentaires Commentaire[]
 }
- 
+
 model Paiement {
   id                Int          @id @default(autoincrement())
   reservation       Reservation  @relation(fields: [reservationId], references: [id])
@@ -130,27 +140,27 @@ model Paiement {
   creeLe            DateTime     @default(now())
   recu              Recu?
 }
- 
+
 model Recu {
   id         Int      @id @default(autoincrement())
   paiement   Paiement @relation(fields: [paiementId], references: [id])
   paiementId Int      @unique
- 
+
   creeLe DateTime @default(now())
- 
+
   media Media?
 }
- 
+
 model Contrat {
   id            Int         @id @default(autoincrement())
   reservation   Reservation @relation(name: "ContratToReservation", fields: [reservationId], references: [id])
   reservationId Int         @unique
   signature     Boolean
   creeLe        DateTime    @default(now())
- 
+
   medias Media[]
 }
- 
+
 model Assurance {
   id                  Int           @id @default(autoincrement())
   nom                 String
@@ -160,10 +170,10 @@ model Assurance {
   bateau              Bateau        @relation(fields: [bateauId], references: [id])
   bateauId            Int
   creeLe              DateTime      @default(now())
- 
+
   medias Media[]
 }
- 
+
 model Message {
   id             Int          @id @default(autoincrement())
   expediteur     Utilisateur  @relation("MessagesEnvoyes", fields: [expediteurId], references: [id])
@@ -180,23 +190,23 @@ model Message {
   lu             Boolean      @default(false)
   creeLe         DateTime     @default(now())
 }
- 
+
 model Commentaire {
   id      Int      @id @default(autoincrement())
   contenu String
   note    Int // 1 à 5
   creeLe  DateTime @default(now())
- 
+
   auteur   Utilisateur @relation(fields: [auteurId], references: [id])
   auteurId Int
- 
+
   bateau   Bateau? @relation(fields: [bateauId], references: [id])
   bateauId Int?
- 
+
   reservation   Reservation? @relation(fields: [reservationId], references: [id])
   reservationId Int?
 }
- 
+
 model DemandeProprietaire {
   id             Int           @id @default(autoincrement())
   utilisateur    Utilisateur   @relation(fields: [utilisateurId], references: [id])
@@ -205,10 +215,10 @@ model DemandeProprietaire {
   data           String
   dateDemande    DateTime
   dateTraitement DateTime?
- 
+
   medias Media[]
 }
- 
+
 model Media {
   id           Int       @id @default(autoincrement())
   url          String
@@ -220,52 +230,52 @@ model Media {
 
   utilisateur   Utilisateur? @relation(fields: [utilisateurId], references: [id])
   utilisateurId Int?
- 
+
   bateau   Bateau? @relation(fields: [bateauId], references: [id])
   bateauId Int?
- 
+
   assurance   Assurance? @relation(fields: [assuranceId], references: [id])
   assuranceId Int?
- 
+
   contrat   Contrat? @relation(fields: [contratId], references: [id])
   contratId Int?
- 
+
   demandeProprietaire   DemandeProprietaire? @relation(fields: [demandeProprietaireId], references: [id])
   demandeProprietaireId Int?
- 
+
   recu   Recu? @relation(fields: [recuId], references: [id])
   recuId Int?  @unique
 }
- 
+
 enum RoleUtilisateur {
   CLIENT
   PROPRIETAIRE
   ADMIN
 }
- 
+
 enum StatutReservation {
   EN_ATTENTE
   CONFIRMEE
   ANNULEE
 }
- 
+
 enum MethodePaiement {
   CARTE
   APPLE_PAY
   PAYPAL
 }
- 
+
 enum TypeAssurance {
   RESPONSABILITE_CIVILE
   TOUS_RISQUES
 }
- 
+
 enum StatutDemande {
   EN_ATTENTE
   ACCEPTEE
   REFUSEE
 }
- 
+
 enum TypeMedia {
   COVER
   GALLERIE
@@ -275,7 +285,7 @@ enum TypeMedia {
   CONTRAT
   RECUS
 }
- 
+
 enum EtatPaiement {
   PAYE
   EN_ATTENTE
